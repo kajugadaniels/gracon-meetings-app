@@ -3,7 +3,10 @@
  */
 .panel {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 12px;
+  height: 100%;
+  min-height: 0;
 }
 
 .summaryCard {
@@ -52,8 +55,9 @@
 
 .messageList {
   display: grid;
+  align-content: start;
   gap: 10px;
-  max-height: min(440px, calc(100dvh - 360px));
+  min-height: 0;
   overflow: auto;
   padding-right: 2px;
 }
@@ -136,6 +140,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
+  align-self: end;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   background: white;
@@ -181,8 +186,8 @@
     flex-direction: column;
   }
 
-  .messageList {
-    max-height: none;
+  .panel {
+    min-height: 460px;
   }
 }
 
