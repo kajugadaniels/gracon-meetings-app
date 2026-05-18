@@ -82,7 +82,8 @@
   gap: 8px;
 }
 
-.actions button {
+.actions button,
+.actions a {
   display: inline-flex;
   min-height: 34px;
   align-items: center;
@@ -97,9 +98,11 @@
   font-size: 12px;
   font-weight: 500;
   padding: 0 11px;
+  text-decoration: none;
 }
 
-.actions button:first-child {
+.actions button:first-child,
+.actions a:first-child {
   border-color: var(--color-primary);
   background: var(--color-primary);
   color: white;
