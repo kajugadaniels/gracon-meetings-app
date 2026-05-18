@@ -4,6 +4,7 @@
 import type {
     CreateMeetingInput,
     Meeting,
+    MeetingRecording,
     MeetingStreamAccess,
 } from './types';
 
@@ -83,6 +84,31 @@ export function issueMeetingStreamToken(
     meetingId: string,
 ): Promise<MeetingStreamAccess> {
     return requestJson<MeetingStreamAccess>(`/api/meetings/${meetingId}/token`, {
+        method: 'POST',
+    });
+}
+
+/**
+ * Lists recording metadata for one meeting through the local BFF route.
+ */
+export function listMeetingRecordings(meetingId: string): Promise<MeetingRecording[]> {
+    return requestJson<MeetingRecording[]>(`/api/meetings/${meetingId}/recordings`);
+}
+
+/**
+ * Starts a host-controlled meeting recording.
+ */
+export function startMeetingRecording(meetingId: string): Promise<MeetingRecording> {
+    return requestJson<MeetingRecording>(`/api/meetings/${meetingId}/recordings/start`, {
+        method: 'POST',
+    });
+}
+
+/**
+ * Stops the active host-controlled meeting recording.
+ */
+export function stopMeetingRecording(meetingId: string): Promise<MeetingRecording> {
+    return requestJson<MeetingRecording>(`/api/meetings/${meetingId}/recordings/stop`, {
         method: 'POST',
     });
 }
