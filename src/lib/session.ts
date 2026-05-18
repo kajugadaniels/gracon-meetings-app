@@ -16,7 +16,7 @@ export const APP_URL =
 export const MEETINGS_URL =
     process.env.NEXT_PUBLIC_MEETINGS_URL ?? 'http://localhost:4003';
 
-const DEFAULT_NEXT_PATH = '/meetings';
+const DEFAULT_NEXT_PATH = '/home';
 
 export type SessionBootstrapResult =
     | { status: 'authenticated'; user: Record<string, unknown> }
