@@ -7,7 +7,7 @@
   min-height: 100dvh;
   min-width: 0;
   background: #f7f7fb;
-  padding: 10px 10px 92px;
+  padding: 10px clamp(48px, 3vw, 44px) 92px;
 }
 
 .header {
@@ -215,7 +215,7 @@
 
 @media (max-width: 720px) {
   .room {
-    padding: 8px 8px 170px;
+    padding: 8px 10px 170px;
   }
 
   .header {
