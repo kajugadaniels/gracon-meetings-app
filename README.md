@@ -38,6 +38,7 @@ metadata, and audit history through `api/meetings`.
 - The authenticated shell uses a flush top navbar, left meetings sidebar, account avatar dropdown, and `/home` as the post-login landing route.
 - The topbar and sidebar live in dedicated `src/components/layout` components; protected layout owns only session recovery and shell placement.
 - `/home` currently renders a static light-mode dashboard with quick actions, realistic upcoming meeting cards, and a short skeleton loading state while future meeting actions mature.
+- Home quick-action dialogs live in `src/components/meetings/MeetingActionDialogs.tsx` with scoped module CSS.
 - `/upcoming` renders a static scheduled-meetings dashboard using the reusable `MeetingCard` component.
 - `/previous` renders a static completed-meetings dashboard using the reusable `MeetingCard` component.
 - `/recordings` renders a static recordings library using the reusable `RecordingCard` component with Play and Share actions.
