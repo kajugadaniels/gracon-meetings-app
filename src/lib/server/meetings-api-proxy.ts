@@ -22,6 +22,7 @@ interface ProxyOptions {
     path: string;
     body?: unknown;
     search?: string;
+    auth?: 'required' | 'none';
 }
 
 /**
@@ -31,9 +32,12 @@ export async function proxyMeetingsApi(
     request: NextRequest,
     options: ProxyOptions,
 ): Promise<NextResponse> {
-    const { accessToken, refreshedTokens } = await resolveAccessToken(request);
+    const requiresAuth = options.auth !== 'none';
+    const { accessToken, refreshedTokens } = requiresAuth
+        ? await resolveAccessToken(request)
+        : { accessToken: null, refreshedTokens: null };
 
-    if (!accessToken) {
+    if (requiresAuth && !accessToken) {
         return clearSessionCookies(
             NextResponse.json({ error: 'Not authenticated' }, { status: 401 }),
         );
@@ -48,7 +52,7 @@ export async function proxyMeetingsApi(
         response = await fetch(upstreamUrl, {
             method: options.method,
             headers: {
-                Authorization: `Bearer ${accessToken}`,
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
                 ...(options.body ? { 'Content-Type': 'application/json' } : {}),
             },
             body: options.body ? JSON.stringify(options.body) : undefined,
