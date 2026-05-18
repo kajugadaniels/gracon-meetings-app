@@ -39,16 +39,22 @@ metadata, and audit history through `api/meetings`.
 - The topbar and sidebar live in dedicated `src/components/layout` components; protected layout owns only session recovery and shell placement.
 - `/home` currently renders a static light-mode dashboard with quick actions, realistic upcoming meeting cards, and a short skeleton loading state while future meeting actions mature.
 - `/home` uses a compact premium dashboard layout with smaller action cards and three meeting cards per desktop row.
+- `/home` now reads the shared meetings seed dataset through typed adapters and only renders the first 6 upcoming meetings.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
 - `/upcoming` renders a static scheduled-meetings dashboard using the reusable `MeetingCard` component.
 - `/upcoming` follows the compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
+- `/upcoming` paginates the shared seed dataset at 18 meeting cards per page.
 - `/upcoming` opens the reusable `ScheduleMeetingDialog` through `UpcomingScheduleButton` so the page can remain server-rendered.
 - `/previous` renders a static completed-meetings dashboard using the reusable `MeetingCard` component.
 - `/previous` follows the same compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
+- `/previous` paginates the shared seed dataset at 18 meeting cards per page.
 - `/recordings` renders a static recordings library using the reusable `RecordingCard` component with Play and Share actions.
 - `/recordings` follows the compact dashboard direction with minimal recording cards and three recordings per desktop row.
+- `/recordings` paginates 40 ready recorded meetings at 18 recording cards per page.
 - `/personal-room` renders a static reusable-room management page with room link, quick actions, settings, and readiness details.
+- `/personal-room` follows the compact dashboard direction with four room setting cards in one desktop row.
+- `src/data/meetings.json` contains 1000 deterministic meeting records, including 40 ready recordings, and `src/lib/meetings/static-meetings.ts` is the only adapter pages should use directly.
 - Route styling uses `.module.css` files rather than growing `globals.css`.
 
 ## Environment
@@ -101,6 +107,7 @@ npm run lint
 - `src/lib/meetings/api-client.ts` is the typed browser client.
 - `src/lib/server/meetings-api-proxy.ts` is the server-side bridge to `api/meetings`.
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
+- `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for seeded list pages.
 - `src/components/meetings/live/MeetingRoom.tsx` owns the Stream room mount/unmount lifecycle.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
 
