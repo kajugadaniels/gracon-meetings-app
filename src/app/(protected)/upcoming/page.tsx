@@ -3,8 +3,7 @@
  */
 import type { Metadata } from 'next';
 import { CalendarClock, Clock3, ShieldCheck, UsersRound } from 'lucide-react';
-import { PaginatedMeetingGrid } from '@/components/meetings/PaginatedMeetingGrid';
-import { UpcomingScheduleButton } from '@/components/meetings/UpcomingScheduleButton';
+import { UpcomingMeetingsExplorer } from '@/components/meetings/UpcomingMeetingsExplorer';
 import { getMeetingsSummary, getUpcomingMeetingCards } from '@/lib/meetings/static-meetings';
 import styles from './page.module.css';
 
@@ -79,22 +78,8 @@ export default function UpcomingPage() {
                 })}
             </div>
 
-            <div className={styles.toolbar}>
-                <div className={styles.filters} aria-label="Meeting filters">
-                    <button type="button" className={styles.activeFilter}>All</button>
-                    <button type="button">Today</button>
-                    <button type="button">This week</button>
-                    <button type="button">Invite only</button>
-                </div>
-                <UpcomingScheduleButton />
-            </div>
-
             <section className={styles.contentGrid} aria-label="Scheduled meetings">
-                <PaginatedMeetingGrid
-                    meetings={upcomingMeetings}
-                    pageSize={18}
-                    ariaLabel="Scheduled meetings"
-                />
+                <UpcomingMeetingsExplorer meetings={upcomingMeetings} />
 
                 <aside className={styles.sidePanel} aria-label="Preparation checklist">
                     <p className={styles.eyebrow}>Readiness</p>
