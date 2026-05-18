@@ -19,7 +19,6 @@
   min-width: 0;
 }
 
-.loadingShell,
 .errorShell {
   display: flex;
   min-height: 100dvh;
@@ -29,7 +28,6 @@
   padding: 24px;
 }
 
-.loadingCard,
 .errorCard {
   width: min(100%, 420px);
   border: 1px solid var(--color-border);
@@ -38,16 +36,6 @@
   box-shadow: 0 24px 70px rgba(15, 23, 42, 0.10);
   padding: 28px;
   text-align: center;
-}
-
-.loadingIcon {
-  width: 42px;
-  height: 42px;
-  margin: 0 auto 16px;
-  border: 3px solid rgba(91, 35, 255, 0.14);
-  border-top-color: var(--color-primary);
-  border-radius: 999px;
-  animation: spin 0.9s linear infinite;
 }
 
 .stateTitle {
@@ -94,16 +82,10 @@
   color: var(--color-text-primary);
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (min-width: 900px) {
   .main {
-    padding-left: 252px;
-    padding-right: 4px;
+    padding-left: 255px;
+    padding-right: 20px;
   }
 }
 
