@@ -5,14 +5,15 @@
 
 import {
     Circle,
-    Copy,
-    Search,
     ShieldCheck,
     UserPlus,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { MeetingRoomView } from '@/lib/meetings/static-meetings';
+import { MeetingChatPanel } from './MeetingChatPanel';
 import { MeetingControlDock } from './MeetingControlDock';
+import { MeetingInviteDialog } from './MeetingInviteDialog';
+import { MeetingMembersPanel } from './MeetingMembersPanel';
 import styles from './meeting-room.module.css';
 
 interface MeetingRoomProps {
@@ -53,40 +54,6 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
     const [chatOpen, setChatOpen] = useState(true);
     const [membersOpen, setMembersOpen] = useState(true);
     const [inviteOpen, setInviteOpen] = useState(false);
-    const [inviteSearch, setInviteSearch] = useState('');
-    const [messageDraft, setMessageDraft] = useState('');
-    const [messages, setMessages] = useState(INITIAL_MESSAGES);
-
-    const visibleInvitees = useMemo(() => {
-        const normalizedSearch = inviteSearch.trim().toLowerCase();
-        const candidates = meeting.attendees.slice(0, 8);
-
-        if (normalizedSearch.length < 2) return candidates;
-
-        return candidates.filter((attendee) => (
-            attendee.name.toLowerCase().includes(normalizedSearch)
-            || attendee.email.toLowerCase().includes(normalizedSearch)
-        ));
-    }, [inviteSearch, meeting.attendees]);
-
-    function sendMessage() {
-        const body = messageDraft.trim();
-        if (!body) return;
-
-        setMessages((currentMessages) => [
-            ...currentMessages,
-            {
-                sender: 'You',
-                body,
-                time: new Intl.DateTimeFormat(undefined, {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false,
-                }).format(new Date()),
-            },
-        ]);
-        setMessageDraft('');
-    }
 
     return (
         <section className={styles.room}>
@@ -148,110 +115,24 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
 
                 <aside className={styles.sideRail} aria-label="Meeting collaboration panels">
                     {membersOpen && (
-                        <section className={styles.panel}>
-                            <div className={styles.panelHeader}>
-                                <h2>Members</h2>
-                                <span>{meeting.attendeeCount}</span>
-                            </div>
-                            <div className={styles.memberList}>
-                                {meeting.attendees.slice(0, 7).map((attendee) => (
-                                    <article key={attendee.email} className={styles.memberItem}>
-                                        <span>{attendee.initials}</span>
-                                        <div>
-                                            <strong>{attendee.name}</strong>
-                                            <small>{attendee.role}</small>
-                                        </div>
-                                    </article>
-                                ))}
-                            </div>
-                        </section>
+                        <MeetingMembersPanel
+                            attendees={meeting.attendees}
+                            attendeeCount={meeting.attendeeCount}
+                        />
                     )}
 
                     {chatOpen && (
-                        <section className={styles.panel}>
-                            <div className={styles.panelHeader}>
-                                <h2>Chat</h2>
-                                <span>{messages.length}</span>
-                            </div>
-                            <div className={styles.messageList}>
-                                {messages.map((message) => (
-                                    <article key={`${message.sender}-${message.time}-${message.body}`}>
-                                        <div>
-                                            <strong>{message.sender}</strong>
-                                            <span>{message.time}</span>
-                                        </div>
-                                        <p>{message.body}</p>
-                                    </article>
-                                ))}
-                            </div>
-                            <div className={styles.chatComposer}>
-                                <input
-                                    value={messageDraft}
-                                    onChange={(event) => setMessageDraft(event.target.value)}
-                                    onKeyDown={(event) => {
-                                        if (event.key === 'Enter') sendMessage();
-                                    }}
-                                    placeholder="Message everyone..."
-                                />
-                                <button type="button" onClick={sendMessage}>Send</button>
-                            </div>
-                        </section>
+                        <MeetingChatPanel initialMessages={INITIAL_MESSAGES} />
                     )}
                 </aside>
             </div>
 
             {inviteOpen && (
-                <div
-                    className={styles.dialogOverlay}
-                    role="presentation"
-                    onMouseDown={(event) => {
-                        if (event.target === event.currentTarget) setInviteOpen(false);
-                    }}
-                >
-                    <section className={styles.inviteDialog} role="dialog" aria-modal="true" aria-labelledby="invite-title">
-                        <div className={styles.dialogHeader}>
-                            <div>
-                                <p className={styles.eyebrow}>Invite people</p>
-                                <h2 id="invite-title">Bring someone into this room</h2>
-                            </div>
-                            <button type="button" onClick={() => setInviteOpen(false)}>Close</button>
-                        </div>
-
-                        <label className={styles.inviteSearch}>
-                            <Search size={16} />
-                            <span>Search invitees</span>
-                            <input
-                                value={inviteSearch}
-                                onChange={(event) => setInviteSearch(event.target.value)}
-                                placeholder="Search by name or email..."
-                            />
-                        </label>
-
-                        <div className={styles.inviteLink}>
-                            <div>
-                                <span>Meeting link</span>
-                                <strong>https://meet.gracon360.com/{meeting.id}</strong>
-                            </div>
-                            <button type="button">
-                                <Copy size={15} />
-                                Copy
-                            </button>
-                        </div>
-
-                        <div className={styles.inviteList}>
-                            {visibleInvitees.map((attendee) => (
-                                <article key={attendee.email}>
-                                    <span>{attendee.initials}</span>
-                                    <div>
-                                        <strong>{attendee.name}</strong>
-                                        <small>{attendee.email}</small>
-                                    </div>
-                                    <button type="button">Invite</button>
-                                </article>
-                            ))}
-                        </div>
-                    </section>
-                </div>
+                <MeetingInviteDialog
+                    meetingId={meeting.id}
+                    attendees={meeting.attendees}
+                    onClose={() => setInviteOpen(false)}
+                />
             )}
         </section>
     );
