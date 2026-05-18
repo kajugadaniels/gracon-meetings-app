@@ -3,76 +3,9 @@
  */
 import type { Metadata } from 'next';
 import { Archive, CheckCircle2, Clock3, FileText, Video } from 'lucide-react';
-import { MeetingCard } from '@/components/meetings/MeetingCard';
+import { PaginatedMeetingGrid } from '@/components/meetings/PaginatedMeetingGrid';
+import { getMeetingsSummary, getPreviousMeetingCards } from '@/lib/meetings/static-meetings';
 import styles from './page.module.css';
-
-const PREVIOUS_MEETINGS = [
-    {
-        title: 'Institution Registration Closeout',
-        date: 'Yesterday',
-        time: '4:00 PM',
-        attendees: ['DK', 'OU', 'JM', 'SN'],
-        overflowCount: 5,
-    },
-    {
-        title: 'Legal Review: Service Agreement',
-        date: 'Mon, 13 May',
-        time: '11:30 AM',
-        attendees: ['DK', 'BK', 'CM', 'YA'],
-        overflowCount: 2,
-    },
-    {
-        title: 'Finance Partner Discovery Call',
-        date: 'Fri, 10 May',
-        time: '9:00 AM',
-        attendees: ['DK', 'RN', 'IM', 'PK'],
-        overflowCount: 7,
-    },
-    {
-        title: 'Digital Signature Workflow Review',
-        date: 'Wed, 08 May',
-        time: '2:15 PM',
-        attendees: ['DK', 'PN', 'EM', 'LS'],
-        overflowCount: 4,
-    },
-    {
-        title: 'Institution Verification Retrospective',
-        date: 'Tue, 07 May',
-        time: '10:45 AM',
-        attendees: ['DK', 'OU', 'AN', 'RN'],
-        overflowCount: 6,
-    },
-    {
-        title: 'Template Library Review',
-        date: 'Mon, 06 May',
-        time: '3:30 PM',
-        attendees: ['DK', 'SM', 'AK', 'BK'],
-        overflowCount: 3,
-    },
-];
-
-const SUMMARY_ITEMS = [
-    {
-        label: 'Completed',
-        value: '24',
-        icon: CheckCircle2,
-    },
-    {
-        label: 'Recorded',
-        value: '13',
-        icon: Video,
-    },
-    {
-        label: 'Follow-ups',
-        value: '8',
-        icon: FileText,
-    },
-    {
-        label: 'Avg duration',
-        value: '42m',
-        icon: Clock3,
-    },
-];
 
 const FOLLOW_UPS = [
     'Share the signed agreement package',
@@ -90,6 +23,32 @@ export const metadata: Metadata = {
  * Renders a static previous-meetings dashboard for completed sessions.
  */
 export default function PreviousPage() {
+    const previousMeetings = getPreviousMeetingCards();
+    const summary = getMeetingsSummary();
+    const latestMeeting = previousMeetings[0];
+    const summaryItems = [
+        {
+            label: 'Completed',
+            value: String(summary.previousCount),
+            icon: CheckCircle2,
+        },
+        {
+            label: 'Recorded',
+            value: String(summary.recordedCount),
+            icon: Video,
+        },
+        {
+            label: 'Follow-ups',
+            value: '8',
+            icon: FileText,
+        },
+        {
+            label: 'Loaded per page',
+            value: '18',
+            icon: Clock3,
+        },
+    ];
+
     return (
         <section className={styles.page}>
             <header className={styles.hero}>
@@ -105,8 +64,8 @@ export default function PreviousPage() {
                 <aside className={styles.focusPanel} aria-label="Latest completed meeting">
                     <Archive size={20} />
                     <span>Latest completed</span>
-                    <strong>Institution Registration Closeout</strong>
-                    <p>Yesterday · 4:00 PM</p>
+                    <strong>{latestMeeting?.title ?? 'No completed meeting'}</strong>
+                    <p>{latestMeeting ? `${latestMeeting.date} · ${latestMeeting.time}` : 'Completed meetings appear here'}</p>
                     <div className={styles.focusMeta}>
                         <small>Recording ready</small>
                         <small>Follow-up open</small>
@@ -115,7 +74,7 @@ export default function PreviousPage() {
             </header>
 
             <div className={styles.summaryGrid} aria-label="Previous meetings summary">
-                {SUMMARY_ITEMS.map((item) => {
+                {summaryItems.map((item) => {
                     const Icon = item.icon;
                     return (
                         <article key={item.label} className={styles.summaryCard}>
@@ -140,18 +99,11 @@ export default function PreviousPage() {
             </div>
 
             <section className={styles.contentGrid} aria-label="Completed meetings">
-                <div className={styles.meetingList}>
-                    {PREVIOUS_MEETINGS.map((meeting) => (
-                        <MeetingCard
-                            key={`${meeting.title}-${meeting.time}`}
-                            title={meeting.title}
-                            date={meeting.date}
-                            time={meeting.time}
-                            attendees={meeting.attendees}
-                            overflowCount={meeting.overflowCount}
-                        />
-                    ))}
-                </div>
+                <PaginatedMeetingGrid
+                    meetings={previousMeetings}
+                    pageSize={18}
+                    ariaLabel="Completed meetings"
+                />
 
                 <aside className={styles.sidePanel} aria-label="Follow-up checklist">
                     <p className={styles.eyebrow}>Follow-up queue</p>
