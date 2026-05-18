@@ -103,71 +103,75 @@ export function LoginForm() {
 
     return (
         <section className={styles.card} aria-label="Meetings sign in">
-            <div className={styles.header}>
-                <div className={styles.mark}>M</div>
-                <h1 className={styles.title}>Welcome back</h1>
-                <p className={styles.copy}>
-                    Sign in to schedule, host, and record secure Gracon meetings.
-                </p>
-            </div>
-
-            <form className={styles.form} onSubmit={handleSubmit} noValidate>
-                <label className={styles.field}>
-                    <span className={styles.label}>Email address</span>
-                    <input
-                        className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-                        type="email"
-                        autoComplete="email"
-                        value={email}
-                        onChange={(event) => {
-                            setEmail(event.target.value);
-                            if (errors.email) {
-                                setErrors((previous) => ({ ...previous, email: undefined }));
-                            }
-                        }}
-                        required
-                    />
-                    {errors.email ? <span className={styles.errorText}>{errors.email}</span> : null}
-                </label>
-
-                <label className={styles.field}>
-                    <span className={styles.label}>Password</span>
-                    <input
-                        className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-                        type="password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(event) => {
-                            setPassword(event.target.value);
-                            if (errors.password) {
-                                setErrors((previous) => ({ ...previous, password: undefined }));
-                            }
-                        }}
-                        required
-                    />
-                    {errors.password ? <span className={styles.errorText}>{errors.password}</span> : null}
-                </label>
-
-                {apiError ? (
-                    <div className={styles.apiError} role="alert">
-                        {apiError}
-                    </div>
-                ) : null}
-
-                <div className={styles.forgotRow}>
-                    <a className={styles.textLink} href={`${APP_URL}/forgot-password`}>
-                        Forgot password?
-                    </a>
+            <div className={styles.inner}>
+                <div className={styles.header}>
+                    <div className={styles.mark}>ID</div>
+                    <h1 className={styles.title}>Welcome back</h1>
+                    <p className={styles.copy}>
+                        Sign in to your verified account
+                    </p>
                 </div>
 
-                <button className={styles.button} type="submit" disabled={loading}>
-                    {loading ? 'Signing in...' : 'Sign in'}
-                </button>
-            </form>
+                <form className={styles.form} onSubmit={handleSubmit} noValidate>
+                    <label className={styles.field}>
+                        <span className={styles.label}>Email address</span>
+                        <input
+                            className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
+                            type="email"
+                            placeholder="you@example.com"
+                            autoComplete="email"
+                            value={email}
+                            onChange={(event) => {
+                                setEmail(event.target.value);
+                                if (errors.email) {
+                                    setErrors((previous) => ({ ...previous, email: undefined }));
+                                }
+                            }}
+                            required
+                        />
+                        {errors.email ? <span className={styles.errorText}>{errors.email}</span> : null}
+                    </label>
 
-            <p className={styles.footer}>
-                Don&apos;t have an account? <a href={`${APP_URL}/register`}>Create one</a>
-            </p>
+                    <label className={styles.field}>
+                        <span className={styles.label}>Password</span>
+                        <input
+                            className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                            type="password"
+                            placeholder="Your password"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(event) => {
+                                setPassword(event.target.value);
+                                if (errors.password) {
+                                    setErrors((previous) => ({ ...previous, password: undefined }));
+                                }
+                            }}
+                            required
+                        />
+                        {errors.password ? <span className={styles.errorText}>{errors.password}</span> : null}
+                    </label>
+
+                    {apiError ? (
+                        <div className={styles.apiError} role="alert">
+                            {apiError}
+                        </div>
+                    ) : null}
+
+                    <div className={styles.forgotRow}>
+                        <a className={styles.textLink} href={`${APP_URL}/forgot-password`}>
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <button className={styles.button} type="submit" disabled={loading}>
+                        {loading ? 'Signing in...' : 'Sign in'}
+                    </button>
+                </form>
+
+                <p className={styles.footer}>
+                    Don&apos;t have an account? <a href={`${APP_URL}/register`}>Create one</a>
+                </p>
+            </div>
         </section>
     );
 }
