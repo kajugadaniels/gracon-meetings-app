@@ -39,6 +39,7 @@ metadata, and audit history through `api/meetings`.
 - The topbar and sidebar live in dedicated `src/components/layout` components; protected layout owns only session recovery and shell placement.
 - `/home` currently renders a static light-mode dashboard with quick actions, realistic upcoming meeting cards, and a short skeleton loading state while future meeting actions mature.
 - `/upcoming` renders a static scheduled-meetings dashboard using the reusable `MeetingCard` component.
+- `/previous` renders a static completed-meetings dashboard using the reusable `MeetingCard` component.
 - Route styling uses `.module.css` files rather than growing `globals.css`.
 
 ## Environment
