@@ -35,18 +35,13 @@ export function proxy(req: NextRequest) {
     const isPublic = PUBLIC_PATHS.some((path) => (
         pathname === path || pathname.startsWith(`${path}/`)
     ));
-    const hasSessionCookie =
-        req.cookies.has(meetingsAuthCookiePolicy.sessionHintCookieName) ||
+    const hasAuthCookie =
         req.cookies.has(meetingsAuthCookiePolicy.accessCookieName) ||
         req.cookies.has(meetingsAuthCookiePolicy.refreshCookieName);
 
-    if (pathname === '/login' && hasSessionCookie) {
-        return NextResponse.redirect(new URL('/meetings', req.url));
-    }
-
     if (isPublic) return NextResponse.next();
 
-    if (!hasSessionCookie) {
+    if (!hasAuthCookie) {
         const loginBase = shouldUseMainAppLogin() ? APP_URL : req.url;
         const loginUrl = new URL('/login', loginBase);
         const next = shouldUseMainAppLogin()
