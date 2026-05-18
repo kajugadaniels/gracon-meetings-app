@@ -13,12 +13,14 @@ import { useRouter } from 'next/navigation';
 import type { ComponentType } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSessionUser } from '@/app/(protected)/layout';
-import { MeetingActionDialogs } from './MeetingActionDialogs';
-import type { MeetingActionDialogType } from './MeetingActionDialogs';
+import { JoinMeetingDialog } from './JoinMeetingDialog';
 import { MeetingCard } from './MeetingCard';
+import { NewMeetingDialog } from './NewMeetingDialog';
+import { ScheduleMeetingDialog } from './ScheduleMeetingDialog';
 import styles from './meetings-workspace.module.css';
 
 type QuickAction = 'new' | 'join' | 'schedule' | 'recordings';
+type ActiveDialog = Exclude<QuickAction, 'recordings'> | null;
 
 interface ActionCard {
     title: string;
@@ -135,7 +137,7 @@ export function MeetingsWorkspace() {
     const user = useSessionUser();
     const router = useRouter();
     const [showSkeleton, setShowSkeleton] = useState(true);
-    const [activeDialog, setActiveDialog] = useState<MeetingActionDialogType | null>(null);
+    const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
     const [joinUrl, setJoinUrl] = useState('');
 
     const hostName = useMemo(() => {
@@ -231,13 +233,24 @@ export function MeetingsWorkspace() {
                 </div>
             </section>
 
-            <MeetingActionDialogs
-                activeDialog={activeDialog}
-                joinUrl={joinUrl}
-                onClose={closeDialog}
-                onDialogChange={setActiveDialog}
-                onJoinUrlChange={setJoinUrl}
-            />
+            {activeDialog === 'new' && (
+                <NewMeetingDialog
+                    onClose={closeDialog}
+                    onSchedule={() => setActiveDialog('schedule')}
+                />
+            )}
+
+            {activeDialog === 'join' && (
+                <JoinMeetingDialog
+                    joinUrl={joinUrl}
+                    onClose={closeDialog}
+                    onJoinUrlChange={setJoinUrl}
+                />
+            )}
+
+            {activeDialog === 'schedule' && (
+                <ScheduleMeetingDialog onClose={closeDialog} />
+            )}
         </section>
     );
 }
