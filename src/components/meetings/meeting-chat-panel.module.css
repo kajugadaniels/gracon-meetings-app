@@ -4,11 +4,6 @@
 .panel {
   display: grid;
   gap: 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
-  padding: 14px;
 }
 
 .panelHeader {
@@ -21,7 +16,7 @@
 .panelHeader h2 {
   margin: 0;
   color: var(--color-text-primary);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
 }
 
