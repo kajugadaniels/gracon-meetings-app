@@ -4,11 +4,13 @@
 'use client';
 
 import { CalendarClock, Copy, Play, Square, Video } from 'lucide-react';
+import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useSessionUser } from '@/app/(protected)/layout';
 import {
     createMeeting,
     endMeeting,
+    getMeetingJoinPath,
     issueMeetingStreamToken,
     listMeetings,
     startMeeting,
@@ -31,8 +33,10 @@ function formatDate(value: string | null) {
     }).format(new Date(value));
 }
 
-function getJoinLink(access: MeetingStreamAccess) {
-    return `/meetings/join/${access.callType}/${access.callId}`;
+type PreparedMeetingStreamAccess = MeetingStreamAccess & { meetingId: string };
+
+function getJoinLink(access: PreparedMeetingStreamAccess) {
+    return getMeetingJoinPath(access.meetingId);
 }
 
 /**
@@ -45,7 +49,7 @@ export function MeetingsWorkspace() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [notice, setNotice] = useState<string | null>(null);
-    const [activeToken, setActiveToken] = useState<MeetingStreamAccess | null>(null);
+    const [activeToken, setActiveToken] = useState<PreparedMeetingStreamAccess | null>(null);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [scheduledStartAt, setScheduledStartAt] = useState('');
@@ -150,7 +154,7 @@ export function MeetingsWorkspace() {
         setNotice(null);
         try {
             const access = await issueMeetingStreamToken(meetingId);
-            setActiveToken(access);
+            setActiveToken({ ...access, meetingId });
             setNotice('Secure Stream join token issued.');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unable to prepare join token.');
@@ -273,6 +277,7 @@ export function MeetingsWorkspace() {
                                 <Copy size={14} />
                                 Copy
                             </button>
+                            <Link href={getJoinLink(activeToken)}>Open room</Link>
                         </div>
                     )}
 
