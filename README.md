@@ -40,6 +40,7 @@ metadata, and audit history through `api/meetings`.
 - `/home` currently renders a static light-mode dashboard with quick actions, realistic upcoming meeting cards, and a short skeleton loading state while future meeting actions mature.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - `/upcoming` renders a static scheduled-meetings dashboard using the reusable `MeetingCard` component.
+- `/upcoming` opens the reusable `ScheduleMeetingDialog` through `UpcomingScheduleButton` so the page can remain server-rendered.
 - `/previous` renders a static completed-meetings dashboard using the reusable `MeetingCard` component.
 - `/recordings` renders a static recordings library using the reusable `RecordingCard` component with Play and Share actions.
 - `/personal-room` renders a static reusable-room management page with room link, quick actions, settings, and readiness details.
