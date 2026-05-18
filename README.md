@@ -42,6 +42,7 @@ metadata, and audit history through `api/meetings`.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
 - `/upcoming` renders a static scheduled-meetings dashboard using the reusable `MeetingCard` component.
+- `/upcoming` follows the compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
 - `/upcoming` opens the reusable `ScheduleMeetingDialog` through `UpcomingScheduleButton` so the page can remain server-rendered.
 - `/previous` renders a static completed-meetings dashboard using the reusable `MeetingCard` component.
 - `/recordings` renders a static recordings library using the reusable `RecordingCard` component with Play and Share actions.
