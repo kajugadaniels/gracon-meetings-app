@@ -33,6 +33,8 @@ metadata, and audit history through `api/meetings`.
 - Protected `/meetings` route is available as the initial authenticated workspace.
 - Same-origin `/api/meetings` route handlers proxy meeting actions to `api/meetings` with server-resolved auth tokens, so production HttpOnly cookies keep working.
 - The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
+- `/meetings/join/:meetingId` opens the live Stream room after requesting a call-scoped token from `api/meetings`.
+- If `api/meetings` is offline, same-origin proxy routes now return a clean 503 response instead of crashing the Next.js route.
 - Route styling uses `.module.css` files rather than growing `globals.css`.
 
 ## Environment
@@ -80,11 +82,13 @@ npm run lint
 - `src/lib/meetings/api-client.ts` is the typed browser client.
 - `src/lib/server/meetings-api-proxy.ts` is the server-side bridge to `api/meetings`.
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
+- `src/components/meetings/live/MeetingRoom.tsx` owns the Stream room mount/unmount lifecycle.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
 
 ## Styling Rules
 
 - Use CSS modules for page and component styling.
+- Use the same DM Sans variable as `app/documents`: `--font-dm-sans`.
 - Keep `globals.css` limited to tokens and base styles.
 - Keep Gracon primary purple as the action color, but avoid purple page backgrounds.
 - Avoid gradients on cards or layout backgrounds.
@@ -93,4 +97,4 @@ npm run lint
 
 - Add invite link acceptance and email notification surfaces.
 - Add recording library and access checks.
-- Add the live Stream Video room screen using the token prepared by `api/meetings`.
+- Add recording controls and transcript surfaces inside the live Stream Video room.
