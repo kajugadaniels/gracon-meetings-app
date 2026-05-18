@@ -3,7 +3,7 @@
  */
 .workspace {
   display: grid;
-  gap: 6px;
+  gap: 24px;
   width: 100%;
   margin: 0;
 }
@@ -21,10 +21,10 @@
 
 .hero {
   display: grid;
-  gap: 8px;
+  gap: 18px;
   align-items: end;
-  border-radius: 14px;
-  padding: 10px 12px;
+  border-radius: 20px;
+  padding: 28px;
 }
 
 .eyebrow {
@@ -48,7 +48,7 @@
 
 .copy {
   max-width: 720px;
-  margin: 6px 0 0;
+  margin: 14px 0 0;
   color: var(--color-text-secondary);
   font-size: 15px;
   line-height: 1.7;
@@ -57,8 +57,8 @@
 .hostCard {
   display: grid;
   gap: 2px;
-  border-radius: 12px;
-  padding: 10px;
+  border-radius: 18px;
+  padding: 20px;
 }
 
 .hostLabel {
@@ -81,15 +81,15 @@
 
 .columns {
   display: grid;
-  gap: 6px;
+  gap: 20px;
 }
 
 .formCard,
 .listCard {
   display: grid;
-  gap: 12px;
-  border-radius: 14px;
-  padding: 10px;
+  gap: 22px;
+  border-radius: 20px;
+  padding: 22px;
 }
 
 .cardHeader {
@@ -295,7 +295,7 @@
   border-radius: 16px;
   color: var(--color-text-muted);
   font-size: 14px;
-  padding: 18px;
+  padding: 36px;
   text-align: center;
 }
 
@@ -316,7 +316,7 @@
 
 @media (min-width: 1040px) {
   .columns {
-    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
     align-items: start;
   }
 }
