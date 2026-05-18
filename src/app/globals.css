@@ -1,41 +1,59 @@
 /**
- * Global design tokens and base styles for app/meetings.
+ * Global design tokens and shared primitives for app/meetings.
+ *
+ * Login intentionally mirrors app/documents, so these primitives match the
+ * documents glass card, input, button, and animation values.
  */
 @import "tailwindcss";
 
 :root {
-  --color-app-bg: #f7f8fb;
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
   --color-primary: #5B23FF;
   --color-primary-hover: #4a1be0;
-  --color-primary-glow: rgba(91, 35, 255, 0.35);
+  --color-primary-active: #3d16c0;
+  --color-primary-glow: rgba(91, 35, 255, 0.22);
   --color-primary-subtle: rgba(91, 35, 255, 0.08);
-  --color-border: rgba(24, 22, 56, 0.10);
-  --color-border-primary: rgba(91, 35, 255, 0.20);
-  --color-text-primary: #171433;
-  --color-text-secondary: #4b4967;
-  --color-text-muted: #7c7a95;
-  --color-error: #f43f5e;
-  --color-error-subtle: rgba(244, 63, 94, 0.08);
-  --color-error-border: rgba(244, 63, 94, 0.22);
-  --radius-md: 10px;
+  --color-bg-base: #f7f6fb;
+  --color-bg-input: rgba(255, 255, 255, 0.82);
+  --color-border: rgba(91, 35, 255, 0.13);
+  --color-border-hover: rgba(91, 35, 255, 0.26);
+  --color-border-focus: rgba(91, 35, 255, 0.55);
+  --color-border-primary: rgba(91, 35, 255, 0.28);
+  --color-text-primary: #16103a;
+  --color-text-secondary: rgba(22, 16, 58, 0.60);
+  --color-text-muted: rgba(22, 16, 58, 0.36);
+  --color-error: #dc2626;
+  --color-error-subtle: rgba(220, 38, 38, 0.08);
+  --color-error-border: rgba(220, 38, 38, 0.28);
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.92);
+  --glass-blur: blur(20px);
+  --glass-shadow: 0 4px 24px rgba(91, 35, 255, 0.07), 0 1px 4px rgba(0,0,0,0.04);
+  --btn-shadow-rest: 0 4px 0 0 #3d16c0, 0 6px 16px rgba(91,35,255,0.22);
+  --btn-shadow-hover: 0 6px 0 0 #3d16c0, 0 8px 24px rgba(91,35,255,0.32);
+  --btn-shadow-active: 0 1px 0 0 #3d16c0, 0 2px 8px rgba(91,35,255,0.18);
+  --radius-md: 12px;
   --radius-lg: 16px;
-  --font-sans: "DM Sans", Arial, sans-serif;
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
-html,
-body {
-  min-height: 100%;
+html {
+  color-scheme: light;
 }
 
 body {
+  min-height: 100dvh;
   margin: 0;
-  background: var(--color-app-bg);
+  background-color: var(--color-bg-base);
+  background-image: linear-gradient(180deg, #fbfafd 0%, var(--color-bg-base) 100%);
+  background-attachment: fixed;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 button,
@@ -45,4 +63,172 @@ input {
 
 a {
   color: inherit;
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.92);
+}
+
+.glass-strong {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255,255,255,0.96);
+  box-shadow: 0 8px 40px rgba(91,35,255,0.10), 0 2px 8px rgba(0,0,0,0.05),
+              inset 0 1px 0 rgba(255,255,255,1);
+}
+
+.btn-primary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 28px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: var(--btn-shadow-rest);
+  transform: translateY(0px);
+  transition: transform 120ms cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 120ms ease, background-color 120ms ease;
+  user-select: none;
+  outline: none;
+  white-space: nowrap;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  box-shadow: var(--btn-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 9999px;
+}
+
+.btn-primary:active:not(:disabled) {
+  background: var(--color-primary-active);
+  box-shadow: var(--btn-shadow-active);
+  transform: translateY(3px);
+  transition-duration: 60ms;
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: rgba(91,35,255,0.06);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(91,35,255,0.08);
+  transition: transform 120ms cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 120ms ease, background-color 120ms ease,
+              border-color 120ms ease;
+  user-select: none;
+  outline: none;
+  white-space: nowrap;
+}
+
+.input-glass {
+  width: 100%;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 11px 14px;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(91,35,255,0.06), inset 0 1px 2px rgba(0,0,0,0.03);
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.input-glass::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input-glass:hover {
+  border-color: var(--color-border-hover);
+  background: rgba(255,255,255,0.92);
+}
+
+.input-glass:focus {
+  border-color: var(--color-border-focus);
+  background: rgba(255,255,255,0.96);
+  box-shadow: 0 0 0 3px rgba(91,35,255,0.12), 0 1px 3px rgba(91,35,255,0.08);
+}
+
+.input-glass.error {
+  border-color: var(--color-error-border);
+  box-shadow: 0 0 0 3px var(--color-error-subtle);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes premium-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-up {
+    animation: fade-up 380ms cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 300ms cubic-bezier(0.16,1,0.3,1) both;
+  }
 }
