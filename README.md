@@ -116,6 +116,7 @@ npm run lint
 - `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for seeded list pages.
 - `src/components/meetings/live/MeetingRoom.tsx` owns the Stream room mount/unmount lifecycle.
 - `src/components/meetings/MeetingRoom.tsx` owns the static Zoom-style meeting room surface used before full media integration.
+- `src/components/meetings/MeetingControlDock.tsx` owns the static room action controls so media actions can evolve independently from room layout.
 - `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
 
