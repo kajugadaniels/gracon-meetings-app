@@ -1,6 +1,12 @@
 /**
  * Upcoming meetings explorer styles.
  */
+.explorer {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
 .toolbar {
   display: grid;
   gap: 10px;
