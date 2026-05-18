@@ -58,3 +58,28 @@ export interface MeetingStreamAccess {
     token: string;
     expiresInSeconds: number;
 }
+
+export type MeetingRecordingStatus =
+    | 'STARTING'
+    | 'RECORDING'
+    | 'PROCESSING'
+    | 'READY'
+    | 'FAILED'
+    | 'DELETED';
+
+export interface MeetingRecording {
+    id: string;
+    meetingId: string;
+    startedById: string | null;
+    status: MeetingRecordingStatus;
+    provider: 'STREAM';
+    providerRecordingId: string | null;
+    providerAssetUrl: string | null;
+    s3Key: string | null;
+    durationSeconds: number | null;
+    sizeBytes: number | null;
+    startedAt: string | null;
+    endedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
