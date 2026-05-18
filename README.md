@@ -37,8 +37,10 @@ metadata, and audit history through `api/meetings`.
 - The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
 - `/meetings/join/:meetingId` opens the live Stream room after requesting a call-scoped token from `api/meetings`.
 - `/meetings/join/:meetingId` can start and stop host-controlled recordings through same-origin proxy routes, so recording actions stay audited in `api/meetings`.
+- `/meetings/join/:meetingId` can end the meeting lifecycle without reloading the page and then shows a clear ended-room state with a Home action.
 - `/meetings/:id` renders a static in-meeting room UI for design validation with mute, video, recording, share, captions, members, chat, and invite controls.
 - `/meetings/:id` now uses a full-screen participant stage, a fixed bottom `MeetingControlDock`, and a Framer Motion-powered collaboration panel that opens Members or Chat as tabs only when requested.
+- `/meetings/:id` now includes an ended-room state so static workflow validation matches the real meeting lifecycle.
 - If `api/meetings` is offline, same-origin proxy routes now return a clean 503 response instead of crashing the Next.js route.
 - The authenticated shell uses a flush top navbar, left meetings sidebar, account avatar dropdown, and `/home` as the post-login landing route.
 - The topbar and sidebar live in dedicated `src/components/layout` components; protected layout owns only session recovery and shell placement.
@@ -46,6 +48,7 @@ metadata, and audit history through `api/meetings`.
 - `/home` uses a compact premium dashboard layout with smaller action cards and three meeting cards per desktop row.
 - `/home` now reads the shared meetings seed dataset through typed adapters and only renders the first 6 upcoming meetings.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
+- `NewMeetingDialog` starts instant meetings dynamically by creating a meeting, starting it through `api/meetings`, and navigating to the live room.
 - Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
 - `/invitations/:token` renders the secure meeting invitation acceptance flow. It previews the invite, sends/verifies email OTP when required, completes the identity gate for verified users, and accepts only through `api/meetings`.
 - `/upcoming` renders a static scheduled-meetings dashboard using the reusable `MeetingCard` component.
