@@ -36,6 +36,20 @@ const UPCOMING_MEETINGS = [
         attendees: ['DK', 'PN', 'EM', 'LS'],
         overflowCount: 8,
     },
+    {
+        title: 'Land Registry Workflow Review',
+        date: 'Monday',
+        time: '11:00 AM',
+        attendees: ['DK', 'AN', 'TU', 'RN'],
+        overflowCount: 5,
+    },
+    {
+        title: 'Task Management Launch Sync',
+        date: 'Tuesday',
+        time: '4:45 PM',
+        attendees: ['DK', 'IM', 'AK', 'SM'],
+        overflowCount: 6,
+    },
 ];
 
 const SUMMARY_ITEMS = [
@@ -75,17 +89,21 @@ export default function UpcomingPage() {
             <header className={styles.hero}>
                 <div>
                     <p className={styles.eyebrow}>Upcoming meetings</p>
-                    <h1>Plan the day before the room opens.</h1>
+                    <h1>Keep the next room ready before people arrive.</h1>
                     <p>
-                        Review scheduled sessions, check invite readiness, and start the
-                        right Gracon room when the meeting begins.
+                        Review scheduled sessions, invite status, and meeting readiness
+                        from one clean queue.
                     </p>
                 </div>
 
                 <aside className={styles.focusPanel} aria-label="Next meeting">
                     <span>Next meeting</span>
                     <strong>Institution Onboarding Review</strong>
-                    <p>Today · 10:00 AM · Invite only</p>
+                    <p>Today · 10:00 AM</p>
+                    <div className={styles.focusMeta}>
+                        <small>Invite only</small>
+                        <small>Ready</small>
+                    </div>
                 </aside>
             </header>
 
