@@ -99,7 +99,7 @@ export function UpcomingMeetingsExplorer({ meetings }: UpcomingMeetingsExplorerP
         : `${filteredMeetings.length.toLocaleString('en')} meeting${filteredMeetings.length === 1 ? '' : 's'} found`;
 
     return (
-        <>
+        <div className={styles.explorer}>
             <div className={styles.toolbar}>
                 <label className={styles.searchField}>
                     <Search size={16} />
@@ -157,6 +157,6 @@ export function UpcomingMeetingsExplorer({ meetings }: UpcomingMeetingsExplorerP
                 pageSize={18}
                 ariaLabel="Scheduled meetings"
             />
-        </>
+        </div>
     );
 }
