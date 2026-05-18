@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# App Meetings
 
-## Getting Started
+Secure Gracon 360 meetings workspace.
 
-First, run the development server:
+This app will let verified users create, schedule, join, invite participants to,
+record, and review meetings. Live media will be powered by Stream Video, while
+Gracon owns authentication, meeting permissions, schedules, invites, recordings
+metadata, and audit history through `api/meetings`.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Overview
+
+- Runtime: Next.js 16 + React + TypeScript
+- Default port: `4003`
+- Styling: scoped CSS modules
+- Auth owner: `app/app` + `api/auth`
+- Meeting backend: `api/meetings`
+- Media SDK: `@stream-io/video-react-sdk`
+- Browser titles: use `"{page} | Gracon 360"`
+
+## What This App Owns
+
+- Meetings workspace UI
+- Local development login page
+- Cross-app session recovery with shared Gracon cookies
+- Meeting list, scheduling, invites, join flow, recording library, and live-call screens in later milestones
+- User-friendly loading and session recovery states
+
+## Current Foundation
+
+- Local `/login` route matches the `app/documents` developer-login pattern.
+- Production can redirect to `app/app/login` by setting `MEETINGS_USE_MAIN_APP_LOGIN=true`.
+- Same-origin `/api/session`, `/api/refresh`, and `/api/logout` routes validate shared cookies server-side.
+- Protected `/meetings` route is available as the initial authenticated workspace.
+- Route styling uses `.module.css` files rather than growing `globals.css`.
+
+## Environment
+
+```env
+NEXT_PUBLIC_MEETINGS_URL=http://localhost:4003
+NEXT_PUBLIC_APP_URL=http://localhost:4000
+NEXT_PUBLIC_MAIN_APP_URL=http://localhost:4000
+NEXT_PUBLIC_MEETINGS_API_URL=http://localhost:3007/api/v1
+NEXT_PUBLIC_AUTH_API_URL=http://localhost:3000/api/v1
+NEXT_PUBLIC_STREAM_API_KEY=
+AUTH_COOKIE_DOMAIN=
+AUTH_COOKIE_SECURE=false
+AUTH_COOKIE_SAME_SITE=lax
+AUTH_ACCESS_TOKEN_TTL=15m
+AUTH_REFRESH_TOKEN_TTL=1d
+AUTH_REFRESH_ROTATION=true
+AUTH_REUSE_DETECTION=true
+MEETINGS_USE_MAIN_APP_LOGIN=false
+NEXT_PUBLIC_MEETINGS_USE_MAIN_APP_LOGIN=false
+ALLOW_DEV_READABLE_AUTH_COOKIES=true
+NEXT_PUBLIC_ALLOW_DEV_READABLE_AUTH_COOKIES=true
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local Commands
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Auth And Login Rules
 
-## Learn More
+- Keep local meetings login available for development.
+- Production should use app/app login with parent-domain HttpOnly cookies.
+- Use hard navigation for cross-app handoff to app/app.
+- Do not add new JavaScript-readable auth storage paths.
+- Logout must call local `/api/logout` first, then hand off to `app/app/logout`.
 
-To learn more about Next.js, take a look at the following resources:
+## Styling Rules
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Use CSS modules for page and component styling.
+- Keep `globals.css` limited to tokens and base styles.
+- Keep Gracon primary purple as the action color, but avoid purple page backgrounds.
+- Avoid gradients on cards or layout backgrounds.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Next Milestones
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Add a typed meetings API client.
+- Add meeting creation and schedule forms.
+- Add Stream call-token request flow through `api/meetings`.
+- Add invite link acceptance and email notification surfaces.
+- Add recording library and access checks.
