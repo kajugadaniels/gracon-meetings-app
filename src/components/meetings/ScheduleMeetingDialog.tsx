@@ -3,6 +3,7 @@
  */
 import { CalendarDays, Clock3, X } from 'lucide-react';
 import type { FormEvent } from 'react';
+import { MouseEvent, useState } from 'react';
 import styles from './schedule-meeting-dialog.module.css';
 
 interface ScheduleMeetingDialogProps {
@@ -13,15 +14,32 @@ interface ScheduleMeetingDialogProps {
  * Renders the schedule meeting form dialog.
  */
 export function ScheduleMeetingDialog({ onClose }: ScheduleMeetingDialogProps) {
+    const [closing, setClosing] = useState(false);
+
+    function closeWithAnimation() {
+        setClosing(true);
+        window.setTimeout(onClose, 140);
+    }
+
+    function handleOverlayMouseDown(event: MouseEvent<HTMLDivElement>) {
+        if (event.target === event.currentTarget) {
+            closeWithAnimation();
+        }
+    }
+
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        onClose();
+        closeWithAnimation();
     }
 
     return (
-        <div className={styles.dialogOverlay} role="presentation">
+        <div
+            className={`${styles.dialogOverlay} ${closing ? styles.dialogOverlayClosing : ''}`}
+            role="presentation"
+            onMouseDown={handleOverlayMouseDown}
+        >
             <section
-                className={styles.dialog}
+                className={`${styles.dialog} ${closing ? styles.dialogClosing : ''}`}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="schedule-meeting-title"
@@ -34,7 +52,7 @@ export function ScheduleMeetingDialog({ onClose }: ScheduleMeetingDialogProps) {
                     <button
                         type="button"
                         className={styles.closeButton}
-                        onClick={onClose}
+                        onClick={closeWithAnimation}
                         aria-label="Close dialog"
                     >
                         <X size={17} />
@@ -69,7 +87,7 @@ export function ScheduleMeetingDialog({ onClose }: ScheduleMeetingDialogProps) {
                     </label>
 
                     <div className={styles.dialogActions}>
-                        <button type="button" onClick={onClose}>Cancel</button>
+                        <button type="button" onClick={closeWithAnimation}>Cancel</button>
                         <button type="submit">
                             <CalendarDays size={15} />
                             Schedule

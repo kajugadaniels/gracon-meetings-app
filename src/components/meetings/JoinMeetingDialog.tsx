@@ -3,6 +3,7 @@
  */
 import { Link2, Send, X } from 'lucide-react';
 import type { FormEvent } from 'react';
+import { MouseEvent, useState } from 'react';
 import styles from './join-meeting-dialog.module.css';
 
 interface JoinMeetingDialogProps {
@@ -19,15 +20,32 @@ export function JoinMeetingDialog({
     onClose,
     onJoinUrlChange,
 }: JoinMeetingDialogProps) {
+    const [closing, setClosing] = useState(false);
+
+    function closeWithAnimation() {
+        setClosing(true);
+        window.setTimeout(onClose, 140);
+    }
+
+    function handleOverlayMouseDown(event: MouseEvent<HTMLDivElement>) {
+        if (event.target === event.currentTarget) {
+            closeWithAnimation();
+        }
+    }
+
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        onClose();
+        closeWithAnimation();
     }
 
     return (
-        <div className={styles.dialogOverlay} role="presentation">
+        <div
+            className={`${styles.dialogOverlay} ${closing ? styles.dialogOverlayClosing : ''}`}
+            role="presentation"
+            onMouseDown={handleOverlayMouseDown}
+        >
             <section
-                className={styles.dialog}
+                className={`${styles.dialog} ${closing ? styles.dialogClosing : ''}`}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="join-meeting-title"
@@ -40,7 +58,7 @@ export function JoinMeetingDialog({
                     <button
                         type="button"
                         className={styles.closeButton}
-                        onClick={onClose}
+                        onClick={closeWithAnimation}
                         aria-label="Close dialog"
                     >
                         <X size={17} />
@@ -63,7 +81,7 @@ export function JoinMeetingDialog({
                     </label>
 
                     <div className={styles.dialogActions}>
-                        <button type="button" onClick={onClose}>Cancel</button>
+                        <button type="button" onClick={closeWithAnimation}>Cancel</button>
                         <button type="submit">
                             <Send size={15} />
                             Join

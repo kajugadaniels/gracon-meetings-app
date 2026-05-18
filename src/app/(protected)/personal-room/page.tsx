@@ -59,10 +59,10 @@ export default function PersonalRoomPage() {
             <header className={styles.hero}>
                 <div>
                     <p className={styles.eyebrow}>Personal room</p>
-                    <h1>Your reusable room for quick trusted meetings.</h1>
+                    <h1>Your reusable room for trusted quick meetings.</h1>
                     <p>
-                        Keep a stable Gracon meeting link ready for partners, teams, and
-                        verified guests without creating a new room every time.
+                        Keep one stable Gracon link ready for partners, teams, and verified
+                        guests without creating a new room every time.
                     </p>
                 </div>
 

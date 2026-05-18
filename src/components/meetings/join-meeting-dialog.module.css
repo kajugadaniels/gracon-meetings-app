@@ -7,21 +7,44 @@
   z-index: 80;
   display: grid;
   place-items: center;
-  background: rgba(15, 23, 42, 0.42);
+  animation: overlayIn 120ms ease-out both;
+  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.34);
   padding: 20px;
 }
 
+.dialogOverlayClosing {
+  animation: overlayOut 140ms ease-in both;
+}
+
 .dialog {
+  position: relative;
   display: grid;
   gap: 18px;
   width: min(100%, 560px);
   max-height: min(760px, calc(100dvh - 40px));
   overflow: auto;
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
+  border: 1px solid rgba(91, 35, 255, 0.16);
+  border-radius: 22px;
   background: white;
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
-  padding: 22px;
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.24);
+  animation: dialogIn 140ms ease-out both;
+  padding: 26px;
+}
+
+.dialog::before {
+  position: absolute;
+  top: 0;
+  left: 24px;
+  right: 24px;
+  height: 3px;
+  border-radius: 0 0 999px 999px;
+  background: var(--color-primary);
+  content: "";
+}
+
+.dialogClosing {
+  animation: dialogOut 140ms ease-in both;
 }
 
 .dialogHeader {
@@ -60,6 +83,7 @@
   background: white;
   color: var(--color-text-secondary);
   cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, transform 120ms ease;
 }
 
 .dialogForm {
@@ -91,6 +115,7 @@
   font-size: 14px;
   outline: none;
   padding: 0 12px;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
 
 .inputShell svg {
@@ -109,6 +134,7 @@
 }
 
 .inputShell:focus-within {
+  background: white;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(91, 35, 255, 0.10);
 }
@@ -136,6 +162,7 @@
   font-size: 13px;
   font-weight: 500;
   padding: 0 16px;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease, transform 120ms ease;
 }
 
 .closeButton:hover,
@@ -147,6 +174,50 @@
   border-color: var(--color-primary);
   background: var(--color-primary);
   color: white;
+}
+
+.closeButton:hover,
+.dialogActions button:hover {
+  transform: translateY(-1px);
+}
+
+.closeButton:hover {
+  color: var(--color-primary);
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlayOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dialogOut {
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
 }
 
 @media (max-width: 520px) {
@@ -162,5 +233,18 @@
 
   .dialogActions button {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogOverlay,
+  .dialogOverlayClosing,
+  .dialog,
+  .dialogClosing,
+  .closeButton,
+  .inputShell,
+  .dialogActions button {
+    animation: none;
+    transition: none;
   }
 }
