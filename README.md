@@ -72,6 +72,9 @@ npm run lint
 
 - Keep local meetings login available for development.
 - Production should use app/app login with parent-domain HttpOnly cookies.
+- Localhost development must leave `AUTH_COOKIE_DOMAIN` empty. A production
+  value like `.gracon360.com` cannot be written by `localhost`, so the browser
+  will reject login cookies and immediately return to `/login`.
 - Use hard navigation for cross-app handoff to app/app.
 - Do not add new JavaScript-readable auth storage paths.
 - Logout must call local `/api/logout` first, then hand off to `app/app/logout`.
