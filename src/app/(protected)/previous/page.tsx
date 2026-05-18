@@ -3,7 +3,7 @@
  */
 import type { Metadata } from 'next';
 import { Archive, CheckCircle2, Clock3, FileText, Video } from 'lucide-react';
-import { PaginatedMeetingGrid } from '@/components/meetings/PaginatedMeetingGrid';
+import { PreviousMeetingsExplorer } from '@/components/meetings/PreviousMeetingsExplorer';
 import { getMeetingsSummary, getPreviousMeetingCards } from '@/lib/meetings/static-meetings';
 import styles from './page.module.css';
 
@@ -86,24 +86,8 @@ export default function PreviousPage() {
                 })}
             </div>
 
-            <div className={styles.toolbar}>
-                <div className={styles.filters} aria-label="Previous meeting filters">
-                    <button type="button" className={styles.activeFilter}>All</button>
-                    <button type="button">Recorded</button>
-                    <button type="button">This month</button>
-                    <button type="button">Needs follow-up</button>
-                </div>
-                <button type="button" className={styles.archiveButton}>
-                    Export history
-                </button>
-            </div>
-
             <section className={styles.contentGrid} aria-label="Completed meetings">
-                <PaginatedMeetingGrid
-                    meetings={previousMeetings}
-                    pageSize={18}
-                    ariaLabel="Completed meetings"
-                />
+                <PreviousMeetingsExplorer meetings={previousMeetings} />
 
                 <aside className={styles.sidePanel} aria-label="Follow-up checklist">
                     <p className={styles.eyebrow}>Follow-up queue</p>
