@@ -3,18 +3,22 @@
  */
 .explorer {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 
 .toolbar {
+  --meeting-filter-ease: cubic-bezier(0.22, 1, 0.36, 1);
   display: grid;
-  gap: 10px;
+  align-items: center;
+  grid-template-columns: minmax(220px, 1fr) auto auto auto;
+  gap: 8px;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
-  padding: 12px;
+  padding: 10px;
+  animation: toolbarEnter 220ms var(--meeting-filter-ease) both;
 }
 
 .searchField {
@@ -27,7 +31,11 @@
   border-radius: 14px;
   background: white;
   color: var(--color-text-muted);
-  padding: 0 12px;
+  padding: 0 10px;
+  transition:
+    border-color 160ms var(--meeting-filter-ease),
+    box-shadow 160ms var(--meeting-filter-ease),
+    transform 160ms var(--meeting-filter-ease);
 }
 
 .searchField span {
@@ -52,22 +60,15 @@
 .searchField:focus-within {
   border-color: rgba(91, 35, 255, 0.45);
   box-shadow: 0 0 0 3px rgba(91, 35, 255, 0.10);
-}
-
-.filterRow,
-.toolbarFooter {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  transform: translateY(-1px);
 }
 
 .filters,
 .dateRange {
   display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-width: 0;
 }
 
 .filters button,
@@ -80,17 +81,24 @@
   font: inherit;
   font-size: 12px;
   font-weight: 500;
+  transition:
+    border-color 160ms var(--meeting-filter-ease),
+    color 160ms var(--meeting-filter-ease),
+    background-color 160ms var(--meeting-filter-ease),
+    transform 160ms var(--meeting-filter-ease);
 }
 
 .filters button {
   cursor: pointer;
-  padding: 0 12px;
+  white-space: nowrap;
+  padding: 0 10px;
 }
 
 .filters .activeFilter,
 .filters button:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
 .dateRange label {
@@ -106,20 +114,68 @@
 }
 
 .dateRange input {
-  min-width: 138px;
-  padding: 0 10px;
+  min-width: 124px;
+  padding: 0 8px;
 }
 
-.toolbarFooter p {
+.resultStatus {
   margin: 0;
   color: var(--color-text-muted);
   font-size: 12px;
   font-weight: 400;
+  padding: 0 2px;
+}
+
+.resultsMotion {
+  animation: resultsFilterIn 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes toolbarEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes resultsFilterIn {
+  from {
+    opacity: 0.6;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1280px) {
+  .toolbar {
+    grid-template-columns: minmax(220px, 1fr) auto;
+  }
+
+  .dateRange {
+    grid-column: 1 / 2;
+  }
+}
+
+@media (max-width: 860px) {
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .filters,
+  .dateRange {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 640px) {
-  .filterRow,
-  .toolbarFooter,
   .dateRange,
   .dateRange label {
     align-items: stretch;
@@ -130,5 +186,24 @@
   .filters button,
   .dateRange input {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar,
+  .resultsMotion {
+    animation: none;
+  }
+
+  .searchField,
+  .filters button,
+  .dateRange input {
+    transition: none;
+  }
+
+  .searchField:focus-within,
+  .filters .activeFilter,
+  .filters button:hover {
+    transform: none;
   }
 }
