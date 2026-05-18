@@ -36,6 +36,7 @@ metadata, and audit history through `api/meetings`.
 - `/meetings/join/:meetingId` opens the live Stream room after requesting a call-scoped token from `api/meetings`.
 - If `api/meetings` is offline, same-origin proxy routes now return a clean 503 response instead of crashing the Next.js route.
 - The authenticated shell uses a flush top navbar, left meetings sidebar, account avatar dropdown, and `/home` as the post-login landing route.
+- The topbar and sidebar live in dedicated `src/components/layout` components; protected layout owns only session recovery and shell placement.
 - Route styling uses `.module.css` files rather than growing `globals.css`.
 
 ## Environment
