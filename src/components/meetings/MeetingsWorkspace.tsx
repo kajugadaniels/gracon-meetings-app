@@ -81,6 +81,12 @@ const STATIC_MEETINGS: StaticMeeting[] = [
         time: '2:30 PM',
         attendees: ['DK', 'RN', 'IM', 'PK'],
     },
+    {
+        title: 'Institution Verification Review',
+        date: 'Today',
+        time: '4:15 PM',
+        attendees: ['DK', 'BK', 'CM', 'YA'],
+    },
 ];
 
 function formatToday() {
@@ -173,19 +179,35 @@ export function MeetingsWorkspace() {
     return (
         <section className={styles.workspace}>
             <section className={styles.hero} aria-label="Meetings overview">
-                <div className={styles.nextMeetingBadge}>
-                    Upcoming meeting at: <strong>12:30 PM</strong>
-                </div>
-                <div>
-                    <div className={styles.clockRow}>
-                        <span>{clock.time}</span>
-                        <small>{clock.meridiem}</small>
+                <div className={styles.heroMain}>
+                    <div className={styles.nextMeetingBadge}>
+                        Next room opens at <strong>12:30 PM</strong>
                     </div>
-                    <p className={styles.dateLine}>{today}</p>
+
+                    <div>
+                        <div className={styles.clockRow}>
+                            <span>{clock.time}</span>
+                            <small>{clock.meridiem}</small>
+                        </div>
+                        <p className={styles.dateLine}>{today}</p>
+                    </div>
                 </div>
-                <div className={styles.heroIdentity}>
-                    <span>Signed in as</span>
-                    <strong>{hostName}</strong>
+
+                <div className={styles.heroPanel}>
+                    <div className={styles.heroIdentity}>
+                        <span>Signed in as</span>
+                        <strong>{hostName}</strong>
+                    </div>
+                    <dl className={styles.heroStats}>
+                        <div>
+                            <dt>Today</dt>
+                            <dd>3 rooms</dd>
+                        </div>
+                        <div>
+                            <dt>Ready</dt>
+                            <dd>2 invites</dd>
+                        </div>
+                    </dl>
                 </div>
             </section>
 
