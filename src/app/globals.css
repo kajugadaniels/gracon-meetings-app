@@ -5,6 +5,7 @@
  * documents glass card, input, button, and animation values.
  */
 @import "tailwindcss";
+@import "@stream-io/video-react-sdk/dist/css/styles.css";
 
 :root {
   --font-sans: var(--font-dm-sans), system-ui, sans-serif;
@@ -25,6 +26,11 @@
   --color-error: #dc2626;
   --color-error-subtle: rgba(220, 38, 38, 0.08);
   --color-error-border: rgba(220, 38, 38, 0.28);
+  --color-success: #059669;
+  --color-success-subtle: rgba(5, 150, 105, 0.10);
+  --color-success-border: rgba(5, 150, 105, 0.28);
+  --color-warning: #d97706;
+  --color-warning-subtle: rgba(217, 119, 6, 0.10);
   --glass-bg: rgba(255, 255, 255, 0.62);
   --glass-border: rgba(255, 255, 255, 0.92);
   --glass-blur: blur(20px);
@@ -32,8 +38,10 @@
   --btn-shadow-rest: 0 4px 0 0 #3d16c0, 0 6px 16px rgba(91,35,255,0.22);
   --btn-shadow-hover: 0 6px 0 0 #3d16c0, 0 8px 24px rgba(91,35,255,0.32);
   --btn-shadow-active: 0 1px 0 0 #3d16c0, 0 2px 8px rgba(91,35,255,0.18);
+  --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
+  --radius-xl: 24px;
 }
 
 *, *::before, *::after {
@@ -57,7 +65,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font-family: inherit;
 }
 
