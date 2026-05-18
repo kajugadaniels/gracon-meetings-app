@@ -1,17 +1,11 @@
 /**
- * Initial protected meetings dashboard.
+ * Backward-compatible redirect from the old meetings route.
  */
-import type { Metadata } from 'next';
-import { MeetingsWorkspace } from '@/components/meetings/MeetingsWorkspace';
-
-export const metadata: Metadata = {
-    title: 'Meetings',
-    description: 'Secure Gracon 360 meeting workspace.',
-};
+import { redirect } from 'next/navigation';
 
 /**
- * Renders the first meetings workspace screen before live-call features land.
+ * Sends older links to the new meetings home route.
  */
 export default function MeetingsPage() {
-    return <MeetingsWorkspace />;
+    redirect('/home');
 }
