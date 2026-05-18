@@ -45,6 +45,7 @@ metadata, and audit history through `api/meetings`.
 - `/upcoming` follows the compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
 - `/upcoming` opens the reusable `ScheduleMeetingDialog` through `UpcomingScheduleButton` so the page can remain server-rendered.
 - `/previous` renders a static completed-meetings dashboard using the reusable `MeetingCard` component.
+- `/previous` follows the same compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
 - `/recordings` renders a static recordings library using the reusable `RecordingCard` component with Play and Share actions.
 - `/personal-room` renders a static reusable-room management page with room link, quick actions, settings, and readiness details.
 - Route styling uses `.module.css` files rather than growing `globals.css`.
