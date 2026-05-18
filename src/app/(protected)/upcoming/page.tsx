@@ -4,6 +4,7 @@
 import type { Metadata } from 'next';
 import { CalendarClock, Clock3, ShieldCheck, UsersRound } from 'lucide-react';
 import { MeetingCard } from '@/components/meetings/MeetingCard';
+import { UpcomingScheduleButton } from '@/components/meetings/UpcomingScheduleButton';
 import styles from './page.module.css';
 
 const UPCOMING_MEETINGS = [
@@ -108,9 +109,7 @@ export default function UpcomingPage() {
                     <button type="button">This week</button>
                     <button type="button">Invite only</button>
                 </div>
-                <button type="button" className={styles.scheduleButton}>
-                    Schedule meeting
-                </button>
+                <UpcomingScheduleButton />
             </div>
 
             <section className={styles.contentGrid} aria-label="Scheduled meetings">
