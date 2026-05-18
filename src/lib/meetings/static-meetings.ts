@@ -85,6 +85,29 @@ export interface MeetingsSummary {
     sharedRecordingCount: number;
 }
 
+export interface MeetingRoomAttendeeView {
+    initials: string;
+    name: string;
+    email: string;
+    role: string;
+}
+
+export interface MeetingRoomView {
+    id: string;
+    title: string;
+    description: string;
+    date: string;
+    time: string;
+    scheduledStartAt: string;
+    scheduledEndAt: string;
+    visibility: SeedMeeting['visibility'];
+    readiness: SeedMeeting['readiness'];
+    hostName: string;
+    attendees: MeetingRoomAttendeeView[];
+    attendeeCount: number;
+    agendaItems: string[];
+}
+
 const dataset = meetingsDataset as MeetingsDataset;
 const DATE_FORMATTER = new Intl.DateTimeFormat('en', {
     day: '2-digit',
@@ -182,6 +205,35 @@ export function getRecordingCards(limit?: number): RecordingCardView[] {
         .map(({ recording }) => recording);
 
     return typeof limit === 'number' ? recordings.slice(0, limit) : recordings;
+}
+
+/**
+ * Returns one meeting prepared for the static in-meeting room surface.
+ */
+export function getMeetingRoomById(id: string): MeetingRoomView | null {
+    const meeting = dataset.meetings.find((item) => item.id === id);
+    if (!meeting) return null;
+
+    return {
+        id: meeting.id,
+        title: meeting.title,
+        description: meeting.description,
+        date: DATE_FORMATTER.format(new Date(meeting.scheduledStartAt)),
+        time: TIME_FORMATTER.format(new Date(meeting.scheduledStartAt)),
+        scheduledStartAt: meeting.scheduledStartAt,
+        scheduledEndAt: meeting.scheduledEndAt,
+        visibility: meeting.visibility,
+        readiness: meeting.readiness,
+        hostName: meeting.host.name,
+        attendees: meeting.attendees.map((attendee) => ({
+            initials: attendee.initials,
+            name: attendee.name,
+            email: attendee.email,
+            role: attendee.role,
+        })),
+        attendeeCount: meeting.attendeeCount,
+        agendaItems: meeting.agendaItems,
+    };
 }
 
 /**
