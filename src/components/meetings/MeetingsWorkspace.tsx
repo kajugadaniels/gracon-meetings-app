@@ -184,7 +184,9 @@ export function MeetingsWorkspace() {
 
             <section className={styles.upcomingSection} aria-labelledby="today-meetings">
                 <div className={styles.sectionHeader}>
-                    <h1 id="today-meetings">Today&apos;s Upcoming Meetings</h1>
+                    <h1 id="today-meetings" className={styles.title}>
+                        Today&apos;s Upcoming Meetings
+                    </h1>
                     <button type="button">See all</button>
                 </div>
 
