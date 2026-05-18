@@ -38,7 +38,9 @@ metadata, and audit history through `api/meetings`.
 - The authenticated shell uses a flush top navbar, left meetings sidebar, account avatar dropdown, and `/home` as the post-login landing route.
 - The topbar and sidebar live in dedicated `src/components/layout` components; protected layout owns only session recovery and shell placement.
 - `/home` currently renders a static light-mode dashboard with quick actions, realistic upcoming meeting cards, and a short skeleton loading state while future meeting actions mature.
+- `/home` uses a compact premium dashboard layout with smaller action cards and three meeting cards per desktop row.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
+- Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
 - `/upcoming` renders a static scheduled-meetings dashboard using the reusable `MeetingCard` component.
 - `/upcoming` opens the reusable `ScheduleMeetingDialog` through `UpcomingScheduleButton` so the page can remain server-rendered.
 - `/previous` renders a static completed-meetings dashboard using the reusable `MeetingCard` component.
