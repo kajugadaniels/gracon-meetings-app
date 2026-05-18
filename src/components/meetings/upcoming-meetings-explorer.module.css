@@ -1,0 +1,128 @@
+/**
+ * Upcoming meetings explorer styles.
+ */
+.toolbar {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+  padding: 12px;
+}
+
+.searchField {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: white;
+  color: var(--color-text-muted);
+  padding: 0 12px;
+}
+
+.searchField span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.searchField input {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  outline: 0;
+}
+
+.searchField:focus-within {
+  border-color: rgba(91, 35, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(91, 35, 255, 0.10);
+}
+
+.filterRow,
+.toolbarFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.filters,
+.dateRange {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.filters button,
+.dateRange input {
+  min-height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.filters button {
+  cursor: pointer;
+  padding: 0 12px;
+}
+
+.filters .activeFilter,
+.filters button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.dateRange label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dateRange span {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.dateRange input {
+  min-width: 138px;
+  padding: 0 10px;
+}
+
+.toolbarFooter p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+@media (max-width: 640px) {
+  .filterRow,
+  .toolbarFooter,
+  .dateRange,
+  .dateRange label {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filters,
+  .filters button,
+  .dateRange input {
+    width: 100%;
+  }
+}
