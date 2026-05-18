@@ -31,7 +31,8 @@
 
 .backLink,
 .secureBadge,
-.recordingButton {
+.recordingButton,
+.endButton {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -54,6 +55,28 @@
     border-color 160ms ease,
     color 160ms ease,
     transform 160ms ease;
+}
+
+.endButton {
+  cursor: pointer;
+  border-color: rgba(244, 63, 94, 0.22);
+  background: rgba(244, 63, 94, 0.08);
+  color: var(--color-error);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.endButton:hover:not(:disabled) {
+  border-color: rgba(244, 63, 94, 0.42);
+  background: rgba(244, 63, 94, 0.12);
+  transform: translateY(-1px);
+}
+
+.endButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
 }
 
 .recordingButton:hover:not(:disabled) {
@@ -131,6 +154,18 @@
   font-weight: 900;
 }
 
+.stateIcon {
+  display: inline-grid;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  place-items: center;
+  border: 1px solid rgba(91, 35, 255, 0.18);
+  border-radius: 17px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
+
 .stateCard p {
   margin: 0 0 18px;
   color: var(--color-text-muted);
@@ -153,7 +188,8 @@
 
   .backLink,
   .secureBadge,
-  .recordingButton {
+  .recordingButton,
+  .endButton {
     justify-content: center;
     width: 100%;
   }
