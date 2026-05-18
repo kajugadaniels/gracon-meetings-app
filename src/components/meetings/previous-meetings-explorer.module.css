@@ -1,0 +1,229 @@
+/**
+ * Previous meetings explorer styles.
+ */
+.explorer {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.toolbar {
+  --meeting-filter-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  display: grid;
+  align-items: center;
+  grid-template-columns: minmax(220px, 1fr) auto auto auto;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+  padding: 10px;
+  animation: toolbarEnter 220ms var(--meeting-filter-ease) both;
+}
+
+.searchField {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: white;
+  color: var(--color-text-muted);
+  padding: 0 10px;
+  transition:
+    border-color 160ms var(--meeting-filter-ease),
+    box-shadow 160ms var(--meeting-filter-ease),
+    transform 160ms var(--meeting-filter-ease);
+}
+
+.searchField span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.searchField input {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  outline: 0;
+}
+
+.searchField:focus-within {
+  border-color: rgba(91, 35, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(91, 35, 255, 0.10);
+  transform: translateY(-1px);
+}
+
+.filters,
+.dateRange {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.filters button,
+.dateRange input,
+.exportButton {
+  min-height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  transition:
+    border-color 160ms var(--meeting-filter-ease),
+    color 160ms var(--meeting-filter-ease),
+    background-color 160ms var(--meeting-filter-ease),
+    transform 160ms var(--meeting-filter-ease);
+}
+
+.filters button,
+.exportButton {
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 0 10px;
+}
+
+.filters .activeFilter,
+.filters button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.dateRange label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dateRange span {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.dateRange input {
+  min-width: 124px;
+  padding: 0 8px;
+}
+
+.exportButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+  padding: 0 12px;
+}
+
+.exportButton:hover {
+  transform: translateY(-1px);
+}
+
+.resultStatus {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  padding: 0 2px;
+}
+
+.resultsMotion {
+  animation: resultsFilterIn 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes toolbarEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes resultsFilterIn {
+  from {
+    opacity: 0.6;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1280px) {
+  .toolbar {
+    grid-template-columns: minmax(220px, 1fr) auto;
+  }
+
+  .dateRange {
+    grid-column: 1 / 2;
+  }
+}
+
+@media (max-width: 860px) {
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .filters,
+  .dateRange {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .dateRange,
+  .dateRange label {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filters,
+  .filters button,
+  .dateRange input,
+  .exportButton {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar,
+  .resultsMotion {
+    animation: none;
+  }
+
+  .searchField,
+  .filters button,
+  .dateRange input,
+  .exportButton {
+    transition: none;
+  }
+
+  .searchField:focus-within,
+  .filters .activeFilter,
+  .filters button:hover,
+  .exportButton:hover {
+    transform: none;
+  }
+}
