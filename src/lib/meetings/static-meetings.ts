@@ -69,6 +69,7 @@ export interface RecordingCardView {
     id: string;
     title: string;
     recordedAt: string;
+    recordedAtIso: string;
     duration: string;
     size: string;
     status: string;
@@ -127,6 +128,7 @@ function toRecordingCardView(meeting: SeedMeeting): RecordingCardView | null {
         id: meeting.recording.id,
         title: meeting.title,
         recordedAt: `Recorded ${DATE_FORMATTER.format(new Date(meeting.recording.recordedAt))} at ${TIME_FORMATTER.format(new Date(meeting.recording.recordedAt))}`,
+        recordedAtIso: meeting.recording.recordedAt,
         duration: meeting.recording.duration,
         size: meeting.recording.size,
         status: meeting.recording.status === 'READY' ? 'Ready' : meeting.recording.status,
