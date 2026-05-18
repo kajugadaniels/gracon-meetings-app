@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Eye, EyeOff } from 'lucide-react';
 import { APP_URL, MEETINGS_URL, normalizeMeetingsPath } from '@/lib/session';
 import styles from './LoginForm.module.css';
 
@@ -54,6 +55,7 @@ export function LoginForm() {
     const [errors, setErrors] = useState<LoginErrors>({});
     const [apiError, setApiError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const nextPath = normalizeMeetingsPath(searchParams.get('next'));
 
     function validate(): boolean {
@@ -114,40 +116,56 @@ export function LoginForm() {
 
                 <form className={styles.form} onSubmit={handleSubmit} noValidate>
                     <label className={styles.field}>
-                        <span className={styles.label}>Email address</span>
-                        <input
-                            className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-                            type="email"
-                            placeholder="you@example.com"
-                            autoComplete="email"
-                            value={email}
-                            onChange={(event) => {
-                                setEmail(event.target.value);
-                                if (errors.email) {
-                                    setErrors((previous) => ({ ...previous, email: undefined }));
-                                }
-                            }}
-                            required
-                        />
+                        <span className={styles.label}>
+                            Email address<span className={styles.required}>*</span>
+                        </span>
+                        <div className={styles.inputWrap}>
+                            <input
+                                className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
+                                type="email"
+                                placeholder="you@example.com"
+                                autoComplete="email"
+                                value={email}
+                                onChange={(event) => {
+                                    setEmail(event.target.value);
+                                    if (errors.email) {
+                                        setErrors((previous) => ({ ...previous, email: undefined }));
+                                    }
+                                }}
+                                required
+                            />
+                        </div>
                         {errors.email ? <span className={styles.errorText}>{errors.email}</span> : null}
                     </label>
 
                     <label className={styles.field}>
-                        <span className={styles.label}>Password</span>
-                        <input
-                            className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-                            type="password"
-                            placeholder="Your password"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(event) => {
-                                setPassword(event.target.value);
-                                if (errors.password) {
-                                    setErrors((previous) => ({ ...previous, password: undefined }));
-                                }
-                            }}
-                            required
-                        />
+                        <span className={styles.label}>
+                            Password<span className={styles.required}>*</span>
+                        </span>
+                        <div className={styles.inputWrap}>
+                            <input
+                                className={`${styles.input} ${styles.inputWithIcon} ${errors.password ? styles.inputError : ''}`}
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Your password"
+                                autoComplete="current-password"
+                                value={password}
+                                onChange={(event) => {
+                                    setPassword(event.target.value);
+                                    if (errors.password) {
+                                        setErrors((previous) => ({ ...previous, password: undefined }));
+                                    }
+                                }}
+                                required
+                            />
+                            <button
+                                type="button"
+                                className={styles.passwordToggle}
+                                onClick={() => setShowPassword((value) => !value)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
                         {errors.password ? <span className={styles.errorText}>{errors.password}</span> : null}
                     </label>
 
