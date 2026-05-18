@@ -3,7 +3,7 @@
  */
 import type { Metadata } from 'next';
 import { Archive, Clock3, HardDrive, Share2, Video } from 'lucide-react';
-import { PaginatedRecordingGrid } from '@/components/meetings/PaginatedRecordingGrid';
+import { RecordingsExplorer } from '@/components/meetings/RecordingsExplorer';
 import { getMeetingsSummary, getRecordingCards } from '@/lib/meetings/static-meetings';
 import styles from './page.module.css';
 
@@ -79,24 +79,8 @@ export default function RecordingsPage() {
                 })}
             </div>
 
-            <div className={styles.toolbar}>
-                <div className={styles.filters} aria-label="Recording filters">
-                    <button type="button" className={styles.activeFilter}>All</button>
-                    <button type="button">Ready</button>
-                    <button type="button">Shared</button>
-                    <button type="button">This month</button>
-                </div>
-                <button type="button" className={styles.storageButton}>
-                    Manage storage
-                </button>
-            </div>
-
             <section className={styles.contentGrid} aria-label="Recorded meetings">
-                <PaginatedRecordingGrid
-                    recordings={recordings}
-                    pageSize={18}
-                    ariaLabel="Recorded meetings"
-                />
+                <RecordingsExplorer recordings={recordings} />
 
                 <aside className={styles.sidePanel} aria-label="Recording access rules">
                     <p className={styles.eyebrow}>Access rules</p>
