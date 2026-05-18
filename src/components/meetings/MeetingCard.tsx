@@ -26,7 +26,7 @@ export function MeetingCard({
     return (
         <article className={styles.card}>
             <CalendarDays size={24} />
-            <h2>{title}</h2>
+            <h2 className={styles.title}>{title}</h2>
             <p>
                 {date} · {time}
             </p>
