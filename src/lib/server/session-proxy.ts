@@ -4,6 +4,7 @@
  * These helpers validate and rotate shared auth cookies without exposing
  * refresh-token handling to browser components.
  */
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import {
     meetingsAuthCookiePolicy,
@@ -23,6 +24,12 @@ export type RefreshedTokens = {
 
 type RefreshMode = 'refresh' | 'upgrade';
 
+const pendingRefreshes = new Map<string, Promise<RefreshedTokens | null>>();
+
+function hashRefreshToken(refreshToken: string) {
+    return crypto.createHash('sha256').update(refreshToken).digest('hex');
+}
+
 function getRefreshPath(mode: RefreshMode) {
     return mode === 'upgrade' ? '/auth/session/upgrade' : '/auth/refresh';
 }
@@ -40,31 +47,45 @@ export function getSessionCookies(request: NextRequest) {
 }
 
 /**
- * Rotates or upgrades a refresh token through api/auth.
+ * Rotates or upgrades a refresh token with single-flight protection.
  */
-export async function refreshSession(
+export function refreshSession(
     refreshToken: string,
     mode: RefreshMode = 'refresh',
 ): Promise<RefreshedTokens | null> {
-    const response = await fetch(`${AUTH_BASE}${getRefreshPath(mode)}`, {
+    const key = `${mode}:${hashRefreshToken(refreshToken)}`;
+    const pending = pendingRefreshes.get(key);
+    if (pending) return pending;
+
+    const refresh = fetch(`${AUTH_BASE}${getRefreshPath(mode)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
         cache: 'no-store',
-    });
+    })
+        .then(async (response) => {
+            if (!response.ok) return null;
 
-    if (!response.ok) return null;
+            const data = await response.json();
+            const payload = data?.data ?? data;
 
-    const data = await response.json();
-    const payload = data?.data ?? data;
+            if (!payload?.accessToken || !payload?.refreshToken) return null;
 
-    if (!payload?.accessToken || !payload?.refreshToken) return null;
+            const tokenType: RefreshedTokens['tokenType'] =
+                payload.tokenType === 'limited' ? 'limited' : 'full';
 
-    return {
-        accessToken: payload.accessToken as string,
-        refreshToken: payload.refreshToken as string,
-        tokenType: payload.tokenType === 'limited' ? 'limited' : 'full',
-    };
+            return {
+                accessToken: payload.accessToken as string,
+                refreshToken: payload.refreshToken as string,
+                tokenType,
+            };
+        })
+        .finally(() => {
+            pendingRefreshes.delete(key);
+        });
+
+    pendingRefreshes.set(key, refresh);
+    return refresh;
 }
 
 /**
