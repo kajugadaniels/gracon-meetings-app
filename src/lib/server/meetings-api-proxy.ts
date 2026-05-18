@@ -42,15 +42,34 @@ export async function proxyMeetingsApi(
     const upstreamUrl = new URL(`${MEETINGS_API_BASE}${options.path}`);
     if (options.search) upstreamUrl.search = options.search;
 
-    const response = await fetch(upstreamUrl, {
-        method: options.method,
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-        },
-        body: options.body ? JSON.stringify(options.body) : undefined,
-        cache: 'no-store',
-    });
+    let response: Response;
+
+    try {
+        response = await fetch(upstreamUrl, {
+            method: options.method,
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+            },
+            body: options.body ? JSON.stringify(options.body) : undefined,
+            cache: 'no-store',
+        });
+    } catch {
+        const unavailableResponse = NextResponse.json(
+            {
+                error: 'Meetings service unavailable',
+                message:
+                    'The meetings backend is not reachable. Start api/meetings on port 3007 and try again.',
+            },
+            { status: 503 },
+        );
+
+        if (refreshedTokens) {
+            applySessionCookies(unavailableResponse, refreshedTokens);
+        }
+
+        return unavailableResponse;
+    }
 
     const payload = await response.json().catch(() => null);
     const nextResponse = NextResponse.json(payload ?? {}, {
