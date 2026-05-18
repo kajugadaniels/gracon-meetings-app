@@ -42,6 +42,8 @@ const VERIFICATION_OPTIONS: Array<{
     },
 ];
 
+const DEFAULT_VERIFICATION_REQUIREMENTS: Exclude<MeetingInviteVerificationRequirement, 'NONE'>[] = ['EMAIL_OTP'];
+
 /**
  * Renders the in-meeting invite flow with local invitee search.
  */
@@ -51,11 +53,14 @@ export function MeetingInviteDialog({
     onClose,
 }: MeetingInviteDialogProps) {
     const [inviteSearch, setInviteSearch] = useState('');
-    const [verificationRequirement, setVerificationRequirement] =
-        useState<MeetingInviteVerificationRequirement>('EMAIL_OTP');
+    const [verificationRequirements, setVerificationRequirements] =
+        useState<Exclude<MeetingInviteVerificationRequirement, 'NONE'>[]>(
+            DEFAULT_VERIFICATION_REQUIREMENTS,
+        );
     const [invitedEmails, setInvitedEmails] = useState<Set<string>>(() => new Set());
     const [copied, setCopied] = useState(false);
     const meetingLink = `https://meet.gracon360.com/${meetingId}`;
+    const noExtraVerification = verificationRequirements.length === 0;
 
     const visibleInvitees = useMemo(() => {
         const normalizedSearch = inviteSearch.trim().toLowerCase();
@@ -71,6 +76,22 @@ export function MeetingInviteDialog({
 
     function markInvited(email: string) {
         setInvitedEmails((currentEmails) => new Set(currentEmails).add(email));
+    }
+
+    function setNoExtraVerification(enabled: boolean) {
+        setVerificationRequirements(enabled ? [] : DEFAULT_VERIFICATION_REQUIREMENTS);
+    }
+
+    function toggleVerificationRequirement(
+        requirement: Exclude<MeetingInviteVerificationRequirement, 'NONE'>,
+    ) {
+        setVerificationRequirements((currentRequirements) => {
+            if (currentRequirements.includes(requirement)) {
+                return currentRequirements.filter((item) => item !== requirement);
+            }
+
+            return [...currentRequirements, requirement];
+        });
     }
 
     async function copyMeetingLink() {
@@ -122,21 +143,37 @@ export function MeetingInviteDialog({
                     <div className={styles.verificationGrid}>
                         {VERIFICATION_OPTIONS.map((option) => {
                             const Icon = option.icon;
-                            const checked = verificationRequirement === option.value;
+                            const isNoneOption = option.value === 'NONE';
+                            const requirement = isNoneOption
+                                ? null
+                                : option.value as Exclude<MeetingInviteVerificationRequirement, 'NONE'>;
+                            const checked = isNoneOption
+                                ? noExtraVerification
+                                : Boolean(requirement && verificationRequirements.includes(requirement));
+                            const disabled = !isNoneOption && noExtraVerification;
 
                             return (
                                 <label
                                     key={option.value}
                                     className={`${styles.verificationOption} ${
                                         checked ? styles.verificationOptionChecked : ''
+                                    } ${
+                                        disabled ? styles.verificationOptionDisabled : ''
                                     }`}
                                 >
                                     <input
-                                        type="radio"
+                                        type="checkbox"
                                         name="meeting-invite-verification"
                                         value={option.value}
                                         checked={checked}
-                                        onChange={() => setVerificationRequirement(option.value)}
+                                        disabled={disabled}
+                                        onChange={() => {
+                                            if (isNoneOption) {
+                                                setNoExtraVerification(!noExtraVerification);
+                                            } else if (requirement) {
+                                                toggleVerificationRequirement(requirement);
+                                            }
+                                        }}
                                     />
                                     <span className={styles.optionIcon}>
                                         <Icon size={16} />
