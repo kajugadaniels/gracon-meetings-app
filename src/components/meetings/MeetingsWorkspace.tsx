@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import type { ComponentType } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSessionUser } from '@/app/(protected)/layout';
+import type { MeetingCardView } from '@/lib/meetings/static-meetings';
 import { JoinMeetingDialog } from './JoinMeetingDialog';
 import { MeetingCard } from './MeetingCard';
 import { NewMeetingDialog } from './NewMeetingDialog';
@@ -30,11 +31,8 @@ interface ActionCard {
     action: QuickAction;
 }
 
-interface StaticMeeting {
-    title: string;
-    date: string;
-    time: string;
-    attendees: string[];
+interface MeetingsWorkspaceProps {
+    meetings: MeetingCardView[];
 }
 
 const ACTION_CARDS: ActionCard[] = [
@@ -65,27 +63,6 @@ const ACTION_CARDS: ActionCard[] = [
         tone: 'amber',
         icon: Video,
         action: 'recordings',
-    },
-];
-
-const STATIC_MEETINGS: StaticMeeting[] = [
-    {
-        title: 'Team Sync: Sprint Planning & Updates',
-        date: 'Today',
-        time: '10:00 AM',
-        attendees: ['DK', 'OU', 'SM', 'AN'],
-    },
-    {
-        title: 'Project Pulse Check: Weekly Standup',
-        date: 'Today',
-        time: '2:30 PM',
-        attendees: ['DK', 'RN', 'IM', 'PK'],
-    },
-    {
-        title: 'Institution Verification Review',
-        date: 'Today',
-        time: '4:15 PM',
-        attendees: ['DK', 'BK', 'CM', 'YA'],
     },
 ];
 
@@ -139,7 +116,7 @@ function MeetingsHomeSkeleton() {
 /**
  * Renders the static home dashboard shown after protected session recovery.
  */
-export function MeetingsWorkspace() {
+export function MeetingsWorkspace({ meetings }: MeetingsWorkspaceProps) {
     const user = useSessionUser();
     const router = useRouter();
     const [showSkeleton, setShowSkeleton] = useState(true);
@@ -153,6 +130,7 @@ export function MeetingsWorkspace() {
 
     const today = useMemo(() => formatToday(), []);
     const clock = useMemo(() => formatCurrentTime(), []);
+    const nextMeeting = meetings[0];
 
     useEffect(() => {
         const timeoutId = window.setTimeout(() => setShowSkeleton(false), 520);
@@ -181,7 +159,7 @@ export function MeetingsWorkspace() {
             <section className={styles.hero} aria-label="Meetings overview">
                 <div className={styles.heroMain}>
                     <div className={styles.nextMeetingBadge}>
-                        Next room opens at <strong>12:30 PM</strong>
+                        Next room opens at <strong>{nextMeeting?.time ?? 'Ready'}</strong>
                     </div>
 
                     <div>
@@ -201,7 +179,7 @@ export function MeetingsWorkspace() {
                     <dl className={styles.heroStats}>
                         <div>
                             <dt>Today</dt>
-                            <dd>3 rooms</dd>
+                            <dd>{meetings.length} rooms</dd>
                         </div>
                         <div>
                             <dt>Ready</dt>
@@ -238,18 +216,20 @@ export function MeetingsWorkspace() {
                     <h1 id="today-meetings" className={styles.title}>
                         Today&apos;s Upcoming Meetings
                     </h1>
-                    <button type="button">See all</button>
+                    <button type="button" onClick={() => router.push('/upcoming')}>
+                        See all
+                    </button>
                 </div>
 
                 <div className={styles.meetingGrid}>
-                    {STATIC_MEETINGS.map((meeting) => (
+                    {meetings.map((meeting) => (
                         <MeetingCard
-                            key={meeting.title}
+                            key={meeting.id}
                             title={meeting.title}
                             date={meeting.date}
                             time={meeting.time}
                             attendees={meeting.attendees}
-                            overflowCount={9}
+                            overflowCount={meeting.overflowCount}
                         />
                     ))}
                 </div>
