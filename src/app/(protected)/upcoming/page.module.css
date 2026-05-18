@@ -123,8 +123,7 @@
   gap: 8px;
 }
 
-.filters button,
-.scheduleButton {
+.filters button {
   min-height: 38px;
   border-radius: 999px;
   cursor: pointer;
@@ -144,12 +143,6 @@
 .filters button:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-}
-
-.scheduleButton {
-  border: 1px solid var(--color-primary);
-  background: var(--color-primary);
-  color: white;
 }
 
 .contentGrid {
@@ -231,7 +224,4 @@
     flex-direction: column;
   }
 
-  .scheduleButton {
-    width: 100%;
-  }
 }
