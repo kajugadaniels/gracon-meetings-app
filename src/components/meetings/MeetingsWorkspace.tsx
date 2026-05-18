@@ -1,336 +1,220 @@
 /**
- * Interactive meetings workspace for scheduling and host actions.
+ * Static meetings home dashboard.
  */
 'use client';
 
-import { CalendarClock, Copy, Play, Square, Video } from 'lucide-react';
-import Link from 'next/link';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { useSessionUser } from '@/app/(protected)/layout';
 import {
-    createMeeting,
-    endMeeting,
-    getMeetingJoinPath,
-    issueMeetingStreamToken,
-    listMeetings,
-    startMeeting,
-} from '@/lib/meetings/api-client';
-import type { Meeting, MeetingStreamAccess, MeetingVisibility } from '@/lib/meetings/types';
-import { Button, Input } from '@/components/ui';
+    CalendarDays,
+    Copy,
+    Plus,
+    UserPlus,
+    Video,
+} from 'lucide-react';
+import type { ComponentType } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSessionUser } from '@/app/(protected)/layout';
 import styles from './meetings-workspace.module.css';
 
-const VISIBILITY_OPTIONS: Array<{ label: string; value: MeetingVisibility }> = [
-    { label: 'Invite only', value: 'INVITE_ONLY' },
-    { label: 'Private', value: 'PRIVATE' },
-    { label: 'Link access', value: 'LINK_ACCESS' },
-];
-
-function formatDate(value: string | null) {
-    if (!value) return 'Not scheduled';
-    return new Intl.DateTimeFormat(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    }).format(new Date(value));
+interface ActionCard {
+    title: string;
+    copy: string;
+    tone: 'coral' | 'blue' | 'purple' | 'amber';
+    icon: ComponentType<{ size?: number; strokeWidth?: number }>;
 }
 
-type PreparedMeetingStreamAccess = MeetingStreamAccess & { meetingId: string };
+interface StaticMeeting {
+    title: string;
+    date: string;
+    time: string;
+    attendees: string[];
+}
 
-function getJoinLink(access: PreparedMeetingStreamAccess) {
-    return getMeetingJoinPath(access.meetingId);
+const ACTION_CARDS: ActionCard[] = [
+    {
+        title: 'New Meeting',
+        copy: 'Start a secure room now',
+        tone: 'coral',
+        icon: Plus,
+    },
+    {
+        title: 'Join Meeting',
+        copy: 'Use an invitation link',
+        tone: 'blue',
+        icon: UserPlus,
+    },
+    {
+        title: 'Schedule Meeting',
+        copy: 'Plan with invited guests',
+        tone: 'purple',
+        icon: CalendarDays,
+    },
+    {
+        title: 'View Recordings',
+        copy: 'Review saved sessions',
+        tone: 'amber',
+        icon: Video,
+    },
+];
+
+const STATIC_MEETINGS: StaticMeeting[] = [
+    {
+        title: 'Team Sync: Sprint Planning & Updates',
+        date: 'Today',
+        time: '10:00 AM',
+        attendees: ['DK', 'OU', 'SM', 'AN'],
+    },
+    {
+        title: 'Project Pulse Check: Weekly Standup',
+        date: 'Today',
+        time: '2:30 PM',
+        attendees: ['DK', 'RN', 'IM', 'PK'],
+    },
+];
+
+function formatToday() {
+    return new Intl.DateTimeFormat(undefined, {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+    }).format(new Date());
+}
+
+function formatCurrentTime() {
+    const parts = new Intl.DateTimeFormat(undefined, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    }).formatToParts(new Date());
+
+    return {
+        time: `${parts.find((part) => part.type === 'hour')?.value ?? '12'}:${parts.find((part) => part.type === 'minute')?.value ?? '00'}`,
+        meridiem: parts.find((part) => part.type === 'dayPeriod')?.value ?? 'PM',
+    };
 }
 
 /**
- * Renders meeting creation, meeting list, and Stream token handoff controls.
+ * Renders a temporary skeleton so the home surface feels loaded intentionally.
+ */
+function MeetingsHomeSkeleton() {
+    return (
+        <section className={styles.workspace} aria-label="Loading meetings home">
+            <div className={`${styles.skeletonBlock} ${styles.skeletonHero}`} />
+            <div className={styles.skeletonActions}>
+                <div className={styles.skeletonBlock} />
+                <div className={styles.skeletonBlock} />
+                <div className={styles.skeletonBlock} />
+                <div className={styles.skeletonBlock} />
+            </div>
+            <div className={styles.skeletonHeader}>
+                <div className={styles.skeletonLineWide} />
+                <div className={styles.skeletonLineShort} />
+            </div>
+            <div className={styles.meetingGrid}>
+                <div className={`${styles.skeletonBlock} ${styles.skeletonMeeting}`} />
+                <div className={`${styles.skeletonBlock} ${styles.skeletonMeeting}`} />
+            </div>
+        </section>
+    );
+}
+
+/**
+ * Renders the static home dashboard shown after protected session recovery.
  */
 export function MeetingsWorkspace() {
     const user = useSessionUser();
-    const [meetings, setMeetings] = useState<Meeting[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [notice, setNotice] = useState<string | null>(null);
-    const [activeToken, setActiveToken] = useState<PreparedMeetingStreamAccess | null>(null);
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [scheduledStartAt, setScheduledStartAt] = useState('');
-    const [scheduledEndAt, setScheduledEndAt] = useState('');
-    const [visibility, setVisibility] = useState<MeetingVisibility>('INVITE_ONLY');
-    const [recordingEnabled, setRecordingEnabled] = useState(false);
+    const [showSkeleton, setShowSkeleton] = useState(true);
 
     const hostName = useMemo(() => {
         if (!user) return 'Host';
         return `${user.postNames} ${user.surName}`.trim() || user.email;
     }, [user]);
 
+    const today = useMemo(() => formatToday(), []);
+    const clock = useMemo(() => formatCurrentTime(), []);
+
     useEffect(() => {
-        let ignore = false;
-
-        listMeetings()
-            .then((items) => {
-                if (!ignore) {
-                    setMeetings(items);
-                    setError(null);
-                }
-            })
-            .catch((err: Error) => {
-                if (!ignore) setError(err.message);
-            })
-            .finally(() => {
-                if (!ignore) setLoading(false);
-            });
-
-        return () => {
-            ignore = true;
-        };
+        const timeoutId = window.setTimeout(() => setShowSkeleton(false), 520);
+        return () => window.clearTimeout(timeoutId);
     }, []);
 
-    /**
-     * Creates a meeting and prepends it to the current list without reloading.
-     */
-    async function handleCreateMeeting(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        setSaving(true);
-        setError(null);
-        setNotice(null);
-
-        try {
-            const meeting = await createMeeting({
-                title,
-                description: description || undefined,
-                visibility,
-                scheduledStartAt: scheduledStartAt
-                    ? new Date(scheduledStartAt).toISOString()
-                    : undefined,
-                scheduledEndAt: scheduledEndAt
-                    ? new Date(scheduledEndAt).toISOString()
-                    : undefined,
-                recordingEnabled,
-                waitingRoomEnabled: true,
-                joinBeforeHost: false,
-            });
-
-            setMeetings((current) => [meeting, ...current]);
-            setTitle('');
-            setDescription('');
-            setScheduledStartAt('');
-            setScheduledEndAt('');
-            setRecordingEnabled(false);
-            setNotice('Meeting created and audit log recorded.');
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unable to create meeting.');
-        } finally {
-            setSaving(false);
-        }
-    }
-
-    /**
-     * Runs a host action and updates the local list in place.
-     */
-    async function updateMeetingAction(
-        meetingId: string,
-        action: 'start' | 'end',
-    ) {
-        setError(null);
-        setNotice(null);
-        try {
-            const updated =
-                action === 'start'
-                    ? await startMeeting(meetingId)
-                    : await endMeeting(meetingId);
-            setMeetings((current) =>
-                current.map((meeting) => meeting.id === meetingId ? updated : meeting),
-            );
-            setNotice(action === 'start' ? 'Meeting started.' : 'Meeting ended.');
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unable to update meeting.');
-        }
-    }
-
-    /**
-     * Requests Stream call access only after api/meetings confirms authorization.
-     */
-    async function handlePrepareJoin(meetingId: string) {
-        setError(null);
-        setNotice(null);
-        try {
-            const access = await issueMeetingStreamToken(meetingId);
-            setActiveToken({ ...access, meetingId });
-            setNotice('Secure Stream join token issued.');
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unable to prepare join token.');
-        }
+    if (showSkeleton) {
+        return <MeetingsHomeSkeleton />;
     }
 
     return (
         <section className={styles.workspace}>
-            <div className={styles.hero}>
+            <section className={styles.hero} aria-label="Meetings overview">
+                <div className={styles.nextMeetingBadge}>
+                    Upcoming meeting at: <strong>12:30 PM</strong>
+                </div>
                 <div>
-                    <p className={styles.eyebrow}>Secure meetings</p>
-                    <h1 className={styles.title}>Host and schedule Gracon meetings.</h1>
-                    <p className={styles.copy}>
-                        Meetings are owned by Gracon, media tokens are issued through
-                        api/meetings, and every host action is audit-ready.
-                    </p>
+                    <div className={styles.clockRow}>
+                        <span>{clock.time}</span>
+                        <small>{clock.meridiem}</small>
+                    </div>
+                    <p className={styles.dateLine}>{today}</p>
                 </div>
-                <div className={styles.hostCard}>
-                    <span className={styles.hostLabel}>Signed in as</span>
+                <div className={styles.heroIdentity}>
+                    <span>Signed in as</span>
                     <strong>{hostName}</strong>
-                    <span>{user?.email}</span>
                 </div>
-            </div>
+            </section>
 
-            <div className={styles.columns}>
-                <form className={styles.formCard} onSubmit={handleCreateMeeting}>
-                    <div className={styles.cardHeader}>
-                        <CalendarClock size={18} />
-                        <div>
-                            <h2>Create meeting</h2>
-                            <p>Schedule now, start when you are ready.</p>
-                        </div>
-                    </div>
-
-                    <Input
-                        label="Meeting title"
-                        value={title}
-                        onChange={(event) => setTitle(event.target.value)}
-                        placeholder="Board review"
-                        required
-                    />
-
-                    <label className={styles.field}>
-                        <span>Description</span>
-                        <textarea
-                            value={description}
-                            onChange={(event) => setDescription(event.target.value)}
-                            placeholder="Agenda, goals, or joining notes"
-                            rows={4}
-                        />
-                    </label>
-
-                    <div className={styles.inlineFields}>
-                        <Input
-                            label="Starts"
-                            type="datetime-local"
-                            value={scheduledStartAt}
-                            onChange={(event) => setScheduledStartAt(event.target.value)}
-                        />
-                        <Input
-                            label="Ends"
-                            type="datetime-local"
-                            value={scheduledEndAt}
-                            onChange={(event) => setScheduledEndAt(event.target.value)}
-                        />
-                    </div>
-
-                    <label className={styles.field}>
-                        <span>Access</span>
-                        <select
-                            value={visibility}
-                            onChange={(event) =>
-                                setVisibility(event.target.value as MeetingVisibility)
-                            }
+            <section className={styles.actionGrid} aria-label="Meeting quick actions">
+                {ACTION_CARDS.map((card) => {
+                    const Icon = card.icon;
+                    return (
+                        <button
+                            key={card.title}
+                            type="button"
+                            className={`${styles.actionCard} ${styles[card.tone]}`}
                         >
-                            {VISIBILITY_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                            <span className={styles.actionIcon}>
+                                <Icon size={30} strokeWidth={2.4} />
+                            </span>
+                            <span className={styles.actionText}>
+                                <strong>{card.title}</strong>
+                                <small>{card.copy}</small>
+                            </span>
+                        </button>
+                    );
+                })}
+            </section>
 
-                    <label className={styles.checkRow}>
-                        <input
-                            type="checkbox"
-                            checked={recordingEnabled}
-                            onChange={(event) => setRecordingEnabled(event.target.checked)}
-                        />
-                        <span>Allow recording for this meeting</span>
-                    </label>
-
-                    <Button type="submit" loading={saving} loadingText="Creating..." fullWidth>
-                        Create meeting
-                    </Button>
-                </form>
-
-                <div className={styles.listCard}>
-                    <div className={styles.cardHeader}>
-                        <Video size={18} />
-                        <div>
-                            <h2>Your meetings</h2>
-                            <p>Start, end, or prepare a secure join token.</p>
-                        </div>
-                    </div>
-
-                    {error && <p className={styles.error}>{error}</p>}
-                    {notice && <p className={styles.notice}>{notice}</p>}
-
-                    {activeToken && (
-                        <div className={styles.tokenBox}>
-                            <span>Join path prepared</span>
-                            <code>{getJoinLink(activeToken)}</code>
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    void navigator.clipboard?.writeText(getJoinLink(activeToken))
-                                }
-                            >
-                                <Copy size={14} />
-                                Copy
-                            </button>
-                            <Link href={getJoinLink(activeToken)}>Open room</Link>
-                        </div>
-                    )}
-
-                    {loading ? (
-                        <div className={styles.emptyState}>Loading meetings...</div>
-                    ) : meetings.length === 0 ? (
-                        <div className={styles.emptyState}>
-                            No meetings yet. Create your first scheduled meeting.
-                        </div>
-                    ) : (
-                        <div className={styles.meetingList}>
-                            {meetings.map((meeting) => (
-                                <article key={meeting.id} className={styles.meetingCard}>
-                                    <div>
-                                        <div className={styles.meetingTopline}>
-                                            <span>{meeting.status.toLowerCase()}</span>
-                                            <span>{meeting.visibility.replace('_', ' ').toLowerCase()}</span>
-                                        </div>
-                                        <h3>{meeting.title}</h3>
-                                        <p>{meeting.description || 'No agenda added yet.'}</p>
-                                        <time>{formatDate(meeting.scheduledStartAt)}</time>
-                                    </div>
-                                    <div className={styles.meetingActions}>
-                                        <button
-                                            type="button"
-                                            onClick={() => void handlePrepareJoin(meeting.id)}
-                                        >
-                                            <Video size={14} />
-                                            Join token
-                                        </button>
-                                        <button
-                                            type="button"
-                                            disabled={meeting.status === 'LIVE'}
-                                            onClick={() => void updateMeetingAction(meeting.id, 'start')}
-                                        >
-                                            <Play size={14} />
-                                            Start
-                                        </button>
-                                        <button
-                                            type="button"
-                                            disabled={meeting.status === 'ENDED'}
-                                            onClick={() => void updateMeetingAction(meeting.id, 'end')}
-                                        >
-                                            <Square size={14} />
-                                            End
-                                        </button>
-                                    </div>
-                                </article>
-                            ))}
-                        </div>
-                    )}
+            <section className={styles.upcomingSection} aria-labelledby="today-meetings">
+                <div className={styles.sectionHeader}>
+                    <h1 id="today-meetings">Today&apos;s Upcoming Meetings</h1>
+                    <button type="button">See all</button>
                 </div>
-            </div>
+
+                <div className={styles.meetingGrid}>
+                    {STATIC_MEETINGS.map((meeting) => (
+                        <article key={meeting.title} className={styles.meetingCard}>
+                            <CalendarDays size={24} />
+                            <h2>{meeting.title}</h2>
+                            <p>
+                                {meeting.date} · {meeting.time}
+                            </p>
+                            <div className={styles.meetingFooter}>
+                                <div className={styles.avatarStack} aria-label="Meeting attendees">
+                                    {meeting.attendees.map((attendee) => (
+                                        <span key={attendee}>{attendee}</span>
+                                    ))}
+                                    <span>+9</span>
+                                </div>
+                                <div className={styles.meetingActions}>
+                                    <button type="button">Start</button>
+                                    <button type="button">
+                                        <Copy size={15} />
+                                        Copy Invitation
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </section>
         </section>
     );
 }
