@@ -237,6 +237,16 @@ export function getMeetingRoomById(id: string): MeetingRoomView | null {
 }
 
 /**
+ * Returns the first seeded meeting as a development-safe room fallback.
+ */
+export function getDefaultMeetingRoom(): MeetingRoomView | null {
+    const meeting = dataset.meetings[0];
+    if (!meeting) return null;
+
+    return getMeetingRoomById(meeting.id);
+}
+
+/**
  * Returns aggregate counts used by the static meetings dashboards.
  */
 export function getMeetingsSummary(): MeetingsSummary {
