@@ -6,7 +6,12 @@
  */
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { LogOut } from 'lucide-react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { MEETINGS_NAV_ITEMS } from '@/constants/meetings-nav';
 import { fetchCurrentUser, logoutFromMeetings, redirectToLogin } from '@/lib/session';
 import styles from './layout.module.css';
 
@@ -55,14 +60,27 @@ function getDisplayName(user: SessionUser) {
     return `${user.postNames} ${user.surName}`.trim() || user.email;
 }
 
+function getInitials(user: SessionUser) {
+    const fullName = getDisplayName(user);
+    return fullName
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join('') || 'G';
+}
+
 /**
  * Renders the authenticated meetings shell.
  */
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
     const [user, setUser] = useState<SessionUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [sessionError, setSessionError] = useState<string | null>(null);
     const [retryKey, setRetryKey] = useState(0);
+    const [accountOpen, setAccountOpen] = useState(false);
+    const accountRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         let ignore = false;
@@ -99,6 +117,17 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             ignore = true;
         };
     }, [retryKey]);
+
+    useEffect(() => {
+        const handlePointerDown = (event: MouseEvent) => {
+            if (!accountRef.current?.contains(event.target as Node)) {
+                setAccountOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handlePointerDown);
+        return () => document.removeEventListener('mousedown', handlePointerDown);
+    }, []);
 
     if (loading) {
         return (
@@ -151,21 +180,97 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         <UserContext.Provider value={user}>
             <div className={styles.shell}>
                 <header className={styles.topbar}>
-                    <div className={styles.brand}>
-                        <div className={styles.brandMark}>M</div>
-                        <div className={styles.brandCopy}>
-                            <span className={styles.eyebrow}>Gracon 360</span>
-                            <span className={styles.name}>Meetings</span>
-                        </div>
-                    </div>
+                    <Link href="/home" className={styles.logo} aria-label="Gracon meetings home">
+                        <span className={styles.logoMark}>G</span>
+                        <span className={styles.logoText}>
+                            <span>Gracon 360</span>
+                            <strong>Meetings</strong>
+                        </span>
+                    </Link>
 
-                    <div className={styles.actions}>
-                        <span className={styles.user}>{getDisplayName(user)}</span>
-                        <button className={styles.logout} onClick={() => void logoutFromMeetings()}>
-                            Sign out
+                    <div ref={accountRef} className={styles.account}>
+                        <button
+                            type="button"
+                            className={styles.avatarButton}
+                            onClick={() => setAccountOpen((open) => !open)}
+                            aria-label="Open account menu"
+                            aria-expanded={accountOpen}
+                            aria-haspopup="menu"
+                            title={getDisplayName(user)}
+                        >
+                            {user.imageUrl ? (
+                                <Image
+                                    src={user.imageUrl}
+                                    alt=""
+                                    width={38}
+                                    height={38}
+                                    unoptimized
+                                    className={styles.avatarImage}
+                                />
+                            ) : (
+                                <span className={styles.avatarInitials}>{getInitials(user)}</span>
+                            )}
                         </button>
+
+                        {accountOpen && (
+                            <div className={styles.accountMenu} role="menu">
+                                <div className={styles.accountProfile}>
+                                    <div className={styles.accountAvatar} aria-hidden="true">
+                                        {user.imageUrl ? (
+                                            <Image
+                                                src={user.imageUrl}
+                                                alt=""
+                                                width={36}
+                                                height={36}
+                                                unoptimized
+                                            />
+                                        ) : (
+                                            <span>{getInitials(user)}</span>
+                                        )}
+                                    </div>
+                                    <div className={styles.accountCopy}>
+                                        <p>{getDisplayName(user)}</p>
+                                        <span>{user.email}</span>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    className={styles.accountItem}
+                                    onClick={() => void logoutFromMeetings()}
+                                    role="menuitem"
+                                >
+                                    <LogOut size={15} />
+                                    <span>Sign out</span>
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </header>
+
+                <aside className={styles.sidebar} aria-label="Meetings navigation">
+                    <nav className={styles.sidebarNav}>
+                        {MEETINGS_NAV_ITEMS.map((item) => {
+                            const Icon = item.icon;
+                            const active =
+                                pathname === item.href ||
+                                (item.href !== '/home' && pathname.startsWith(`${item.href}/`));
+
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
+                                    title={item.description}
+                                    aria-current={active ? 'page' : undefined}
+                                >
+                                    <Icon size={18} />
+                                    <span>{item.label}</span>
+                                </Link>
+                            );
+                        })}
+                    </nav>
+                </aside>
+
                 <main className={styles.main}>{children}</main>
             </div>
         </UserContext.Provider>
