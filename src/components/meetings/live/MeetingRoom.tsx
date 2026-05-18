@@ -13,6 +13,7 @@ import {
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { MeetingsLoadingState } from '@/components/ui/MeetingsLoadingState';
 import { issueMeetingStreamToken } from '@/lib/meetings/api-client';
 import type { MeetingStreamAccess } from '@/lib/meetings/types';
 import styles from './meeting-room.module.css';
@@ -81,13 +82,11 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
 
     if (loading) {
         return (
-            <section className={styles.stateShell}>
-                <div className={styles.stateCard}>
-                    <div className={styles.loader} aria-hidden="true" />
-                    <h1>Preparing secure room...</h1>
-                    <p>Requesting a short-lived meeting token from Gracon.</p>
-                </div>
-            </section>
+            <MeetingsLoadingState
+                title="Preparing secure room..."
+                copy="Requesting a short-lived meeting token from Gracon."
+                detail="Call-scoped token only"
+            />
         );
     }
 
