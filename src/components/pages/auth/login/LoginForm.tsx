@@ -96,7 +96,7 @@ export function LoginForm() {
                 return;
             }
 
-            window.location.href = nextPath;
+            window.location.href = nextPath === '/meetings' ? '/home' : nextPath;
         } catch (error: unknown) {
             setApiError(error instanceof Error
                 ? error.message
