@@ -76,6 +76,7 @@ npm run lint
 - Do not add new JavaScript-readable auth storage paths.
 - Logout must call local `/api/logout` first, then hand off to `app/app/logout`.
 - Browser meeting actions must call same-origin `/api/meetings/*` routes, not `api/meetings` directly, so auth token handling stays server-side.
+- Middleware must not redirect `/login` back to `/meetings` based on cookies alone. The protected layout owns final session validation, which prevents stale-cookie redirect loops.
 
 ## Meeting Workspace Flow
 
