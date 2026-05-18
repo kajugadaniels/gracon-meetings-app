@@ -7,6 +7,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { MeetingsSidebar } from '@/components/layout/MeetingsSidebar';
 import { MeetingsTopbar } from '@/components/layout/MeetingsTopbar';
 import { MeetingsLoadingState } from '@/components/ui/MeetingsLoadingState';
@@ -58,6 +59,7 @@ function isSessionUser(value: unknown): value is SessionUser {
  * Renders the authenticated meetings shell.
  */
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
     const [user, setUser] = useState<SessionUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [sessionError, setSessionError] = useState<string | null>(null);
@@ -144,13 +146,21 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
     if (!user) return null;
 
+    const isMeetingRoom = pathname.startsWith('/meetings/');
+
     return (
         <UserContext.Provider value={user}>
-            <div className={styles.shell}>
-                <MeetingsTopbar user={user} />
-                <MeetingsSidebar />
+            <div className={isMeetingRoom ? styles.roomShell : styles.shell}>
+                {!isMeetingRoom && (
+                    <>
+                        <MeetingsTopbar user={user} />
+                        <MeetingsSidebar />
+                    </>
+                )}
 
-                <main className={styles.main}>{children}</main>
+                <main className={isMeetingRoom ? styles.roomMain : styles.main}>
+                    {children}
+                </main>
             </div>
         </UserContext.Provider>
     );
