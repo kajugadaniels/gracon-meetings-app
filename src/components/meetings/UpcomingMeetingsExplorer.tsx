@@ -112,51 +112,53 @@ export function UpcomingMeetingsExplorer({ meetings }: UpcomingMeetingsExplorerP
                     />
                 </label>
 
-                <div className={styles.filterRow}>
-                    <div className={styles.filters} aria-label="Meeting filters">
-                        {FILTERS.map((filter) => (
-                            <button
-                                key={filter.id}
-                                type="button"
-                                className={activeFilter === filter.id ? styles.activeFilter : undefined}
-                                onClick={() => setActiveFilter(filter.id)}
-                            >
-                                {filter.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className={styles.dateRange} aria-label="Custom date range">
-                        <label>
-                            <span>From</span>
-                            <input
-                                type="date"
-                                value={fromDate}
-                                onChange={(event) => setFromDate(event.target.value)}
-                            />
-                        </label>
-                        <label>
-                            <span>To</span>
-                            <input
-                                type="date"
-                                value={toDate}
-                                onChange={(event) => setToDate(event.target.value)}
-                            />
-                        </label>
-                    </div>
+                <div className={styles.filters} aria-label="Meeting filters">
+                    {FILTERS.map((filter) => (
+                        <button
+                            key={filter.id}
+                            type="button"
+                            className={activeFilter === filter.id ? styles.activeFilter : undefined}
+                            onClick={() => setActiveFilter(filter.id)}
+                        >
+                            {filter.label}
+                        </button>
+                    ))}
                 </div>
 
-                <div className={styles.toolbarFooter}>
-                    <p>{searchHint}</p>
-                    <UpcomingScheduleButton />
+                <div className={styles.dateRange} aria-label="Custom date range">
+                    <label>
+                        <span>From</span>
+                        <input
+                            type="date"
+                            value={fromDate}
+                            onChange={(event) => setFromDate(event.target.value)}
+                        />
+                    </label>
+                    <label>
+                        <span>To</span>
+                        <input
+                            type="date"
+                            value={toDate}
+                            onChange={(event) => setToDate(event.target.value)}
+                        />
+                    </label>
                 </div>
+
+                <UpcomingScheduleButton />
             </div>
 
-            <PaginatedMeetingGrid
-                meetings={filteredMeetings}
-                pageSize={18}
-                ariaLabel="Scheduled meetings"
-            />
+            <p className={styles.resultStatus}>{searchHint}</p>
+
+            <div
+                key={`${activeFilter}-${fromDate}-${toDate}-${search.trim().slice(0, 16)}-${filteredMeetings.length}`}
+                className={styles.resultsMotion}
+            >
+                <PaginatedMeetingGrid
+                    meetings={filteredMeetings}
+                    pageSize={18}
+                    ariaLabel="Scheduled meetings"
+                />
+            </div>
         </div>
     );
 }
