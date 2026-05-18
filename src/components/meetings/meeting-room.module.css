@@ -195,6 +195,62 @@
   padding: 7px 10px;
 }
 
+.endedState {
+  display: grid;
+  width: min(100%, 520px);
+  place-items: center;
+  align-self: center;
+  justify-self: center;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 26px 80px rgba(15, 23, 42, 0.12);
+  padding: clamp(24px, 5vw, 42px);
+  text-align: center;
+}
+
+.endedIcon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 12px;
+  place-items: center;
+  border: 1px solid rgba(91, 35, 255, 0.18);
+  border-radius: 18px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
+
+.endedState h1 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.endedState p:not(.eyebrow) {
+  margin: 10px 0 20px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.endedState a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  box-shadow: 0 4px 0 #3d16c0, 0 12px 28px rgba(91, 35, 255, 0.20);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 18px;
+  text-decoration: none;
+}
+
 @media (max-width: 1180px) {
   .stageLayoutWithPanel {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
