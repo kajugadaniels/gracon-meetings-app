@@ -17,6 +17,8 @@
   --color-error: #f43f5e;
   --color-error-subtle: rgba(244, 63, 94, 0.08);
   --color-error-border: rgba(244, 63, 94, 0.22);
+  --radius-md: 10px;
+  --radius-lg: 16px;
   --font-sans: "DM Sans", Arial, sans-serif;
 }
 
