@@ -30,6 +30,7 @@ metadata, and audit history through `api/meetings`.
 - Local `/login` route matches the `app/documents` developer-login pattern.
 - Production can redirect to `app/app/login` by setting `MEETINGS_USE_MAIN_APP_LOGIN=true`.
 - Same-origin `/api/session`, `/api/refresh`, and `/api/logout` routes validate shared cookies server-side.
+- Loading states now use `MeetingsLoadingState` for session recovery, route transitions, and Stream room preparation.
 - Protected `/meetings` route is available as the initial authenticated workspace.
 - Same-origin `/api/meetings` route handlers proxy meeting actions to `api/meetings` with server-resolved auth tokens, so production HttpOnly cookies keep working.
 - The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
@@ -113,6 +114,7 @@ npm run lint
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
 - `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for seeded list pages.
 - `src/components/meetings/live/MeetingRoom.tsx` owns the Stream room mount/unmount lifecycle.
+- `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
 
 ## Styling Rules
