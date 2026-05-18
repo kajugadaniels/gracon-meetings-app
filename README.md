@@ -35,6 +35,7 @@ metadata, and audit history through `api/meetings`.
 - The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
 - `/meetings/join/:meetingId` opens the live Stream room after requesting a call-scoped token from `api/meetings`.
 - If `api/meetings` is offline, same-origin proxy routes now return a clean 503 response instead of crashing the Next.js route.
+- The authenticated shell uses a flush top navbar, left meetings sidebar, account avatar dropdown, and `/home` as the post-login landing route.
 - Route styling uses `.module.css` files rather than growing `globals.css`.
 
 ## Environment
@@ -83,6 +84,7 @@ npm run lint
 
 ## Meeting Workspace Flow
 
+- `src/constants/meetings-nav.tsx` owns the protected meetings sidebar links.
 - `src/lib/meetings/api-client.ts` is the typed browser client.
 - `src/lib/server/meetings-api-proxy.ts` is the server-side bridge to `api/meetings`.
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
