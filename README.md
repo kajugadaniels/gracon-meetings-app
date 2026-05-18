@@ -35,6 +35,7 @@ metadata, and audit history through `api/meetings`.
 - Same-origin `/api/meetings` route handlers proxy meeting actions to `api/meetings` with server-resolved auth tokens, so production HttpOnly cookies keep working.
 - The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
 - `/meetings/join/:meetingId` opens the live Stream room after requesting a call-scoped token from `api/meetings`.
+- `/meetings/:id` renders a static in-meeting room UI for design validation with mute, video, recording, share, captions, members, chat, and invite controls.
 - If `api/meetings` is offline, same-origin proxy routes now return a clean 503 response instead of crashing the Next.js route.
 - The authenticated shell uses a flush top navbar, left meetings sidebar, account avatar dropdown, and `/home` as the post-login landing route.
 - The topbar and sidebar live in dedicated `src/components/layout` components; protected layout owns only session recovery and shell placement.
@@ -114,6 +115,7 @@ npm run lint
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
 - `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for seeded list pages.
 - `src/components/meetings/live/MeetingRoom.tsx` owns the Stream room mount/unmount lifecycle.
+- `src/components/meetings/StaticMeetingRoom.tsx` owns the static Zoom-style meeting room surface used before full media integration.
 - `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
 
