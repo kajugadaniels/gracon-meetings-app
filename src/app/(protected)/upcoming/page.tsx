@@ -3,77 +3,10 @@
  */
 import type { Metadata } from 'next';
 import { CalendarClock, Clock3, ShieldCheck, UsersRound } from 'lucide-react';
-import { MeetingCard } from '@/components/meetings/MeetingCard';
+import { PaginatedMeetingGrid } from '@/components/meetings/PaginatedMeetingGrid';
 import { UpcomingScheduleButton } from '@/components/meetings/UpcomingScheduleButton';
+import { getMeetingsSummary, getUpcomingMeetingCards } from '@/lib/meetings/static-meetings';
 import styles from './page.module.css';
-
-const UPCOMING_MEETINGS = [
-    {
-        title: 'Institution Onboarding Review',
-        date: 'Today',
-        time: '10:00 AM',
-        attendees: ['DK', 'OU', 'JM', 'SN'],
-        overflowCount: 6,
-    },
-    {
-        title: 'Product Roadmap Alignment',
-        date: 'Today',
-        time: '1:30 PM',
-        attendees: ['DK', 'RN', 'IM', 'AK'],
-        overflowCount: 4,
-    },
-    {
-        title: 'Compliance Document Walkthrough',
-        date: 'Tomorrow',
-        time: '9:15 AM',
-        attendees: ['DK', 'BK', 'CM', 'YA'],
-        overflowCount: 3,
-    },
-    {
-        title: 'Partner Banking Integration Check',
-        date: 'Friday',
-        time: '3:00 PM',
-        attendees: ['DK', 'PN', 'EM', 'LS'],
-        overflowCount: 8,
-    },
-    {
-        title: 'Land Registry Workflow Review',
-        date: 'Monday',
-        time: '11:00 AM',
-        attendees: ['DK', 'AN', 'TU', 'RN'],
-        overflowCount: 5,
-    },
-    {
-        title: 'Task Management Launch Sync',
-        date: 'Tuesday',
-        time: '4:45 PM',
-        attendees: ['DK', 'IM', 'AK', 'SM'],
-        overflowCount: 6,
-    },
-];
-
-const SUMMARY_ITEMS = [
-    {
-        label: 'Today',
-        value: '2',
-        icon: CalendarClock,
-    },
-    {
-        label: 'This week',
-        value: '7',
-        icon: Clock3,
-    },
-    {
-        label: 'Invited guests',
-        value: '31',
-        icon: UsersRound,
-    },
-    {
-        label: 'Secure rooms',
-        value: '100%',
-        icon: ShieldCheck,
-    },
-];
 
 export const metadata: Metadata = {
     title: 'Upcoming',
@@ -84,6 +17,32 @@ export const metadata: Metadata = {
  * Renders a static upcoming meetings dashboard while scheduled-meeting APIs mature.
  */
 export default function UpcomingPage() {
+    const upcomingMeetings = getUpcomingMeetingCards();
+    const summary = getMeetingsSummary();
+    const nextMeeting = upcomingMeetings[0];
+    const summaryItems = [
+        {
+            label: 'Upcoming',
+            value: String(summary.upcomingCount),
+            icon: CalendarClock,
+        },
+        {
+            label: 'Loaded per page',
+            value: '18',
+            icon: Clock3,
+        },
+        {
+            label: 'Invited guests',
+            value: summary.invitedGuestCount.toLocaleString('en'),
+            icon: UsersRound,
+        },
+        {
+            label: 'Secure rooms',
+            value: '100%',
+            icon: ShieldCheck,
+        },
+    ];
+
     return (
         <section className={styles.page}>
             <header className={styles.hero}>
@@ -98,17 +57,17 @@ export default function UpcomingPage() {
 
                 <aside className={styles.focusPanel} aria-label="Next meeting">
                     <span>Next meeting</span>
-                    <strong>Institution Onboarding Review</strong>
-                    <p>Today · 10:00 AM</p>
+                    <strong>{nextMeeting?.title ?? 'No scheduled meeting'}</strong>
+                    <p>{nextMeeting ? `${nextMeeting.date} · ${nextMeeting.time}` : 'Schedule a secure room'}</p>
                     <div className={styles.focusMeta}>
-                        <small>Invite only</small>
-                        <small>Ready</small>
+                        <small>{nextMeeting?.visibility.replace('_', ' ').toLowerCase() ?? 'Private'}</small>
+                        <small>{nextMeeting?.readiness.replace('_', ' ').toLowerCase() ?? 'Ready'}</small>
                     </div>
                 </aside>
             </header>
 
             <div className={styles.summaryGrid} aria-label="Upcoming meetings summary">
-                {SUMMARY_ITEMS.map((item) => {
+                {summaryItems.map((item) => {
                     const Icon = item.icon;
                     return (
                         <article key={item.label} className={styles.summaryCard}>
@@ -131,18 +90,11 @@ export default function UpcomingPage() {
             </div>
 
             <section className={styles.contentGrid} aria-label="Scheduled meetings">
-                <div className={styles.meetingList}>
-                    {UPCOMING_MEETINGS.map((meeting) => (
-                        <MeetingCard
-                            key={`${meeting.title}-${meeting.time}`}
-                            title={meeting.title}
-                            date={meeting.date}
-                            time={meeting.time}
-                            attendees={meeting.attendees}
-                            overflowCount={meeting.overflowCount}
-                        />
-                    ))}
-                </div>
+                <PaginatedMeetingGrid
+                    meetings={upcomingMeetings}
+                    pageSize={18}
+                    ariaLabel="Scheduled meetings"
+                />
 
                 <aside className={styles.sidePanel} aria-label="Preparation checklist">
                     <p className={styles.eyebrow}>Readiness</p>
