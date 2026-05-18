@@ -45,6 +45,7 @@ metadata, and audit history through `api/meetings`.
 - `/home` now reads the shared meetings seed dataset through typed adapters and only renders the first 6 upcoming meetings.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
+- `/invitations/:token` renders the secure meeting invitation acceptance flow. It previews the invite, sends/verifies email OTP when required, completes the identity gate for verified users, and accepts only through `api/meetings`.
 - `/upcoming` renders a static scheduled-meetings dashboard using the reusable `MeetingCard` component.
 - `/upcoming` follows the compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
 - `/upcoming` paginates the shared seed dataset at 18 meeting cards per page.
@@ -119,6 +120,7 @@ npm run lint
 - `src/components/meetings/MeetingRoom.tsx` owns the static Zoom-style meeting room surface used before full media integration.
 - `src/components/meetings/MeetingControlDock.tsx` owns the static room action controls so media actions can evolve independently from room layout.
 - `src/components/meetings/MeetingCollaborationPanel.tsx` owns the animated Members/Chat tab shell, while `MeetingMembersPanel.tsx`, `MeetingChatPanel.tsx`, and `MeetingInviteDialog.tsx` keep their focused room responsibilities.
+- `src/components/invitations/MeetingInvitationAcceptance.tsx` owns the public invite acceptance flow and must keep backend verification gates authoritative.
 - `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
 
