@@ -51,6 +51,7 @@ metadata, and audit history through `api/meetings`.
 - `/previous` renders a static completed-meetings dashboard using the reusable `MeetingCard` component.
 - `/previous` follows the same compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
 - `/previous` paginates the shared seed dataset at 18 meeting cards per page.
+- `/previous` uses `PreviousMeetingsExplorer` for title search, recorded/this-month/follow-up filters, custom date ranges, and one-row desktop controls.
 - `/recordings` renders a static recordings library using the reusable `RecordingCard` component with Play and Share actions.
 - `/recordings` follows the compact dashboard direction with minimal recording cards and three recordings per desktop row.
 - `/recordings` paginates 40 ready recorded meetings at 18 recording cards per page.
