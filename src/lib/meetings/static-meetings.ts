@@ -56,6 +56,7 @@ export interface MeetingCardView {
     title: string;
     date: string;
     time: string;
+    scheduledStartAt: string;
     attendees: string[];
     overflowCount: number;
     visibility: SeedMeeting['visibility'];
@@ -104,6 +105,7 @@ function toMeetingCardView(meeting: SeedMeeting): MeetingCardView {
         title: meeting.title,
         date: DATE_FORMATTER.format(new Date(meeting.scheduledStartAt)),
         time: TIME_FORMATTER.format(new Date(meeting.scheduledStartAt)),
+        scheduledStartAt: meeting.scheduledStartAt,
         attendees: visibleAttendees.map((attendee) => attendee.initials),
         overflowCount: Math.max(meeting.attendeeCount - visibleAttendees.length, 0),
         visibility: meeting.visibility,
