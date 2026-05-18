@@ -220,110 +220,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.meetingCard {
-  display: grid;
-  gap: 16px;
-  border: 1px solid var(--color-border);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
-  padding: clamp(18px, 2.4vw, 30px);
-}
-
-.meetingCard svg {
-  color: var(--color-primary);
-}
-
-.meetingCard h2 {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: clamp(18px, 2vw, 26px);
-  font-weight: 900;
-  letter-spacing: 0;
-  line-height: 1.2;
-}
-
-.meetingCard p {
-  margin: -4px 0 8px;
-  color: var(--color-text-secondary);
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.meetingFooter {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.avatarStack {
-  display: flex;
-  align-items: center;
-}
-
-.avatarStack span {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border: 2px solid white;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: var(--color-primary);
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.avatarStack span + span {
-  margin-left: -10px;
-}
-
-.avatarStack span:nth-child(2) {
-  background: #ecfeff;
-  color: #0369a1;
-}
-
-.avatarStack span:nth-child(3) {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.avatarStack span:nth-child(4) {
-  background: #dcfce7;
-  color: #047857;
-}
-
-.meetingActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.meetingActions button {
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: white;
-  color: var(--color-text-primary);
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 900;
-  padding: 0 14px;
-}
-
-.meetingActions button:first-child {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-  color: white;
-}
-
 .skeletonBlock,
 .skeletonLineWide,
 .skeletonLineShort {
@@ -404,7 +300,6 @@
     min-height: 168px;
   }
 
-  .meetingFooter,
   .sectionHeader {
     align-items: flex-start;
     flex-direction: column;
@@ -417,8 +312,7 @@
   }
 
   .hero,
-  .actionCard,
-  .meetingCard {
+  .actionCard {
     border-radius: 14px;
   }
 
