@@ -1,0 +1,542 @@
+/**
+ * Static meeting room styles.
+ */
+.room {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.07);
+  padding: 18px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+
+.header p {
+  margin: 8px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.headerActions,
+.secureBadge,
+.headerActions button {
+  display: inline-flex;
+  align-items: center;
+}
+
+.headerActions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.secureBadge,
+.headerActions button {
+  gap: 7px;
+  min-height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 12px;
+}
+
+.secureBadge {
+  color: var(--color-success);
+}
+
+.headerActions button {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+}
+
+.stageLayout {
+  display: grid;
+  gap: 12px;
+}
+
+.stage {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.speakerTile {
+  position: relative;
+  display: grid;
+  min-height: 420px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid rgba(91, 35, 255, 0.18);
+  border-radius: 22px;
+  background: #111827;
+  color: white;
+}
+
+.speakerAvatar {
+  display: grid;
+  width: 132px;
+  height: 132px;
+  place-items: center;
+  border: 4px solid rgba(255, 255, 255, 0.12);
+  border-radius: 44px;
+  background: var(--color-primary);
+  box-shadow: 0 22px 55px rgba(91, 35, 255, 0.28);
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.speakerMeta,
+.recordingPill {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+}
+
+.speakerMeta {
+  left: 18px;
+  bottom: 18px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.10);
+  padding: 10px 13px;
+}
+
+.speakerMeta strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.speakerMeta span {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+}
+
+.recordingPill {
+  top: 18px;
+  right: 18px;
+  gap: 7px;
+  background: rgba(220, 38, 38, 0.18);
+  color: #fecaca;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 11px;
+}
+
+.participantGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.participantTile {
+  display: grid;
+  gap: 5px;
+  min-height: 120px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 14px;
+  text-align: center;
+}
+
+.participantTile span,
+.memberItem > span,
+.inviteList article > span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.participantTile strong {
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.participantTile small {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.controlDock {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.07);
+  padding: 10px;
+}
+
+.controlDock button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 12px;
+}
+
+.controlDock button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.controlDock .leaveButton {
+  border-color: var(--color-error);
+  background: var(--color-error);
+  color: white;
+}
+
+.sideRail {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+}
+
+.panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+  padding: 14px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.panelHeader h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.panelHeader span {
+  border-radius: 999px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+}
+
+.memberList,
+.messageList,
+.inviteList {
+  display: grid;
+  gap: 8px;
+}
+
+.memberItem,
+.inviteList article {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  background: white;
+  padding: 10px;
+}
+
+.memberItem {
+  grid-template-columns: 40px minmax(0, 1fr);
+}
+
+.memberItem strong,
+.inviteList strong {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memberItem small,
+.inviteList small {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messageList article {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  background: white;
+  padding: 10px;
+}
+
+.messageList article div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.messageList strong {
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.messageList span,
+.messageList p {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.messageList p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.chatComposer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.chatComposer input,
+.inviteSearch input {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 13px;
+  outline: 0;
+}
+
+.chatComposer input,
+.inviteSearch {
+  min-height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: white;
+  padding: 0 11px;
+}
+
+.chatComposer button,
+.inviteList button,
+.inviteLink button,
+.dialogHeader button {
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 12px;
+}
+
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 8, 28, 0.26);
+  backdrop-filter: blur(10px);
+  padding: 18px;
+}
+
+.inviteDialog {
+  display: grid;
+  gap: 14px;
+  width: min(100%, 560px);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background: white;
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.20);
+  padding: 18px;
+  animation: dialogIn 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dialogHeader,
+.inviteLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dialogHeader h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.dialogHeader button {
+  min-height: 34px;
+  border-color: var(--color-border);
+  background: white;
+  color: var(--color-text-primary);
+}
+
+.inviteSearch {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.inviteSearch span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.inviteLink {
+  border: 1px solid var(--color-border);
+  border-radius: 15px;
+  background: var(--color-bg-base);
+  padding: 12px;
+}
+
+.inviteLink span {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.inviteLink strong {
+  display: block;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.inviteLink button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+}
+
+.inviteList button {
+  min-height: 32px;
+}
+
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (min-width: 1180px) {
+  .stageLayout {
+    grid-template-columns: minmax(0, 1fr) minmax(290px, 340px);
+    align-items: start;
+  }
+}
+
+@media (max-width: 860px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .participantGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .speakerTile {
+    min-height: 320px;
+  }
+
+  .participantGrid,
+  .chatComposer {
+    grid-template-columns: 1fr;
+  }
+
+  .controlDock button,
+  .headerActions,
+  .headerActions button,
+  .secureBadge {
+    width: 100%;
+  }
+
+  .dialogHeader,
+  .inviteLink {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
