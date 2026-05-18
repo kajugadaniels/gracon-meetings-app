@@ -5,7 +5,6 @@
 
 import {
     Circle,
-    ShieldCheck,
     UserPlus,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -113,10 +112,6 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                     <p>{meeting.date} · {meeting.time} · Hosted by {meeting.hostName}</p>
                 </div>
                 <div className={styles.headerActions}>
-                    <span className={styles.secureBadge}>
-                        <ShieldCheck size={15} />
-                        Secure room
-                    </span>
                     <button type="button" onClick={() => setInviteOpen(true)}>
                         <UserPlus size={16} />
                         Invite
