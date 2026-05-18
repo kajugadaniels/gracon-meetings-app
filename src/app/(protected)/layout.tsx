@@ -67,9 +67,6 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     useEffect(() => {
         let ignore = false;
 
-        setLoading(true);
-        setSessionError(null);
-
         fetchCurrentUser().then((result) => {
             if (ignore) return;
 
@@ -124,7 +121,11 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
                     <div className={styles.errorActions}>
                         <button
                             className={styles.primaryAction}
-                            onClick={() => setRetryKey((value) => value + 1)}
+                            onClick={() => {
+                                setLoading(true);
+                                setSessionError(null);
+                                setRetryKey((value) => value + 1);
+                            }}
                         >
                             Try again
                         </button>
