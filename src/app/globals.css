@@ -1,26 +1,46 @@
+/**
+ * Global design tokens and base styles for app/meetings.
+ */
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-app-bg: #f7f8fb;
+  --color-primary: #5B23FF;
+  --color-primary-hover: #4a1be0;
+  --color-primary-glow: rgba(91, 35, 255, 0.35);
+  --color-primary-subtle: rgba(91, 35, 255, 0.08);
+  --color-border: rgba(24, 22, 56, 0.10);
+  --color-border-primary: rgba(91, 35, 255, 0.20);
+  --color-text-primary: #171433;
+  --color-text-secondary: #4b4967;
+  --color-text-muted: #7c7a95;
+  --color-error: #f43f5e;
+  --color-error-subtle: rgba(244, 63, 94, 0.08);
+  --color-error-border: rgba(244, 63, 94, 0.22);
+  --font-sans: "DM Sans", Arial, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  min-height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--color-app-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
 }
