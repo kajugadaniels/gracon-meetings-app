@@ -1,0 +1,48 @@
+/**
+ * Meeting control dock styles.
+ */
+.controlDock {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.07);
+  padding: 10px;
+}
+
+.controlDock button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 12px;
+}
+
+.controlDock button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.controlDock .leaveButton {
+  border-color: var(--color-error);
+  background: var(--color-error);
+  color: white;
+}
+
+@media (max-width: 620px) {
+  .controlDock button {
+    width: 100%;
+  }
+}
