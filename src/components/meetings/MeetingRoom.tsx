@@ -4,26 +4,15 @@
 'use client';
 
 import {
-    Captions,
+    Circle,
     Copy,
-    Hand,
-    MessageSquare,
-    Mic,
-    MicOff,
-    MonitorUp,
-    MoreHorizontal,
-    PhoneOff,
     Search,
-    Settings,
     ShieldCheck,
     UserPlus,
-    UsersRound,
-    Video,
-    VideoOff,
-    Circle,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { MeetingRoomView } from '@/lib/meetings/static-meetings';
+import { MeetingControlDock } from './MeetingControlDock';
 import styles from './meeting-room.module.css';
 
 interface MeetingRoomProps {
@@ -145,52 +134,16 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                         ))}
                     </div>
 
-                    <div className={styles.controlDock} aria-label="Meeting actions">
-                        <button type="button" onClick={() => setMuted((value) => !value)}>
-                            {muted ? <MicOff size={18} /> : <Mic size={18} />}
-                            {muted ? 'Unmute' : 'Mute'}
-                        </button>
-                        <button type="button" onClick={() => setCameraOff((value) => !value)}>
-                            {cameraOff ? <VideoOff size={18} /> : <Video size={18} />}
-                            {cameraOff ? 'Start video' : 'Stop video'}
-                        </button>
-                        <button type="button">
-                            <MonitorUp size={18} />
-                            Share
-                        </button>
-                        <button type="button" onClick={() => setRecording((value) => !value)}>
-                            <Circle size={14} fill="currentColor" />
-                            {recording ? 'Stop recording' : 'Record'}
-                        </button>
-                        <button type="button">
-                            <Captions size={18} />
-                            Captions
-                        </button>
-                        <button type="button">
-                            <Hand size={18} />
-                            Raise hand
-                        </button>
-                        <button type="button" onClick={() => setMembersOpen((value) => !value)}>
-                            <UsersRound size={18} />
-                            Members
-                        </button>
-                        <button type="button" onClick={() => setChatOpen((value) => !value)}>
-                            <MessageSquare size={18} />
-                            Chat
-                        </button>
-                        <button type="button">
-                            <Settings size={18} />
-                            Settings
-                        </button>
-                        <button type="button">
-                            <MoreHorizontal size={18} />
-                            More
-                        </button>
-                        <button type="button" className={styles.leaveButton}>
-                            <PhoneOff size={18} />
-                            End
-                        </button>
-                    </div>
+                    <MeetingControlDock
+                        muted={muted}
+                        cameraOff={cameraOff}
+                        recording={recording}
+                        onToggleMute={() => setMuted((value) => !value)}
+                        onToggleCamera={() => setCameraOff((value) => !value)}
+                        onToggleRecording={() => setRecording((value) => !value)}
+                        onToggleMembers={() => setMembersOpen((value) => !value)}
+                        onToggleChat={() => setChatOpen((value) => !value)}
+                    />
                 </main>
 
                 <aside className={styles.sideRail} aria-label="Meeting collaboration panels">
