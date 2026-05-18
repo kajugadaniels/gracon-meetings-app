@@ -33,8 +33,10 @@ metadata, and audit history through `api/meetings`.
 - Loading states now use `MeetingsLoadingState` for session recovery, route transitions, and Stream room preparation.
 - Protected `/meetings` route is available as the initial authenticated workspace.
 - Same-origin `/api/meetings` route handlers proxy meeting actions to `api/meetings` with server-resolved auth tokens, so production HttpOnly cookies keep working.
+- Same-origin recording proxy routes live under `/api/meetings/:id/recordings/*`; browser components never call `api/meetings` directly for recording control.
 - The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
 - `/meetings/join/:meetingId` opens the live Stream room after requesting a call-scoped token from `api/meetings`.
+- `/meetings/join/:meetingId` can start and stop host-controlled recordings through same-origin proxy routes, so recording actions stay audited in `api/meetings`.
 - `/meetings/:id` renders a static in-meeting room UI for design validation with mute, video, recording, share, captions, members, chat, and invite controls.
 - `/meetings/:id` now uses a full-screen participant stage, a fixed bottom `MeetingControlDock`, and a Framer Motion-powered collaboration panel that opens Members or Chat as tabs only when requested.
 - If `api/meetings` is offline, same-origin proxy routes now return a clean 503 response instead of crashing the Next.js route.
@@ -116,13 +118,14 @@ npm run lint
 - `src/lib/server/meetings-api-proxy.ts` is the server-side bridge to `api/meetings`.
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
 - `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for seeded list pages.
-- `src/components/meetings/live/MeetingRoom.tsx` owns the Stream room mount/unmount lifecycle.
+- `src/components/meetings/live/MeetingRoom.tsx` owns the Stream room mount/unmount lifecycle and live recording toggles.
 - `src/components/meetings/MeetingRoom.tsx` owns the static Zoom-style meeting room surface used before full media integration.
 - `src/components/meetings/MeetingControlDock.tsx` owns the static room action controls so media actions can evolve independently from room layout.
 - `src/components/meetings/MeetingCollaborationPanel.tsx` owns the animated Members/Chat tab shell, while `MeetingMembersPanel.tsx`, `MeetingChatPanel.tsx`, and `MeetingInviteDialog.tsx` keep their focused room responsibilities.
 - `src/components/invitations/MeetingInvitationAcceptance.tsx` owns the public invite acceptance flow and must keep backend verification gates authoritative.
 - `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
+- Recording start/stop is explicit host action. The frontend may show immediate status feedback, but the backend audit event is the source of truth.
 
 ## Styling Rules
 
