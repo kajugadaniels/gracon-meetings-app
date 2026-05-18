@@ -1,0 +1,109 @@
+/**
+ * Meeting chat panel styles.
+ */
+.panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+  padding: 14px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.panelHeader h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.panelHeader span {
+  border-radius: 999px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+}
+
+.messageList {
+  display: grid;
+  gap: 8px;
+}
+
+.messageList article {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  background: white;
+  padding: 10px;
+}
+
+.messageList article div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.messageList strong {
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.messageList span,
+.messageList p {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.messageList p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.chatComposer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.chatComposer input {
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: white;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 13px;
+  outline: 0;
+  padding: 0 11px;
+}
+
+.chatComposer button {
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 12px;
+}
+
+@media (max-width: 620px) {
+  .chatComposer {
+    grid-template-columns: 1fr;
+  }
+}
