@@ -217,6 +217,17 @@
   background: var(--color-primary-subtle);
 }
 
+.verificationOptionDisabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.verificationOptionDisabled:hover {
+  border-color: var(--color-border);
+  box-shadow: none;
+  transform: none;
+}
+
 .optionIcon {
   display: grid;
   width: 34px;
