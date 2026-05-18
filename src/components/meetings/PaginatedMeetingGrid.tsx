@@ -51,6 +51,7 @@ export function PaginatedMeetingGrid({
                             time={meeting.time}
                             attendees={meeting.attendees}
                             overflowCount={meeting.overflowCount}
+                            meetingId={meeting.id}
                         />
                     ))}
                 </div>
