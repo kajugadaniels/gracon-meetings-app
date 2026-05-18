@@ -7,8 +7,16 @@
 }
 
 .main {
+  display: grid;
+  align-content: start;
+  gap: 6px;
   min-height: 100dvh;
   padding: 80px 4px 4px;
+}
+
+.main > * {
+  width: 100%;
+  min-width: 0;
 }
 
 .loadingShell,
