@@ -13,6 +13,11 @@ import { useRouter } from 'next/navigation';
 import type { ComponentType } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSessionUser } from '@/app/(protected)/layout';
+import {
+    createMeeting,
+    getMeetingJoinPath,
+    startMeeting,
+} from '@/lib/meetings/api-client';
 import type { MeetingCardView } from '@/lib/meetings/static-meetings';
 import { JoinMeetingDialog } from './JoinMeetingDialog';
 import { MeetingCard } from './MeetingCard';
@@ -122,6 +127,8 @@ export function MeetingsWorkspace({ meetings }: MeetingsWorkspaceProps) {
     const [showSkeleton, setShowSkeleton] = useState(true);
     const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
     const [joinUrl, setJoinUrl] = useState('');
+    const [instantStarting, setInstantStarting] = useState(false);
+    const [instantError, setInstantError] = useState<string | null>(null);
 
     const hostName = useMemo(() => {
         if (!user) return 'Host';
@@ -139,6 +146,7 @@ export function MeetingsWorkspace({ meetings }: MeetingsWorkspaceProps) {
 
     function closeDialog() {
         setActiveDialog(null);
+        setInstantError(null);
     }
 
     function handleQuickAction(action: QuickAction) {
@@ -148,6 +156,37 @@ export function MeetingsWorkspace({ meetings }: MeetingsWorkspaceProps) {
         }
 
         setActiveDialog(action);
+    }
+
+    /**
+     * Creates and starts an instant Gracon meeting before entering the live room.
+     */
+    async function handleInstantMeetingStart() {
+        if (instantStarting) return;
+
+        setInstantStarting(true);
+        setInstantError(null);
+
+        try {
+            const createdMeeting = await createMeeting({
+                title: `Instant meeting with ${hostName}`,
+                description: 'Instant secure meeting room.',
+                visibility: 'INVITE_ONLY',
+                recordingEnabled: false,
+                waitingRoomEnabled: true,
+                joinBeforeHost: false,
+            });
+            const liveMeeting = await startMeeting(createdMeeting.id);
+            router.push(getMeetingJoinPath(liveMeeting.id));
+        } catch (err) {
+            setInstantError(
+                err instanceof Error
+                    ? err.message
+                    : 'Unable to start an instant meeting right now.',
+            );
+        } finally {
+            setInstantStarting(false);
+        }
     }
 
     if (showSkeleton) {
@@ -238,7 +277,10 @@ export function MeetingsWorkspace({ meetings }: MeetingsWorkspaceProps) {
 
             {activeDialog === 'new' && (
                 <NewMeetingDialog
+                    error={instantError}
+                    instantStarting={instantStarting}
                     onClose={closeDialog}
+                    onInstantStart={handleInstantMeetingStart}
                     onSchedule={() => setActiveDialog('schedule')}
                 />
             )}
