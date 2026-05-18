@@ -63,14 +63,15 @@
 }
 
 .messageList article {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  display: flex;
   gap: 9px;
   align-items: end;
+  min-width: 0;
 }
 
 .avatar {
   display: grid;
+  flex: 0 0 auto;
   width: 34px;
   height: 34px;
   place-items: center;
@@ -83,7 +84,9 @@
 
 .messageBody {
   display: grid;
+  flex: 1 1 auto;
   gap: 5px;
+  min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: 15px 15px 15px 6px;
   background: white;
@@ -118,19 +121,15 @@
 }
 
 .ownMessage {
-  grid-template-columns: minmax(0, 1fr) 34px;
+  flex-direction: row-reverse;
 }
 
 .ownMessage .avatar {
-  grid-column: 2;
-  grid-row: 1;
   background: var(--color-primary);
   color: white;
 }
 
 .ownMessage .messageBody {
-  grid-column: 1;
-  grid-row: 1;
   border-color: rgba(91, 35, 255, 0.22);
   border-radius: 15px 15px 6px 15px;
   background: rgba(91, 35, 255, 0.05);
