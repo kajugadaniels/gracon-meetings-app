@@ -86,3 +86,10 @@ export function issueMeetingStreamToken(
         method: 'POST',
     });
 }
+
+/**
+ * Builds the local live-room route for a Gracon meeting id.
+ */
+export function getMeetingJoinPath(meetingId: string): string {
+    return `/meetings/join/${encodeURIComponent(meetingId)}`;
+}
