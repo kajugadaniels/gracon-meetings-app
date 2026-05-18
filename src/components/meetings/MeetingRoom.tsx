@@ -5,9 +5,11 @@
 
 import {
     Circle,
+    Home,
     UserPlus,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 import { useState } from 'react';
 import type { MeetingRoomView } from '@/lib/meetings/static-meetings';
 import { MeetingCollaborationPanel } from './MeetingCollaborationPanel';
@@ -97,10 +99,30 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
     const [recording, setRecording] = useState(true);
     const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
+    const [ended, setEnded] = useState(false);
     const stageParticipants = getStageParticipants(meeting);
 
     function openPanel(panel: CollaborationPanel) {
         setActivePanel((currentPanel) => (currentPanel === panel ? null : panel));
+    }
+
+    if (ended) {
+        return (
+            <section className={styles.room}>
+                <div className={styles.endedState}>
+                    <span className={styles.endedIcon}>
+                        <Home size={22} />
+                    </span>
+                    <p className={styles.eyebrow}>Meeting ended</p>
+                    <h1>{meeting.title}</h1>
+                    <p>
+                        This room is closed. Participants can no longer speak, chat, or
+                        record in this session.
+                    </p>
+                    <Link href="/home">Go back home</Link>
+                </div>
+            </section>
+        );
     }
 
     return (
@@ -183,6 +205,7 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                 onToggleRecording={() => setRecording((value) => !value)}
                 onToggleMembers={() => openPanel('members')}
                 onToggleChat={() => openPanel('chat')}
+                onEndMeeting={() => setEnded(true)}
             />
 
             {inviteOpen && (
