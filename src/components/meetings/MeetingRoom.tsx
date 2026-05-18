@@ -8,12 +8,12 @@ import {
     ShieldCheck,
     UserPlus,
 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import type { MeetingRoomView } from '@/lib/meetings/static-meetings';
-import { MeetingChatPanel } from './MeetingChatPanel';
+import { MeetingCollaborationPanel } from './MeetingCollaborationPanel';
 import { MeetingControlDock } from './MeetingControlDock';
 import { MeetingInviteDialog } from './MeetingInviteDialog';
-import { MeetingMembersPanel } from './MeetingMembersPanel';
 import styles from './meeting-room.module.css';
 
 interface MeetingRoomProps {
@@ -24,6 +24,15 @@ interface RoomMessage {
     sender: string;
     body: string;
     time: string;
+}
+
+type CollaborationPanel = 'members' | 'chat';
+
+interface StageParticipant {
+    initials: string;
+    name: string;
+    role: string;
+    speaking: boolean;
 }
 
 const INITIAL_MESSAGES: RoomMessage[] = [
@@ -45,15 +54,55 @@ const INITIAL_MESSAGES: RoomMessage[] = [
 ];
 
 /**
+ * Builds a stable initials fallback for the meeting host when seed data does not expose one.
+ */
+function getInitials(name: string) {
+    return name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join('') || 'GM';
+}
+
+/**
+ * Returns the visible stage participants using the host as the active speaker.
+ */
+function getStageParticipants(meeting: MeetingRoomView): StageParticipant[] {
+    const hostParticipant: StageParticipant = {
+        initials: getInitials(meeting.hostName),
+        name: meeting.hostName,
+        role: 'Speaking · Host',
+        speaking: true,
+    };
+
+    const otherParticipants = meeting.attendees
+        .filter((attendee) => attendee.name !== meeting.hostName)
+        .slice(0, 3)
+        .map<StageParticipant>((attendee, index) => ({
+            initials: attendee.initials,
+            name: attendee.name,
+            role: index % 2 === 0 ? 'Listening' : attendee.role,
+            speaking: false,
+        }));
+
+    return [hostParticipant, ...otherParticipants].slice(0, 4);
+}
+
+/**
  * Renders a non-media static meeting room with controls, chat, members, and invite flow.
  */
 export function MeetingRoom({ meeting }: MeetingRoomProps) {
     const [muted, setMuted] = useState(false);
     const [cameraOff, setCameraOff] = useState(false);
     const [recording, setRecording] = useState(true);
-    const [chatOpen, setChatOpen] = useState(true);
-    const [membersOpen, setMembersOpen] = useState(true);
+    const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
+    const stageParticipants = getStageParticipants(meeting);
+
+    function openPanel(panel: CollaborationPanel) {
+        setActivePanel((currentPanel) => (currentPanel === panel ? null : panel));
+    }
 
     return (
         <section className={styles.room}>
@@ -75,57 +124,71 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                 </div>
             </header>
 
-            <div className={styles.stageLayout}>
-                <main className={styles.stage} aria-label="Meeting stage">
-                    <div className={styles.speakerTile}>
-                        <div className={styles.speakerAvatar}>DK</div>
-                        <div className={styles.speakerMeta}>
-                            <strong>{meeting.hostName}</strong>
-                            <span>Speaking · Host</span>
-                        </div>
-                        {recording && (
-                            <div className={styles.recordingPill}>
-                                <Circle size={9} fill="currentColor" />
-                                Recording
-                            </div>
-                        )}
-                    </div>
-
-                    <div className={styles.participantGrid}>
-                        {meeting.attendees.slice(1, 7).map((attendee, index) => (
-                            <article key={attendee.email} className={styles.participantTile}>
-                                <span>{attendee.initials}</span>
-                                <strong>{attendee.name}</strong>
-                                <small>{index % 3 === 0 ? 'Muted' : attendee.role}</small>
-                            </article>
+            <motion.div
+                layout
+                className={`${styles.stageLayout} ${activePanel ? styles.stageLayoutWithPanel : ''}`}
+            >
+                <motion.main layout className={styles.stage} aria-label="Meeting stage">
+                    <div
+                        className={`${styles.videoGrid} ${
+                            stageParticipants.length === 1 ? styles.videoGridSingle : ''
+                        }`}
+                    >
+                        {stageParticipants.map((participant, index) => (
+                            <motion.article
+                                layout
+                                key={`${participant.name}-${participant.role}`}
+                                className={`${styles.videoTile} ${
+                                    participant.speaking ? styles.videoTileSpeaking : ''
+                                } ${
+                                    stageParticipants.length === 3 && index === 2
+                                        ? styles.videoTileFull
+                                        : ''
+                                }`}
+                                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                            >
+                                {participant.speaking && recording && (
+                                    <div className={styles.recordingPill}>
+                                        <Circle size={8} fill="currentColor" />
+                                        Recording
+                                    </div>
+                                )}
+                                <span className={styles.videoAvatar}>{participant.initials}</span>
+                                <div className={styles.videoMeta}>
+                                    <strong>{participant.name}</strong>
+                                    <small>{participant.role}</small>
+                                </div>
+                            </motion.article>
                         ))}
                     </div>
+                </motion.main>
 
-                    <MeetingControlDock
-                        muted={muted}
-                        cameraOff={cameraOff}
-                        recording={recording}
-                        onToggleMute={() => setMuted((value) => !value)}
-                        onToggleCamera={() => setCameraOff((value) => !value)}
-                        onToggleRecording={() => setRecording((value) => !value)}
-                        onToggleMembers={() => setMembersOpen((value) => !value)}
-                        onToggleChat={() => setChatOpen((value) => !value)}
-                    />
-                </main>
-
-                <aside className={styles.sideRail} aria-label="Meeting collaboration panels">
-                    {membersOpen && (
-                        <MeetingMembersPanel
+                <AnimatePresence initial={false}>
+                    {activePanel && (
+                        <MeetingCollaborationPanel
+                            key="meeting-collaboration-panel"
+                            activePanel={activePanel}
                             attendees={meeting.attendees}
                             attendeeCount={meeting.attendeeCount}
+                            initialMessages={INITIAL_MESSAGES}
+                            onChangePanel={setActivePanel}
+                            onClose={() => setActivePanel(null)}
                         />
                     )}
+                </AnimatePresence>
+            </motion.div>
 
-                    {chatOpen && (
-                        <MeetingChatPanel initialMessages={INITIAL_MESSAGES} />
-                    )}
-                </aside>
-            </div>
+            <MeetingControlDock
+                muted={muted}
+                cameraOff={cameraOff}
+                recording={recording}
+                activePanel={activePanel}
+                onToggleMute={() => setMuted((value) => !value)}
+                onToggleCamera={() => setCameraOff((value) => !value)}
+                onToggleRecording={() => setRecording((value) => !value)}
+                onToggleMembers={() => openPanel('members')}
+                onToggleChat={() => openPanel('chat')}
+            />
 
             {inviteOpen && (
                 <MeetingInviteDialog
