@@ -3,6 +3,7 @@
  */
 import type { Metadata } from 'next';
 import { MeetingsWorkspace } from '@/components/meetings/MeetingsWorkspace';
+import { getUpcomingMeetingCards } from '@/lib/meetings/static-meetings';
 
 export const metadata: Metadata = {
     title: 'Home',
@@ -13,5 +14,5 @@ export const metadata: Metadata = {
  * Renders the primary authenticated meetings workspace.
  */
 export default function HomePage() {
-    return <MeetingsWorkspace />;
+    return <MeetingsWorkspace meetings={getUpcomingMeetingCards(6)} />;
 }
