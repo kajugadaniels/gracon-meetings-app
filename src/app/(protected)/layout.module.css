@@ -1,0 +1,177 @@
+/**
+ * Protected meetings shell styles.
+ */
+.shell {
+  min-height: 100dvh;
+  background: var(--color-app-bg);
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.90);
+  padding: 14px clamp(18px, 4vw, 42px);
+  backdrop-filter: blur(24px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.brandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background: var(--color-primary);
+  color: white;
+  font-weight: 900;
+}
+
+.brandCopy {
+  min-width: 0;
+}
+
+.eyebrow {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.name {
+  display: block;
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user {
+  display: none;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.logout {
+  min-height: 40px;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 16px;
+}
+
+.main {
+  padding: clamp(24px, 4vw, 42px);
+}
+
+.loadingShell,
+.errorShell {
+  display: flex;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-app-bg);
+  padding: 24px;
+}
+
+.loadingCard,
+.errorCard {
+  width: min(100%, 420px);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.10);
+  padding: 28px;
+  text-align: center;
+}
+
+.loadingIcon {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 16px;
+  border: 3px solid rgba(91, 35, 255, 0.14);
+  border-top-color: var(--color-primary);
+  border-radius: 999px;
+  animation: spin 0.9s linear infinite;
+}
+
+.stateTitle {
+  margin: 0 0 6px;
+  color: var(--color-text-primary);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.stateCopy {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.errorActions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.primaryAction,
+.ghostAction {
+  min-height: 40px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 16px;
+}
+
+.primaryAction {
+  border: 0;
+  background: var(--color-primary);
+  color: white;
+}
+
+.ghostAction {
+  border: 1px solid var(--color-border);
+  background: white;
+  color: var(--color-text-primary);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (min-width: 760px) {
+  .user {
+    display: inline;
+  }
+}
