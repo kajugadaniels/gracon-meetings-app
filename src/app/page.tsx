@@ -7,5 +7,5 @@ import { redirect } from 'next/navigation';
  * Sends users to the protected meetings workspace.
  */
 export default function Home() {
-    redirect('/meetings');
+    redirect('/home');
 }
