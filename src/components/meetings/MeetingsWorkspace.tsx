@@ -230,6 +230,7 @@ export function MeetingsWorkspace({ meetings }: MeetingsWorkspaceProps) {
                             time={meeting.time}
                             attendees={meeting.attendees}
                             overflowCount={meeting.overflowCount}
+                            meetingId={meeting.id}
                         />
                     ))}
                 </div>
