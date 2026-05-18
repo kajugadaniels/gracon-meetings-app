@@ -54,8 +54,10 @@ function normalizeUser(profile: Record<string, unknown>) {
  */
 export async function GET(request: NextRequest) {
     try {
-        let { accessToken, refreshToken, refreshedTokens } =
-            await resolveAccessToken(request);
+        const session = await resolveAccessToken(request);
+        const refreshToken = session.refreshToken;
+        let accessToken = session.accessToken;
+        let refreshedTokens = session.refreshedTokens;
 
         if (!accessToken) {
             return clearSessionCookies(
