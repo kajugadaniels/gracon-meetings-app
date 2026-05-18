@@ -4,6 +4,7 @@
 'use client';
 
 import { useState } from 'react';
+import { CalendarPlus } from 'lucide-react';
 import { ScheduleMeetingDialog } from './ScheduleMeetingDialog';
 import styles from './upcoming-schedule-button.module.css';
 
@@ -20,6 +21,7 @@ export function UpcomingScheduleButton() {
                 className={styles.scheduleButton}
                 onClick={() => setOpen(true)}
             >
+                <CalendarPlus size={15} />
                 Schedule meeting
             </button>
 
