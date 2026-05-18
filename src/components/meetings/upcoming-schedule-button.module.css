@@ -2,6 +2,10 @@
  * Upcoming page schedule button styles.
  */
 .scheduleButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   min-height: 34px;
   border: 1px solid var(--color-primary);
   border-radius: 999px;
@@ -12,6 +16,10 @@
   font-size: 12px;
   font-weight: 500;
   padding: 0 12px;
+}
+
+.scheduleButton svg {
+  flex: 0 0 auto;
 }
 
 .scheduleButton:focus-visible {
