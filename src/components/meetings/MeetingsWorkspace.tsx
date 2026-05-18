@@ -5,7 +5,6 @@
 
 import {
     CalendarDays,
-    Copy,
     Plus,
     UserPlus,
     Video,
@@ -13,6 +12,7 @@ import {
 import type { ComponentType } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSessionUser } from '@/app/(protected)/layout';
+import { MeetingCard } from './MeetingCard';
 import styles from './meetings-workspace.module.css';
 
 interface ActionCard {
@@ -190,28 +190,14 @@ export function MeetingsWorkspace() {
 
                 <div className={styles.meetingGrid}>
                     {STATIC_MEETINGS.map((meeting) => (
-                        <article key={meeting.title} className={styles.meetingCard}>
-                            <CalendarDays size={24} />
-                            <h2>{meeting.title}</h2>
-                            <p>
-                                {meeting.date} · {meeting.time}
-                            </p>
-                            <div className={styles.meetingFooter}>
-                                <div className={styles.avatarStack} aria-label="Meeting attendees">
-                                    {meeting.attendees.map((attendee) => (
-                                        <span key={attendee}>{attendee}</span>
-                                    ))}
-                                    <span>+9</span>
-                                </div>
-                                <div className={styles.meetingActions}>
-                                    <button type="button">Start</button>
-                                    <button type="button">
-                                        <Copy size={15} />
-                                        Copy Invitation
-                                    </button>
-                                </div>
-                            </div>
-                        </article>
+                        <MeetingCard
+                            key={meeting.title}
+                            title={meeting.title}
+                            date={meeting.date}
+                            time={meeting.time}
+                            attendees={meeting.attendees}
+                            overflowCount={9}
+                        />
                     ))}
                 </div>
             </section>
