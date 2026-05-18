@@ -16,6 +16,27 @@ function getEnv(name: string): string | undefined {
     return process.env[name]?.trim() || undefined;
 }
 
+/**
+ * Keeps production parent-domain cookies without breaking localhost development.
+ */
+function normalizeCookieDomain(value: string | undefined): string | undefined {
+    if (!value) return undefined;
+
+    if (process.env.NODE_ENV !== 'production') {
+        const normalized = value.toLowerCase();
+
+        if (
+            normalized !== 'localhost' &&
+            normalized !== '.localhost' &&
+            !normalized.endsWith('.localhost')
+        ) {
+            return undefined;
+        }
+    }
+
+    return value;
+}
+
 function normalizeSameSite(value: string | undefined): CookieSameSite {
     const normalized = value?.toLowerCase();
     if (normalized === 'strict') return 'strict';
@@ -51,8 +72,9 @@ export const meetingsAuthCookiePolicy = {
         getEnv('AUTH_SESSION_HINT_COOKIE_NAME') ??
         getEnv('NEXT_PUBLIC_AUTH_SESSION_HINT_COOKIE_NAME') ??
         DEFAULT_SESSION_HINT_COOKIE,
-    cookieDomain:
+    cookieDomain: normalizeCookieDomain(
         getEnv('AUTH_COOKIE_DOMAIN') ?? getEnv('NEXT_PUBLIC_AUTH_COOKIE_DOMAIN'),
+    ),
     cookieSecure:
         getEnv('AUTH_COOKIE_SECURE') === 'true' ||
         getEnv('NEXT_PUBLIC_AUTH_COOKIE_SECURE') === 'true' ||
@@ -68,6 +90,12 @@ export const meetingsAuthCookiePolicy = {
         getEnv('AUTH_REFRESH_TOKEN_TTL') ?? getEnv('NEXT_PUBLIC_AUTH_REFRESH_TOKEN_TTL'),
         DEFAULT_REFRESH_TOKEN_TTL,
     ),
+    refreshRotationRequired:
+        (getEnv('AUTH_REFRESH_ROTATION') ??
+            getEnv('NEXT_PUBLIC_AUTH_REFRESH_ROTATION')) !== 'false',
+    refreshReuseDetectionRequired:
+        (getEnv('AUTH_REUSE_DETECTION') ??
+            getEnv('NEXT_PUBLIC_AUTH_REUSE_DETECTION')) !== 'false',
 };
 
 /**
@@ -96,4 +124,36 @@ export function shouldAllowReadableMeetingsAuthCookies(): boolean {
     if (explicit === 'false') return false;
 
     return process.env.NODE_ENV !== 'production';
+}
+
+function serializeClientCookie(name: string): string {
+    const parts = [
+        `${name}=`,
+        'path=/',
+        'max-age=0',
+        'expires=Thu, 01 Jan 1970 00:00:00 GMT',
+        `SameSite=${meetingsAuthCookiePolicy.cookieSameSite}`,
+    ];
+
+    if (meetingsAuthCookiePolicy.cookieDomain) {
+        parts.push(`domain=${meetingsAuthCookiePolicy.cookieDomain}`);
+    }
+    if (meetingsAuthCookiePolicy.cookieSecure) {
+        parts.push('Secure');
+    }
+
+    return parts.join('; ');
+}
+
+/**
+ * Clears readable development cookies from the browser during local recovery.
+ */
+export function clearMeetingsAuthCookies(): void {
+    if (typeof document === 'undefined') return;
+
+    document.cookie = serializeClientCookie(meetingsAuthCookiePolicy.accessCookieName);
+    document.cookie = serializeClientCookie(meetingsAuthCookiePolicy.refreshCookieName);
+    document.cookie = serializeClientCookie(
+        meetingsAuthCookiePolicy.sessionHintCookieName,
+    );
 }
