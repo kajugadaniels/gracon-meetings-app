@@ -61,6 +61,8 @@ export interface MeetingCardView {
     overflowCount: number;
     visibility: SeedMeeting['visibility'];
     readiness: SeedMeeting['readiness'];
+    hasRecording: boolean;
+    needsFollowUp: boolean;
 }
 
 export interface RecordingCardView {
@@ -110,6 +112,8 @@ function toMeetingCardView(meeting: SeedMeeting): MeetingCardView {
         overflowCount: Math.max(meeting.attendeeCount - visibleAttendees.length, 0),
         visibility: meeting.visibility,
         readiness: meeting.readiness,
+        hasRecording: Boolean(meeting.recording),
+        needsFollowUp: meeting.readiness === 'NEEDS_REVIEW',
     };
 }
 
