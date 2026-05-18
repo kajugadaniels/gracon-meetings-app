@@ -6,86 +6,160 @@
   gap: 12px;
 }
 
-.panelHeader {
+.summaryCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(248, 247, 255, 0.72);
+  padding: 12px;
+}
+
+.summaryCard div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.summaryLabel {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.summaryCard strong {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.securePill {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 8px;
+}
+
+.messageList {
+  display: grid;
+  gap: 10px;
+  max-height: min(440px, calc(100dvh - 360px));
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.messageList article {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 9px;
+  align-items: end;
+}
+
+.avatar {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.messageBody {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 15px 15px 15px 6px;
+  background: white;
+  padding: 10px;
+}
+
+.messageBody header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
 
-.panelHeader h2 {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.panelHeader span {
-  border-radius: 999px;
-  background: var(--color-primary-subtle);
-  color: var(--color-primary);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 8px;
-}
-
-.messageList {
-  display: grid;
-  gap: 8px;
-}
-
-.messageList article {
-  display: grid;
-  gap: 5px;
-  border: 1px solid var(--color-border);
-  border-radius: 13px;
-  background: white;
-  padding: 10px;
-}
-
-.messageList article div {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.messageList strong {
+.messageBody strong {
+  overflow: hidden;
   color: var(--color-text-primary);
   font-size: 12px;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.messageList span,
-.messageList p {
+.messageBody span,
+.messageBody p {
   color: var(--color-text-muted);
   font-size: 12px;
 }
 
-.messageList p {
+.messageBody p {
   margin: 0;
   line-height: 1.45;
+}
+
+.ownMessage {
+  grid-template-columns: minmax(0, 1fr) 34px;
+}
+
+.ownMessage .avatar {
+  grid-column: 2;
+  grid-row: 1;
+  background: var(--color-primary);
+  color: white;
+}
+
+.ownMessage .messageBody {
+  grid-column: 1;
+  grid-row: 1;
+  border-color: rgba(91, 35, 255, 0.22);
+  border-radius: 15px 15px 6px 15px;
+  background: rgba(91, 35, 255, 0.05);
 }
 
 .chatComposer {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: white;
+  padding: 7px;
 }
 
 .chatComposer input {
   min-width: 0;
-  min-height: 40px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: white;
+  min-height: 38px;
+  border: 0;
+  background: transparent;
   color: var(--color-text-primary);
   font: inherit;
   font-size: 13px;
   outline: 0;
-  padding: 0 11px;
+  padding: 0 5px;
 }
 
 .chatComposer button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
   border: 1px solid var(--color-primary);
   border-radius: 999px;
   background: var(--color-primary);
@@ -97,7 +171,22 @@
   padding: 0 12px;
 }
 
+.chatComposer button:hover {
+  background: var(--color-primary-hover);
+}
+
 @media (max-width: 620px) {
+  .summaryCard {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .messageList {
+    max-height: none;
+  }
+}
+
+@media (max-width: 460px) {
   .chatComposer {
     grid-template-columns: 1fr;
   }
