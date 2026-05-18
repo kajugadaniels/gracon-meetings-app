@@ -55,6 +55,7 @@ metadata, and audit history through `api/meetings`.
 - `/recordings` renders a static recordings library using the reusable `RecordingCard` component with Play and Share actions.
 - `/recordings` follows the compact dashboard direction with minimal recording cards and three recordings per desktop row.
 - `/recordings` paginates 40 ready recorded meetings at 18 recording cards per page.
+- `/recordings` uses `RecordingsExplorer` for title search, ready/shared/this-month filters, custom date ranges, and one-row desktop controls.
 - `/personal-room` renders a static reusable-room management page with room link, quick actions, settings, and readiness details.
 - `/personal-room` follows the compact dashboard direction with four room setting cards in one desktop row.
 - `src/data/meetings.json` contains 1000 deterministic meeting records, including 40 ready recordings, and `src/lib/meetings/static-meetings.ts` is the only adapter pages should use directly.
