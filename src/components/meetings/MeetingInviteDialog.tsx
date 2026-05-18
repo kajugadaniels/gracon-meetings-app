@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { Copy, Search } from 'lucide-react';
+import { Check, Copy, MailCheck, Search, ShieldCheck, UserCheck, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { MeetingRoomAttendeeView } from '@/lib/meetings/static-meetings';
 import styles from './meeting-invite-dialog.module.css';
@@ -14,6 +14,34 @@ interface MeetingInviteDialogProps {
     onClose: () => void;
 }
 
+type MeetingInviteVerificationRequirement = 'NONE' | 'EMAIL_OTP' | 'IDENTITY_VERIFICATION';
+
+const VERIFICATION_OPTIONS: Array<{
+    value: MeetingInviteVerificationRequirement;
+    label: string;
+    description: string;
+    icon: typeof ShieldCheck;
+}> = [
+    {
+        value: 'NONE',
+        label: 'No extra verification',
+        description: 'Recipient can join after signing in with their Gracon account.',
+        icon: UserCheck,
+    },
+    {
+        value: 'EMAIL_OTP',
+        label: 'Email verification',
+        description: 'Recipient confirms the invited email with a one-time code before joining.',
+        icon: MailCheck,
+    },
+    {
+        value: 'IDENTITY_VERIFICATION',
+        label: 'Identity verification',
+        description: 'Recipient must pass the identity challenge before accepting the meeting invite.',
+        icon: ShieldCheck,
+    },
+];
+
 /**
  * Renders the in-meeting invite flow with local invitee search.
  */
@@ -23,10 +51,15 @@ export function MeetingInviteDialog({
     onClose,
 }: MeetingInviteDialogProps) {
     const [inviteSearch, setInviteSearch] = useState('');
+    const [verificationRequirement, setVerificationRequirement] =
+        useState<MeetingInviteVerificationRequirement>('EMAIL_OTP');
+    const [invitedEmails, setInvitedEmails] = useState<Set<string>>(() => new Set());
+    const [copied, setCopied] = useState(false);
+    const meetingLink = `https://meet.gracon360.com/${meetingId}`;
 
     const visibleInvitees = useMemo(() => {
         const normalizedSearch = inviteSearch.trim().toLowerCase();
-        const candidates = attendees.slice(0, 8);
+        const candidates = attendees.slice(0, 10);
 
         if (normalizedSearch.length < 2) return candidates;
 
@@ -35,6 +68,16 @@ export function MeetingInviteDialog({
             || attendee.email.toLowerCase().includes(normalizedSearch)
         ));
     }, [attendees, inviteSearch]);
+
+    function markInvited(email: string) {
+        setInvitedEmails((currentEmails) => new Set(currentEmails).add(email));
+    }
+
+    async function copyMeetingLink() {
+        await navigator.clipboard.writeText(meetingLink);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1500);
+    }
 
     return (
         <div
@@ -49,42 +92,111 @@ export function MeetingInviteDialog({
                     <div>
                         <p className={styles.eyebrow}>Invite people</p>
                         <h2 id="invite-title">Bring someone into this room</h2>
+                        <p>Choose who can join and what proof they must complete before accepting.</p>
                     </div>
-                    <button type="button" onClick={onClose}>Close</button>
+                    <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close invite dialog">
+                        <X size={16} />
+                    </button>
                 </div>
-
-                <label className={styles.inviteSearch}>
-                    <Search size={16} />
-                    <span>Search invitees</span>
-                    <input
-                        value={inviteSearch}
-                        onChange={(event) => setInviteSearch(event.target.value)}
-                        placeholder="Search by name or email..."
-                    />
-                </label>
 
                 <div className={styles.inviteLink}>
                     <div>
                         <span>Meeting link</span>
-                        <strong>https://meet.gracon360.com/{meetingId}</strong>
+                        <strong>{meetingLink}</strong>
                     </div>
-                    <button type="button">
-                        <Copy size={15} />
-                        Copy
+                    <button type="button" onClick={() => void copyMeetingLink()}>
+                        {copied ? <Check size={15} /> : <Copy size={15} />}
+                        {copied ? 'Copied' : 'Copy'}
                     </button>
                 </div>
 
-                <div className={styles.inviteList}>
-                    {visibleInvitees.map((attendee) => (
-                        <article key={attendee.email}>
-                            <span>{attendee.initials}</span>
-                            <div>
-                                <strong>{attendee.name}</strong>
-                                <small>{attendee.email}</small>
-                            </div>
-                            <button type="button">Invite</button>
-                        </article>
-                    ))}
+                <div className={styles.verificationPanel}>
+                    <div className={styles.sectionHead}>
+                        <div>
+                            <span>Required verification</span>
+                            <strong>Before accepting invitation</strong>
+                        </div>
+                        <p>Login is always required. Select one extra gate for this invite.</p>
+                    </div>
+
+                    <div className={styles.verificationGrid}>
+                        {VERIFICATION_OPTIONS.map((option) => {
+                            const Icon = option.icon;
+                            const checked = verificationRequirement === option.value;
+
+                            return (
+                                <label
+                                    key={option.value}
+                                    className={`${styles.verificationOption} ${
+                                        checked ? styles.verificationOptionChecked : ''
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="meeting-invite-verification"
+                                        value={option.value}
+                                        checked={checked}
+                                        onChange={() => setVerificationRequirement(option.value)}
+                                    />
+                                    <span className={styles.optionIcon}>
+                                        <Icon size={16} />
+                                    </span>
+                                    <span>
+                                        <strong>{option.label}</strong>
+                                        <small>{option.description}</small>
+                                    </span>
+                                </label>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div className={styles.inviteePanel}>
+                    <div className={styles.searchRow}>
+                        <label className={styles.inviteSearch}>
+                            <Search size={16} />
+                            <span>Search invitees</span>
+                            <input
+                                value={inviteSearch}
+                                onChange={(event) => setInviteSearch(event.target.value)}
+                                placeholder="Search by name or email..."
+                            />
+                        </label>
+                    </div>
+
+                    <div className={styles.inviteList}>
+                        {visibleInvitees.map((attendee) => {
+                            const invited = invitedEmails.has(attendee.email);
+
+                            return (
+                                <article key={attendee.email}>
+                                    <span className={styles.avatar}>{attendee.initials}</span>
+                                    <div>
+                                        <strong>{attendee.name}</strong>
+                                        <small>{attendee.email}</small>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className={invited ? styles.invitedButton : ''}
+                                        onClick={() => markInvited(attendee.email)}
+                                    >
+                                        {invited ? (
+                                            <>
+                                                <Check size={14} />
+                                                Invited
+                                            </>
+                                        ) : (
+                                            'Invite'
+                                        )}
+                                    </button>
+                                </article>
+                            );
+                        })}
+                    </div>
+
+                    {visibleInvitees.length === 0 && (
+                        <p className={styles.emptyState}>No invitees match that search.</p>
+                    )}
                 </div>
             </section>
         </div>
