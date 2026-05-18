@@ -46,6 +46,7 @@ metadata, and audit history through `api/meetings`.
 - `/upcoming` follows the compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
 - `/upcoming` paginates the shared seed dataset at 18 meeting cards per page.
 - `/upcoming` uses `UpcomingMeetingsExplorer` for title search, active filters, custom date ranges, and paginated results.
+- `/upcoming` keeps search, filters, custom dates, and scheduling on one compact desktop row with reduced-motion-safe filter feedback.
 - `/upcoming` opens the reusable `ScheduleMeetingDialog` through `UpcomingScheduleButton` so the page can remain server-rendered.
 - `/previous` renders a static completed-meetings dashboard using the reusable `MeetingCard` component.
 - `/previous` follows the same compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
