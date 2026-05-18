@@ -1,20 +1,30 @@
 /**
  * Protected meetings shell styles.
  */
-.shell {
+.shell,
+.roomShell {
   min-height: 100dvh;
   background: var(--color-bg-base);
 }
 
-.main {
+.main,
+.roomMain {
   display: grid;
   align-content: start;
   gap: 6px;
   min-height: 100dvh;
+}
+
+.main {
   padding: 80px 4px 4px;
 }
 
-.main > * {
+.roomMain {
+  padding: 0;
+}
+
+.main > *,
+.roomMain > * {
   width: 100%;
   min-width: 0;
 }
