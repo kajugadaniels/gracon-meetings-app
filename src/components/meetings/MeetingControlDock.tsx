@@ -22,6 +22,7 @@ interface MeetingControlDockProps {
     muted: boolean;
     cameraOff: boolean;
     recording: boolean;
+    activePanel: 'members' | 'chat' | null;
     onToggleMute: () => void;
     onToggleCamera: () => void;
     onToggleRecording: () => void;
@@ -36,6 +37,7 @@ export function MeetingControlDock({
     muted,
     cameraOff,
     recording,
+    activePanel,
     onToggleMute,
     onToggleCamera,
     onToggleRecording,
@@ -68,11 +70,19 @@ export function MeetingControlDock({
                 <Hand size={18} />
                 Raise hand
             </button>
-            <button type="button" onClick={onToggleMembers}>
+            <button
+                type="button"
+                className={activePanel === 'members' ? styles.activeButton : ''}
+                onClick={onToggleMembers}
+            >
                 <UsersRound size={18} />
                 Members
             </button>
-            <button type="button" onClick={onToggleChat}>
+            <button
+                type="button"
+                className={activePanel === 'chat' ? styles.activeButton : ''}
+                onClick={onToggleChat}
+            >
                 <MessageSquare size={18} />
                 Chat
             </button>
