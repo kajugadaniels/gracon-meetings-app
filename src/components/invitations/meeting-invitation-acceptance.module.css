@@ -1,0 +1,226 @@
+/**
+ * Meeting invitation acceptance page styles.
+ */
+.shell {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  background: #f7f7fb;
+  padding: clamp(16px, 4vw, 48px);
+}
+
+.card {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 720px);
+  border: 1px solid var(--color-border);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.12);
+  padding: clamp(18px, 3vw, 26px);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 13px;
+  align-items: center;
+}
+
+.icon,
+.loadingMark {
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--color-primary);
+  color: white;
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+}
+
+.loadingMark {
+  width: 42px;
+  height: 42px;
+  animation: pulse 900ms ease-in-out infinite alternate;
+}
+
+.eyebrow,
+.header h1,
+.header p,
+.requirementCard span,
+.requirementCard strong,
+.requirementCard p,
+.steps p,
+.error {
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin-top: 4px;
+  color: var(--color-text-primary);
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.header p,
+.steps p,
+.requirementCard p {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.requirementCard {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(248, 247, 255, 0.72);
+  padding: 14px;
+}
+
+.requirementCard span {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.requirementCard strong {
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.steps {
+  display: grid;
+  gap: 10px;
+}
+
+.steps article {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: white;
+  padding: 12px;
+}
+
+.steps svg {
+  color: var(--color-primary);
+}
+
+.steps strong {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stepComplete {
+  border-color: rgba(16, 185, 129, 0.18) !important;
+  background: rgba(16, 185, 129, 0.05) !important;
+}
+
+.steps button,
+.inlineForm button,
+.primaryAction {
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 38px;
+  padding: 0 13px;
+}
+
+.steps button:disabled,
+.inlineForm button:disabled,
+.primaryAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.inlineForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.inlineForm input {
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 13px;
+  outline: 0;
+  padding: 0 11px;
+}
+
+.error {
+  border: 1px solid var(--color-error-border);
+  border-radius: 14px;
+  background: var(--color-error-subtle);
+  color: var(--color-error);
+  font-size: 13px;
+  padding: 10px 12px;
+}
+
+.primaryAction {
+  min-height: 46px;
+  width: 100%;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 620px) {
+  .header,
+  .steps article {
+    grid-template-columns: 1fr;
+  }
+
+  .icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .steps button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 460px) {
+  .inlineForm {
+    grid-template-columns: 1fr;
+  }
+}
