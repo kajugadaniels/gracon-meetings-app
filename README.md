@@ -31,6 +31,8 @@ metadata, and audit history through `api/meetings`.
 - Production can redirect to `app/app/login` by setting `MEETINGS_USE_MAIN_APP_LOGIN=true`.
 - Same-origin `/api/session`, `/api/refresh`, and `/api/logout` routes validate shared cookies server-side.
 - Protected `/meetings` route is available as the initial authenticated workspace.
+- Same-origin `/api/meetings` route handlers proxy meeting actions to `api/meetings` with server-resolved auth tokens, so production HttpOnly cookies keep working.
+- The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
 - Route styling uses `.module.css` files rather than growing `globals.css`.
 
 ## Environment
@@ -71,6 +73,14 @@ npm run lint
 - Use hard navigation for cross-app handoff to app/app.
 - Do not add new JavaScript-readable auth storage paths.
 - Logout must call local `/api/logout` first, then hand off to `app/app/logout`.
+- Browser meeting actions must call same-origin `/api/meetings/*` routes, not `api/meetings` directly, so auth token handling stays server-side.
+
+## Meeting Workspace Flow
+
+- `src/lib/meetings/api-client.ts` is the typed browser client.
+- `src/lib/server/meetings-api-proxy.ts` is the server-side bridge to `api/meetings`.
+- `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
+- Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
 
 ## Styling Rules
 
@@ -81,8 +91,6 @@ npm run lint
 
 ## Next Milestones
 
-- Add a typed meetings API client.
-- Add meeting creation and schedule forms.
-- Add Stream call-token request flow through `api/meetings`.
 - Add invite link acceptance and email notification surfaces.
 - Add recording library and access checks.
+- Add the live Stream Video room screen using the token prepared by `api/meetings`.
