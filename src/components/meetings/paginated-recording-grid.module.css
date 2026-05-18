@@ -13,6 +13,32 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.emptyState {
+  display: grid;
+  gap: 5px;
+  place-items: center;
+  min-height: 180px;
+  border: 1px dashed var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 24px;
+  text-align: center;
+}
+
+.emptyState strong {
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.emptyState span {
+  max-width: 340px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
 .pagination {
   display: flex;
   align-items: center;
