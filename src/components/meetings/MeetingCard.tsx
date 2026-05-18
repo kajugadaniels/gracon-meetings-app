@@ -2,6 +2,7 @@
  * Reusable meeting summary card.
  */
 import { CalendarDays, Copy } from 'lucide-react';
+import Link from 'next/link';
 import styles from './meeting-card.module.css';
 
 export interface MeetingCardProps {
@@ -10,6 +11,7 @@ export interface MeetingCardProps {
     time: string;
     attendees: string[];
     overflowCount?: number;
+    meetingId?: string;
 }
 
 /**
@@ -22,6 +24,7 @@ export function MeetingCard({
     time,
     attendees,
     overflowCount = 0,
+    meetingId,
 }: MeetingCardProps) {
     return (
         <article className={styles.card}>
@@ -38,7 +41,11 @@ export function MeetingCard({
                     {overflowCount > 0 && <span>+{overflowCount}</span>}
                 </div>
                 <div className={styles.actions}>
-                    <button type="button">Start</button>
+                    {meetingId ? (
+                        <Link href={`/meetings/${meetingId}`}>Start</Link>
+                    ) : (
+                        <button type="button">Start</button>
+                    )}
                     <button type="button">
                         <Copy size={15} />
                         Copy Invitation
