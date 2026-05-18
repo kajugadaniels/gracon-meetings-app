@@ -1,0 +1,165 @@
+/**
+ * Scoped styles for the meetings login form.
+ */
+.card {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.10);
+  padding: 28px;
+}
+
+.header {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: var(--color-primary);
+  color: white;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 0 10px 28px var(--color-primary-glow);
+}
+
+.title {
+  margin: 0 0 6px;
+  color: var(--color-text-primary);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.copy {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.label {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  padding: 0 14px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(91, 35, 255, 0.10);
+}
+
+.inputError {
+  border-color: var(--color-error);
+}
+
+.errorText {
+  color: var(--color-error);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.apiError {
+  border: 1px solid var(--color-error-border);
+  border-radius: 14px;
+  background: var(--color-error-subtle);
+  color: var(--color-error);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 11px 13px;
+}
+
+.forgotRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.textLink {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.textLink:hover {
+  color: var(--color-primary);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 4px 0 0 #3d16c0, 0 10px 24px rgba(91, 35, 255, 0.25);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  box-shadow: 0 5px 0 0 #3d16c0, 0 14px 30px rgba(91, 35, 255, 0.30);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 #3d16c0, 0 8px 18px rgba(91, 35, 255, 0.22);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.footer {
+  margin: 24px 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.footer a {
+  color: var(--color-primary);
+  font-weight: 800;
+  text-decoration: none;
+}
