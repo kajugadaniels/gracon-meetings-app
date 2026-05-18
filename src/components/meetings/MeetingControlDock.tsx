@@ -28,6 +28,7 @@ interface MeetingControlDockProps {
     onToggleRecording: () => void;
     onToggleMembers: () => void;
     onToggleChat: () => void;
+    onEndMeeting: () => void;
 }
 
 /**
@@ -43,6 +44,7 @@ export function MeetingControlDock({
     onToggleRecording,
     onToggleMembers,
     onToggleChat,
+    onEndMeeting,
 }: MeetingControlDockProps) {
     return (
         <div className={styles.controlDock} aria-label="Meeting actions">
@@ -94,7 +96,7 @@ export function MeetingControlDock({
                 <MoreHorizontal size={18} />
                 More
             </button>
-            <button type="button" className={styles.leaveButton}>
+            <button type="button" className={styles.leaveButton} onClick={onEndMeeting}>
                 <PhoneOff size={18} />
                 End
             </button>
