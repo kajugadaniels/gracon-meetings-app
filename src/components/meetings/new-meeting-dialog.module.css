@@ -1,0 +1,124 @@
+/**
+ * New meeting dialog styles.
+ */
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.42);
+  padding: 20px;
+}
+
+.dialog {
+  display: grid;
+  gap: 18px;
+  width: min(100%, 560px);
+  max-height: min(760px, calc(100dvh - 40px));
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+  padding: 22px;
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dialogHeader p {
+  margin: 0 0 7px;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.dialogHeader h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.closeButton {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.choiceGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.choiceGrid button {
+  display: grid;
+  gap: 11px;
+  min-height: 174px;
+  align-content: start;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font: inherit;
+  padding: 18px;
+  text-align: left;
+}
+
+.choiceGrid button:hover,
+.closeButton:hover {
+  border-color: var(--color-primary);
+}
+
+.choiceGrid button span {
+  display: inline-grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
+
+.choiceGrid button strong {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.choiceGrid button small {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+@media (max-width: 760px) {
+  .choiceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .dialog {
+    border-radius: 16px;
+    padding: 18px;
+  }
+}
