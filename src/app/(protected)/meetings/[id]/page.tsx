@@ -3,8 +3,8 @@
  */
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { StaticMeetingRoom } from '@/components/meetings/StaticMeetingRoom';
-import { getMeetingRoomById } from '@/lib/meetings/static-meetings';
+import { MeetingRoom } from '@/components/meetings/MeetingRoom';
+import { getDefaultMeetingRoom, getMeetingRoomById } from '@/lib/meetings/static-meetings';
 
 interface MeetingRoomPageProps {
     params: Promise<{
@@ -22,9 +22,9 @@ export const metadata: Metadata = {
  */
 export default async function MeetingRoomPage({ params }: MeetingRoomPageProps) {
     const { id } = await params;
-    const meeting = getMeetingRoomById(id);
+    const meeting = getMeetingRoomById(id) ?? getDefaultMeetingRoom();
 
     if (!meeting) notFound();
 
-    return <StaticMeetingRoom meeting={meeting} />;
+    return <MeetingRoom meeting={meeting} />;
 }
