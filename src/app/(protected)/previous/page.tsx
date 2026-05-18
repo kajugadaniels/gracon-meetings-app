@@ -35,6 +35,20 @@ const PREVIOUS_MEETINGS = [
         attendees: ['DK', 'PN', 'EM', 'LS'],
         overflowCount: 4,
     },
+    {
+        title: 'Institution Verification Retrospective',
+        date: 'Tue, 07 May',
+        time: '10:45 AM',
+        attendees: ['DK', 'OU', 'AN', 'RN'],
+        overflowCount: 6,
+    },
+    {
+        title: 'Template Library Review',
+        date: 'Mon, 06 May',
+        time: '3:30 PM',
+        attendees: ['DK', 'SM', 'AK', 'BK'],
+        overflowCount: 3,
+    },
 ];
 
 const SUMMARY_ITEMS = [
@@ -81,10 +95,10 @@ export default function PreviousPage() {
             <header className={styles.hero}>
                 <div>
                     <p className={styles.eyebrow}>Previous meetings</p>
-                    <h1>Find completed sessions without digging.</h1>
+                    <h1>Review completed sessions without digging.</h1>
                     <p>
-                        Review ended meetings, confirm recordings, and keep follow-up work
-                        visible before it disappears into chat or email.
+                        Confirm recordings, scan follow-up work, and reopen the right
+                        meeting context when decisions need proof.
                     </p>
                 </div>
 
@@ -92,7 +106,11 @@ export default function PreviousPage() {
                     <Archive size={20} />
                     <span>Latest completed</span>
                     <strong>Institution Registration Closeout</strong>
-                    <p>Yesterday · 4:00 PM · Recording ready</p>
+                    <p>Yesterday · 4:00 PM</p>
+                    <div className={styles.focusMeta}>
+                        <small>Recording ready</small>
+                        <small>Follow-up open</small>
+                    </div>
                 </aside>
             </header>
 
