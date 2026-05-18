@@ -9,6 +9,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { MeetingsSidebar } from '@/components/layout/MeetingsSidebar';
 import { MeetingsTopbar } from '@/components/layout/MeetingsTopbar';
+import { MeetingsLoadingState } from '@/components/ui/MeetingsLoadingState';
 import { fetchCurrentUser, redirectToLogin } from '@/lib/session';
 import styles from './layout.module.css';
 
@@ -100,13 +101,11 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
     if (loading) {
         return (
-            <div className={styles.loadingShell}>
-                <div className={styles.loadingCard}>
-                    <div className={styles.loadingIcon} aria-hidden="true" />
-                    <p className={styles.stateTitle}>Opening meetings workspace...</p>
-                    <p className={styles.stateCopy}>Checking your secure Gracon session</p>
-                </div>
-            </div>
+            <MeetingsLoadingState
+                title="Opening meetings workspace..."
+                copy="Checking your secure Gracon session"
+                detail="Encrypted session check"
+            />
         );
     }
 
