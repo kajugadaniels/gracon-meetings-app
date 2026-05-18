@@ -10,11 +10,12 @@ import {
     StreamVideo,
     StreamVideoClient,
 } from '@stream-io/video-react-sdk';
-import { ArrowLeft, Circle, Loader2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Circle, Home, Loader2, PhoneOff, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { MeetingsLoadingState } from '@/components/ui/MeetingsLoadingState';
 import {
+    endMeeting,
     issueMeetingStreamToken,
     listMeetingRecordings,
     startMeetingRecording,
@@ -37,6 +38,8 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
     const [recording, setRecording] = useState<MeetingRecording | null>(null);
     const [recordingBusy, setRecordingBusy] = useState(false);
     const [recordingMessage, setRecordingMessage] = useState<string | null>(null);
+    const [ending, setEnding] = useState(false);
+    const [ended, setEnded] = useState(false);
 
     useEffect(() => {
         let ignore = false;
@@ -145,6 +148,30 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
         }
     }
 
+    /**
+     * Ends the Gracon meeting lifecycle and leaves the provider call without a page reload.
+     */
+    async function handleEndMeeting() {
+        if (ending) return;
+
+        setEnding(true);
+        setRecordingMessage(null);
+
+        try {
+            await endMeeting(meetingId);
+            await call?.leave();
+            setEnded(true);
+        } catch (err) {
+            setRecordingMessage(
+                err instanceof Error
+                    ? err.message
+                    : 'Unable to end this meeting right now.',
+            );
+        } finally {
+            setEnding(false);
+        }
+    }
+
     if (loading) {
         return (
             <MeetingsLoadingState
@@ -152,6 +179,27 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
                 copy="Requesting a short-lived meeting token from Gracon."
                 detail="Call-scoped token only"
             />
+        );
+    }
+
+    if (ended) {
+        return (
+            <section className={styles.stateShell}>
+                <div className={styles.stateCard}>
+                    <span className={styles.stateIcon}>
+                        <Home size={22} />
+                    </span>
+                    <h1>Meeting is over</h1>
+                    <p>
+                        This room has been closed. Participants can no longer join this
+                        session.
+                    </p>
+                    <Link href="/home" className={styles.backLink}>
+                        <ArrowLeft size={15} />
+                        Go back home
+                    </Link>
+                </div>
+            </section>
         );
     }
 
@@ -195,6 +243,19 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
                         <ShieldCheck size={15} />
                         Token scoped to this room
                     </div>
+                    <button
+                        type="button"
+                        className={styles.endButton}
+                        disabled={ending}
+                        onClick={handleEndMeeting}
+                    >
+                        {ending ? (
+                            <Loader2 size={15} className={styles.spinIcon} />
+                        ) : (
+                            <PhoneOff size={15} />
+                        )}
+                        End meeting
+                    </button>
                 </div>
             </header>
 
