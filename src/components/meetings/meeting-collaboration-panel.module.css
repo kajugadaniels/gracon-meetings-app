@@ -3,6 +3,7 @@
  */
 .panel {
   display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   align-content: start;
   gap: 12px;
   min-width: 0;
@@ -95,7 +96,7 @@
 
 .tabSurface {
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   padding-right: 2px;
 }
 
