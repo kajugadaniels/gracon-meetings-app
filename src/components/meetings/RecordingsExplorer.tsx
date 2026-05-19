@@ -5,7 +5,7 @@
 
 import { HardDrive, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import type { RecordingCardView } from '@/lib/meetings/static-meetings';
+import type { RecordingCardView } from '@/lib/meetings/meeting-view-models';
 import { PaginatedRecordingGrid } from './PaginatedRecordingGrid';
 import styles from './recordings-explorer.module.css';
 
@@ -13,6 +13,7 @@ type RecordingFilter = 'all' | 'ready' | 'shared' | 'month';
 
 interface RecordingsExplorerProps {
     recordings: RecordingCardView[];
+    loading?: boolean;
 }
 
 const FILTERS: Array<{ id: RecordingFilter; label: string }> = [
@@ -55,7 +56,10 @@ function isInsideDateRange(isoDate: string, fromDate: string, toDate: string) {
 /**
  * Renders recording controls and paginated recording results.
  */
-export function RecordingsExplorer({ recordings }: RecordingsExplorerProps) {
+export function RecordingsExplorer({
+    recordings,
+    loading = false,
+}: RecordingsExplorerProps) {
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState<RecordingFilter>('all');
     const [fromDate, setFromDate] = useState('');
@@ -87,7 +91,9 @@ export function RecordingsExplorer({ recordings }: RecordingsExplorerProps) {
 
     const searchHint = search.trim().length > 0 && search.trim().length < 3
         ? 'Type at least 3 characters to search by title.'
-        : `${filteredRecordings.length.toLocaleString('en')} recording${filteredRecordings.length === 1 ? '' : 's'} found`;
+        : loading
+            ? 'Loading recordings from the secure backend...'
+            : `${filteredRecordings.length.toLocaleString('en')} recording${filteredRecordings.length === 1 ? '' : 's'} found`;
 
     return (
         <div className={styles.explorer}>
@@ -151,6 +157,7 @@ export function RecordingsExplorer({ recordings }: RecordingsExplorerProps) {
                     recordings={filteredRecordings}
                     pageSize={18}
                     ariaLabel="Recorded meetings"
+                    loading={loading}
                 />
             </div>
         </div>
