@@ -83,6 +83,7 @@ metadata, and audit history through `api/meetings`.
 - `/recordings` fetches accessible recording metadata through same-origin recording routes and paginates it at 18 recording cards per page.
 - `/recordings` uses `RecordingsExplorer` for title search, ready/shared/this-month filters, custom date ranges, and one-row desktop controls.
 - `/recordings` opens recordings in `RecordingPlayerDialog`. The dialog plays provider asset URLs when available and shows a processing state when metadata exists before the media file is ready.
+- `/recordings` can refresh a processing recording through the same-origin recording refresh route, which asks `api/meetings` to pull finalized Stream playback metadata without exposing provider credentials to the browser.
 - Recording cards must display derived duration from `durationSeconds` or recording timestamps; avoid showing `00:00` for processing recordings.
 - `/personal-room` renders a static reusable-room management page with room link, quick actions, settings, and readiness details.
 - `/personal-room` follows the compact dashboard direction with four room setting cards in one desktop row.
@@ -141,7 +142,7 @@ npm run lint
 - `src/lib/server/meetings-api-proxy.ts` is the server-side bridge to `api/meetings`.
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
 - `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for backend-backed list pages.
-- `src/components/meetings/RecordingPlayerDialog.tsx` owns secure recording playback, metadata display, and processing fallback states.
+- `src/components/meetings/RecordingPlayerDialog.tsx` owns secure recording playback, metadata display, processing fallback states, and the user-triggered refresh action for provider playback readiness.
 - `src/components/meetings/MeetingRoom.tsx` owns the custom Gracon meeting room surface used for the user-facing meeting experience.
 - `src/components/meetings/MeetingRoom.tsx` owns meeting detail loading, authenticated host derivation, Stream session setup for API-backed meetings, and local browser mic/camera fallback.
 - Stream-backed rooms must keep the custom Gracon stage, controls, collaboration panel, and invite dialog instead of mounting Stream's default call UI.
@@ -165,6 +166,7 @@ npm run lint
 - `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
 - Recording start/stop is explicit host action. The frontend may show immediate status feedback, but the backend audit event is the source of truth.
+- Recording playback URLs are not guessed on the client. The recordings page must call the same-origin refresh route when a processing recording is opened and only play URLs returned by `api/meetings`.
 
 ## Styling Rules
 
