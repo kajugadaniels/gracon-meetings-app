@@ -5,7 +5,7 @@
 
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import type { MeetingCardView } from '@/lib/meetings/static-meetings';
+import type { MeetingCardView } from '@/lib/meetings/meeting-view-models';
 import { PaginatedMeetingGrid } from './PaginatedMeetingGrid';
 import { UpcomingScheduleButton } from './UpcomingScheduleButton';
 import styles from './upcoming-meetings-explorer.module.css';
@@ -14,6 +14,7 @@ type UpcomingFilter = 'all' | 'today' | 'week' | 'invite';
 
 interface UpcomingMeetingsExplorerProps {
     meetings: MeetingCardView[];
+    loading?: boolean;
 }
 
 const FILTERS: Array<{ id: UpcomingFilter; label: string }> = [
@@ -64,7 +65,10 @@ function isInsideDateRange(isoDate: string, fromDate: string, toDate: string) {
 /**
  * Renders the upcoming meeting controls and paginated meeting results.
  */
-export function UpcomingMeetingsExplorer({ meetings }: UpcomingMeetingsExplorerProps) {
+export function UpcomingMeetingsExplorer({
+    meetings,
+    loading = false,
+}: UpcomingMeetingsExplorerProps) {
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState<UpcomingFilter>('all');
     const [fromDate, setFromDate] = useState('');
@@ -96,7 +100,9 @@ export function UpcomingMeetingsExplorer({ meetings }: UpcomingMeetingsExplorerP
 
     const searchHint = search.trim().length > 0 && search.trim().length < 3
         ? 'Type at least 3 characters to search by title.'
-        : `${filteredMeetings.length.toLocaleString('en')} meeting${filteredMeetings.length === 1 ? '' : 's'} found`;
+        : loading
+            ? 'Loading meetings from the secure backend...'
+            : `${filteredMeetings.length.toLocaleString('en')} meeting${filteredMeetings.length === 1 ? '' : 's'} found`;
 
     return (
         <div className={styles.explorer}>
@@ -157,6 +163,7 @@ export function UpcomingMeetingsExplorer({ meetings }: UpcomingMeetingsExplorerP
                     meetings={filteredMeetings}
                     pageSize={18}
                     ariaLabel="Scheduled meetings"
+                    loading={loading}
                 />
             </div>
         </div>
