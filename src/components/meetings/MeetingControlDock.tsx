@@ -10,6 +10,7 @@ import {
     MonitorUp,
     PhoneOff,
     Settings,
+    Keyboard,
     UsersRound,
     Video,
     VideoOff,
@@ -34,6 +35,7 @@ interface MeetingControlDockProps {
     onToggleMembers: () => void;
     onToggleChat: () => void;
     onOpenSettings: () => void;
+    onOpenShortcuts: () => void;
     onEndMeeting: () => void;
 }
 
@@ -58,6 +60,7 @@ export function MeetingControlDock({
     onToggleMembers,
     onToggleChat,
     onOpenSettings,
+    onOpenShortcuts,
     onEndMeeting,
 }: MeetingControlDockProps) {
     return (
@@ -138,6 +141,10 @@ export function MeetingControlDock({
             <button type="button" title="Open room settings" onClick={onOpenSettings}>
                 <Settings size={18} />
                 Settings
+            </button>
+            <button type="button" title="Show keyboard shortcuts" onClick={onOpenShortcuts}>
+                <Keyboard size={18} />
+                Shortcuts
             </button>
             <button
                 type="button"
