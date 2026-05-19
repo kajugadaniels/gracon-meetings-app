@@ -7,8 +7,15 @@ import type {
     Meeting,
     MeetingInvite,
     MeetingRecording,
+    MeetingStatus,
     MeetingStreamAccess,
 } from './types';
+
+interface ListMeetingsInput {
+    status?: MeetingStatus;
+    take?: number;
+    cursor?: string;
+}
 
 interface ApiErrorPayload {
     message?: string;
@@ -47,8 +54,37 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 /**
  * Fetches meetings visible to the authenticated user.
  */
-export function listMeetings(): Promise<Meeting[]> {
-    return requestJson<Meeting[]>('/api/meetings');
+export function listMeetings(input: ListMeetingsInput = {}): Promise<Meeting[]> {
+    const search = new URLSearchParams();
+    if (input.status) search.set('status', input.status);
+    if (input.take) search.set('take', String(input.take));
+    if (input.cursor) search.set('cursor', input.cursor);
+
+    const query = search.toString();
+    return requestJson<Meeting[]>(query ? `/api/meetings?${query}` : '/api/meetings');
+}
+
+/**
+ * Fetches all visible meetings through the paginated BFF route.
+ *
+ * The backend caps each page at 50 rows. This bounded loop keeps long lists
+ * dynamic without making the browser depend on static seed data.
+ */
+export async function listAllVisibleMeetings(maxPages = 20): Promise<Meeting[]> {
+    const meetings: Meeting[] = [];
+    let cursor: string | undefined;
+
+    for (let page = 0; page < maxPages; page += 1) {
+        const pageItems = await listMeetings({ take: 50, cursor });
+        meetings.push(...pageItems);
+
+        if (pageItems.length < 50) break;
+
+        cursor = pageItems[pageItems.length - 1]?.id;
+        if (!cursor) break;
+    }
+
+    return meetings;
 }
 
 /**
@@ -95,6 +131,37 @@ export function issueMeetingStreamToken(
  */
 export function listMeetingRecordings(meetingId: string): Promise<MeetingRecording[]> {
     return requestJson<MeetingRecording[]>(`/api/meetings/${meetingId}/recordings`);
+}
+
+export interface VisibleMeetingRecordings {
+    recordings: MeetingRecording[];
+    recordingsByMeetingId: Map<string, MeetingRecording[]>;
+}
+
+/**
+ * Fetches recording metadata for visible meetings without failing the whole page
+ * when one meeting has no accessible recording history.
+ */
+export async function listVisibleMeetingRecordings(
+    meetings: Meeting[],
+): Promise<VisibleMeetingRecordings> {
+    const settledRecordings = await Promise.allSettled(
+        meetings.map(async (meeting) => ({
+            meetingId: meeting.id,
+            recordings: await listMeetingRecordings(meeting.id),
+        })),
+    );
+    const recordingsByMeetingId = new Map<string, MeetingRecording[]>();
+
+    settledRecordings.forEach((result) => {
+        if (result.status !== 'fulfilled') return;
+        recordingsByMeetingId.set(result.value.meetingId, result.value.recordings);
+    });
+
+    return {
+        recordings: Array.from(recordingsByMeetingId.values()).flat(),
+        recordingsByMeetingId,
+    };
 }
 
 /**
