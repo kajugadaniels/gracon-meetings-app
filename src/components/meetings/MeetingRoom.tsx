@@ -580,11 +580,9 @@ function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: 
     const localParticipant = useLocalParticipant();
     const rawParticipantCount = useParticipantCount();
     const visibleParticipants = getUniqueStreamParticipants(participants);
-    const remoteAudioParticipants = getUniqueStreamParticipants(remoteParticipants)
-        .filter((participant) => (
-            !participant.isLocalParticipant
-            && participant.userId !== localParticipant?.userId
-        ));
+    const remoteAudioParticipants = remoteParticipants.filter(
+        (participant) => !participant.isLocalParticipant,
+    );
     const muted = !hasPublishedTrack(localParticipant, STREAM_TRACK_TYPE_AUDIO);
     const cameraOff = !hasPublishedTrack(localParticipant, STREAM_TRACK_TYPE_VIDEO);
     const sharingScreen = hasPublishedTrack(localParticipant, STREAM_TRACK_TYPE_SCREEN_SHARE);
