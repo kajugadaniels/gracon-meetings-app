@@ -68,7 +68,7 @@ metadata, and audit history through `api/meetings`.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - `NewMeetingDialog` starts instant meetings dynamically by creating a meeting, starting it through `api/meetings`, and navigating to the live room.
 - Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
-- `/invitations/:token` renders a single-step secure invitation wizard. It starts with the invited account, sends email OTP only when required, uses six auto-verifying OTP boxes, advances through identity verification only when the host required it, and shows the accept action only after all gates pass.
+- `/invitations/:token` renders a single-step secure invitation wizard. It starts with the invited account, sends email OTP only when required, uses six auto-verifying OTP boxes, sends identity-required users to `app/app` with `challenge=invitation` for ID-card plus face verification, and shows the accept action only after `api/meetings` confirms every gate.
 - `/upcoming` renders a backend-backed scheduled-meetings dashboard using the reusable `MeetingCard` component.
 - `/upcoming` only displays future meetings with `SCHEDULED` status, ordered by nearest scheduled date first.
 - `/upcoming` follows the compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
@@ -170,6 +170,7 @@ npm run lint
 - `MeetingInviteDialog.tsx` builds public meeting links from `NEXT_PUBLIC_MEETINGS_PUBLIC_URL` or the current localhost origin, and API-backed rooms send invitations through same-origin proxy routes.
 - `MeetingInviteDialog.tsx` searches active verified invitees by email through the same-origin `/api/users/search` route after the user types at least 3 characters.
 - `src/components/invitations/MeetingInvitationAcceptance.tsx` owns the public invite acceptance flow and must keep backend verification gates authoritative.
+- Identity-gated invitations must use the same proof flow as documents: start the challenge in `api/meetings`, redirect to `app/app/verify-identity?challenge=invitation`, return to the invitation URL, then let `api/meetings` sync the fresh `id_verifications` proof.
 - `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
 - Recording start/stop is explicit host action. The frontend may show immediate status feedback, but the backend audit event is the source of truth.
