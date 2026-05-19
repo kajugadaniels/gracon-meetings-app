@@ -10,6 +10,13 @@
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
   padding: 14px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.card:hover {
+  border-color: rgba(91, 35, 255, 0.22);
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.10);
+  transform: translateY(-1px);
 }
 
 .preview {
@@ -23,6 +30,14 @@
   border-radius: 13px;
   background: #111827;
   color: white;
+}
+
+.preview::before {
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  content: "";
 }
 
 .preview svg {
@@ -120,12 +135,17 @@
   font-size: 12px;
   font-weight: 500;
   padding: 0 11px;
+  transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
 .actions button:first-child {
   border-color: var(--color-primary);
   background: var(--color-primary);
   color: white;
+}
+
+.actions button:hover {
+  transform: translateY(-1px);
 }
 
 @media (max-width: 520px) {
