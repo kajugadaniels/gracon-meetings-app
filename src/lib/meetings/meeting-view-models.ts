@@ -36,11 +36,16 @@ export interface RecordingCardView {
     title: string;
     recordedAt: string;
     recordedAtIso: string;
+    startedAtIso: string | null;
+    endedAtIso: string | null;
     duration: string;
+    durationSeconds: number | null;
     size: string;
     status: string;
     owner: string;
     shared: boolean;
+    playbackUrl: string | null;
+    meetingId: string;
 }
 
 export interface MeetingsSummary {
@@ -221,7 +226,7 @@ export function toRecordingCardView(
     const recordedAtIso = recording.startedAt
         ?? recording.endedAt
         ?? recording.createdAt;
-    const durationSeconds = recording.durationSeconds ?? 0;
+    const durationSeconds = resolveRecordingDurationSeconds(recording);
     const sizeBytes = recording.sizeBytes ?? 0;
 
     return {
@@ -229,11 +234,16 @@ export function toRecordingCardView(
         title: meeting?.title ?? `Recording ${recording.id.slice(0, 8)}`,
         recordedAt: `Recorded ${formatMeetingDate(recordedAtIso)} at ${formatMeetingTime(recordedAtIso)}`,
         recordedAtIso,
+        startedAtIso: recording.startedAt,
+        endedAtIso: recording.endedAt,
         duration: formatDuration(durationSeconds),
+        durationSeconds,
         size: formatBytes(sizeBytes),
         status: toTitleCase(recording.status),
         owner: getRecordingOwner(meeting),
         shared: Boolean(recording.providerAssetUrl || recording.s3Key),
+        playbackUrl: recording.providerAssetUrl,
+        meetingId: recording.meetingId,
     };
 }
 
@@ -374,7 +384,7 @@ function buildRoomAttendees(
  * Formats a recording duration into a compact mm:ss or h:mm:ss label.
  */
 function formatDuration(totalSeconds: number): string {
-    if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return '00:00';
+    if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return 'Processing';
 
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -385,6 +395,28 @@ function formatDuration(totalSeconds: number): string {
     }
 
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+/**
+ * Resolves the most accurate duration currently available from the backend row.
+ */
+function resolveRecordingDurationSeconds(recording: MeetingRecording): number {
+    if (recording.durationSeconds && recording.durationSeconds > 0) {
+        return recording.durationSeconds;
+    }
+
+    if (!recording.startedAt) return 0;
+
+    const startMs = new Date(recording.startedAt).getTime();
+    const endSource = recording.endedAt ?? recording.updatedAt;
+    const endMs = new Date(endSource).getTime();
+    const durationSeconds = Math.round((endMs - startMs) / 1000);
+
+    if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+        return recording.status === 'RECORDING' ? 1 : 0;
+    }
+
+    return durationSeconds;
 }
 
 /**
