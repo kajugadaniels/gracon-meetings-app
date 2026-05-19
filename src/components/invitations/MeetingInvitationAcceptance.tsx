@@ -14,6 +14,7 @@ import {
     LockKeyhole,
     MailCheck,
     ShieldCheck,
+    Video,
     UserRoundCheck,
 } from 'lucide-react';
 import { APP_URL, MEETINGS_URL, fetchCurrentUser, redirectToLogin } from '@/lib/session';
@@ -37,9 +38,6 @@ interface InviteStatus {
     expiresAt: string;
     emailVerified?: boolean;
     identityVerified?: boolean;
-    identityChallengeStartedAt?: string | null;
-    identityVerificationAttemptId?: string | null;
-    identityVerifiedAt?: string | null;
     gatesComplete?: boolean;
     meetingId?: string;
 }
@@ -474,10 +472,50 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
     if (loading) {
         return (
             <main className={styles.shell}>
-                <section className={styles.stateCard}>
-                    <span className={styles.loadingMark} />
-                    <p className={styles.stateTitle}>Loading invitation</p>
-                    <p className={styles.stateCopy}>Checking the secure meeting link.</p>
+                <section
+                    className={styles.loadingCard}
+                    aria-busy="true"
+                    aria-live="polite"
+                >
+                    <div className={styles.loadingHeader}>
+                        <span className={styles.loadingMark} aria-hidden="true">
+                            <span className={styles.loadingOrbit} />
+                            <Video size={22} />
+                        </span>
+                        <div>
+                            <p className={styles.eyebrow}>Secure invitation</p>
+                            <h1>Preparing your meeting access</h1>
+                            <p>
+                                We are checking the invitation link, your session, and any
+                                required verification gates.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className={styles.loadingProgress} aria-hidden="true">
+                        <span />
+                    </div>
+
+                    <div className={styles.loadingChecklist} aria-hidden="true">
+                        <span>
+                            <LockKeyhole size={15} />
+                            Validating secure link
+                        </span>
+                        <span>
+                            <ShieldCheck size={15} />
+                            Checking verification rules
+                        </span>
+                        <span>
+                            <UserRoundCheck size={15} />
+                            Confirming signed-in account
+                        </span>
+                    </div>
+
+                    <div className={styles.loadingPreview} aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                    </div>
                 </section>
             </main>
         );
@@ -656,15 +694,10 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
                                     <p>
                                         {status.identityVerified
                                             ? 'Identity confirmed.'
-                                            : 'Complete a fresh ID-card and face-verification challenge in the main app before accepting this room.'}
+                                            : 'Confirm your Gracon verified identity before accepting this room.'}
                                     </p>
                                 </div>
                             </div>
-                            {status.identityChallengeStartedAt && (
-                                <p className={styles.otpHint}>
-                                    Challenge started {formatExpiry(status.identityChallengeStartedAt)}.
-                                </p>
-                            )}
                             {!status.identityVerified && (
                                 <button
                                     type="button"
@@ -672,7 +705,7 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
                                     disabled={working}
                                     onClick={handleCompleteIdentity}
                                 >
-                                    Continue to identity verification
+                                    Verify identity
                                 </button>
                             )}
                         </div>
