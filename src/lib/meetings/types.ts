@@ -83,3 +83,23 @@ export interface MeetingRecording {
     createdAt: string;
     updatedAt: string;
 }
+
+export type MeetingInviteVerificationRequirement =
+    | 'EMAIL_OTP'
+    | 'IDENTITY_VERIFICATION';
+
+export interface CreateMeetingInviteInput {
+    email: string;
+    invitedUserId?: string;
+    requiredVerifications?: MeetingInviteVerificationRequirement[];
+    note?: string;
+}
+
+export interface MeetingInvite {
+    id: string;
+    meetingId: string;
+    email: string;
+    requiredVerifications: MeetingInviteVerificationRequirement[];
+    expiresAt: string;
+    emailSent?: boolean;
+}
