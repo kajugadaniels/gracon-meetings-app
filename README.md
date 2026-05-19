@@ -72,6 +72,7 @@ metadata, and audit history through `api/meetings`.
 - `/upcoming` opens the reusable `ScheduleMeetingDialog` through `UpcomingScheduleButton` so the page can remain server-rendered.
 - `/previous` renders a backend-backed completed-meetings dashboard using the reusable `MeetingCard` component.
 - `/previous` only displays meetings with `ENDED` or `CANCELLED` status, ordered from newest to oldest.
+- `/previous` hides live-room actions on history cards and shows a readable completed-meeting duration such as `1 hour, 3 minutes, 2 seconds`.
 - `/previous` follows the same compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
 - `/previous` paginates real visible meeting data at 18 meeting cards per page.
 - `/previous` uses `PreviousMeetingsExplorer` for title search, recorded/this-month/follow-up filters, custom date ranges, and one-row desktop controls.
