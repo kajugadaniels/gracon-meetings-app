@@ -312,13 +312,14 @@ function getStreamAttendees(
 /**
  * Initializes the Stream client and joins the call only for persisted API meetings.
  */
-function useStreamSession(meeting: MeetingRoomView) {
+function useStreamSession(meeting: MeetingRoomView, active = true) {
     const [session, setSession] = useState<StreamSession | null>(null);
-    const [loading, setLoading] = useState(isUuid(meeting.id));
+    const [loading, setLoading] = useState(active && isUuid(meeting.id));
     const [error, setError] = useState<string | null>(null);
+    const shouldConnect = active && isUuid(meeting.id);
 
     useEffect(() => {
-        if (!isUuid(meeting.id)) {
+        if (!shouldConnect) {
             return undefined;
         }
 
@@ -374,7 +375,7 @@ function useStreamSession(meeting: MeetingRoomView) {
             cleanupSession?.call.leave().catch(() => undefined);
             cleanupSession?.client.disconnectUser().catch(() => undefined);
         };
-    }, [meeting.hostName, meeting.id]);
+    }, [meeting.hostName, meeting.id, shouldConnect]);
 
     return { session, loading, error };
 }
@@ -1055,6 +1056,7 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
     const [persistedMeeting, setPersistedMeeting] = useState<Meeting | null>(null);
     const [meetingLoading, setMeetingLoading] = useState(isUuid(meetingId));
     const [meetingError, setMeetingError] = useState<string | null>(null);
+    const endedNoticeShownRef = useRef(false);
 
     useEffect(() => {
         const currentUrl = new URL(window.location.href);
@@ -1081,7 +1083,8 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
             persistedMeeting,
         )
     ), [hostProfile, meetingId, persistedMeeting]);
-    const { session, loading, error } = useStreamSession(meeting);
+    const meetingEnded = persistedMeeting?.status === 'ENDED';
+    const { session, loading, error } = useStreamSession(meeting, !meetingEnded);
 
     useEffect(() => {
         if (!hostProfile || !isUuid(meetingId)) {
@@ -1121,9 +1124,53 @@ export function MeetingRoom({ meetingId }: MeetingRoomProps) {
         meetingId,
     ]);
 
+    useEffect(() => {
+        if (!hostProfile || !isUuid(meetingId) || meetingEnded) {
+            return undefined;
+        }
+
+        let cancelled = false;
+
+        async function refreshMeetingStatus() {
+            try {
+                const nextMeeting = await getMeeting(meetingId);
+                if (cancelled) return;
+
+                setPersistedMeeting(nextMeeting);
+
+                if (nextMeeting.status === 'ENDED' && !endedNoticeShownRef.current) {
+                    endedNoticeShownRef.current = true;
+                    toast.info('Meeting ended', {
+                        description: 'The host closed this room. You have been moved out of the live meeting.',
+                    });
+                }
+            } catch {
+                // Status polling is a notification path, not the source of access
+                // control. Keep the current room state if one transient poll fails.
+            }
+        }
+
+        const intervalId = window.setInterval(() => {
+            void refreshMeetingStatus();
+        }, 5000);
+
+        return () => {
+            cancelled = true;
+            window.clearInterval(intervalId);
+        };
+    }, [
+        hostProfile,
+        meetingEnded,
+        meetingId,
+    ]);
+
     const roomNotice = meetingLoading
         ? 'Loading meeting details...'
         : meetingError ?? (loading ? 'Preparing secure live media...' : error);
+
+    if (meetingEnded) {
+        return <MeetingEndedState title={meeting.title} />;
+    }
 
     if (session) {
         return (
