@@ -43,6 +43,12 @@
   transform: translateY(-1px);
 }
 
+.controlDock button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+  transform: none;
+}
+
 .controlDock .activeButton {
   border-color: rgba(91, 35, 255, 0.22);
   background: var(--color-primary-subtle);
