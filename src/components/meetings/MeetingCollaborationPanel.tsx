@@ -112,7 +112,14 @@ export function MeetingCollaborationPanel({
                     transition={{ duration: 0.16 }}
                 >
                     {activePanel === 'members' ? (
-                        <MeetingMembersPanel attendees={attendees} attendeeCount={attendeeCount} />
+                        <MeetingMembersPanel
+                            attendees={attendees}
+                            attendeeCount={attendeeCount}
+                            muted={muted}
+                            cameraOff={cameraOff}
+                            onToggleMute={onToggleMute}
+                            onToggleCamera={onToggleCamera}
+                        />
                     ) : (
                         <MeetingChatPanel initialMessages={initialMessages} />
                     )}
