@@ -177,7 +177,7 @@ export function MeetingsWorkspace({ meetings }: MeetingsWorkspaceProps) {
                 joinBeforeHost: false,
             });
             const liveMeeting = await startMeeting(createdMeeting.id);
-            router.push(getMeetingJoinPath(liveMeeting.id));
+            router.push(getMeetingJoinPath(liveMeeting.id, liveMeeting.title));
         } catch (err) {
             setInstantError(
                 err instanceof Error
