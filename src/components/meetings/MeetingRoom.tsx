@@ -4,9 +4,8 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Captions, Circle, Hand, Home, UserPlus } from 'lucide-react';
+import { Circle, Hand, UserPlus } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import Link from 'next/link';
 import {
     ParticipantView,
     ParticipantsAudio,
@@ -28,32 +27,19 @@ import type {
     MeetingRoomAttendeeView,
     MeetingRoomView,
 } from '@/lib/meetings/static-meetings';
+import { toast } from '@/components/ui';
 import { MeetingCollaborationPanel } from './MeetingCollaborationPanel';
 import { MeetingControlDock } from './MeetingControlDock';
+import { MeetingEndedState } from './MeetingEndedState';
 import { MeetingInviteDialog } from './MeetingInviteDialog';
 import { MeetingSettingsDialog } from './MeetingSettingsDialog';
+import { MeetingStage } from './MeetingStage';
+import { RecordingStopDialog } from './RecordingStopDialog';
+import type { CollaborationPanel, RoomMessage, StageParticipant } from './meeting-room-types';
 import styles from './meeting-room.module.css';
 
 interface MeetingRoomProps {
     meeting: MeetingRoomView;
-}
-
-interface RoomMessage {
-    sender: string;
-    body: string;
-    time: string;
-}
-
-type CollaborationPanel = 'members' | 'chat';
-
-interface StageParticipant {
-    initials: string;
-    name: string;
-    role: string;
-    speaking: boolean;
-    hasVideo?: boolean;
-    trackType?: 'videoTrack' | 'screenShareTrack';
-    streamParticipant?: StreamVideoParticipant;
 }
 
 interface StreamSession {
@@ -417,6 +403,7 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
             stopMediaStream(audioStreamRef.current);
             audioStreamRef.current = null;
             setMuted(true);
+            toast.info('Microphone muted');
             return;
         }
 
@@ -426,8 +413,11 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
                 video: false,
             });
             setMuted(false);
+            toast.success('Microphone enabled');
         } catch {
-            setMediaError('Microphone permission was blocked or unavailable.');
+            const message = 'Microphone permission was blocked or unavailable.';
+            setMediaError(message);
+            toast.error('Microphone unavailable', { description: message });
         }
     }
 
@@ -441,6 +431,7 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
             stopMediaStream(videoStreamRef.current);
             videoStreamRef.current = null;
             setCameraOff(true);
+            toast.info('Camera stopped');
             return;
         }
 
@@ -455,8 +446,11 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
             });
             videoStreamRef.current = stream;
             setCameraOff(false);
+            toast.success('Camera started');
         } catch {
-            setMediaError('Camera permission was blocked or unavailable.');
+            const message = 'Camera permission was blocked or unavailable.';
+            setMediaError(message);
+            toast.error('Camera unavailable', { description: message });
         }
     }
 
@@ -470,6 +464,7 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
             stopMediaStream(screenShareStreamRef.current);
             screenShareStreamRef.current = null;
             setSharingScreen(false);
+            toast.info('Screen sharing stopped');
             return;
         }
 
@@ -482,11 +477,15 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
             track?.addEventListener('ended', () => {
                 screenShareStreamRef.current = null;
                 setSharingScreen(false);
+                toast.info('Screen sharing stopped');
             });
             screenShareStreamRef.current = stream;
             setSharingScreen(true);
+            toast.success('Screen sharing started');
         } catch {
-            setMediaError('Screen sharing permission was blocked or unavailable.');
+            const message = 'Screen sharing permission was blocked or unavailable.';
+            setMediaError(message);
+            toast.error('Screen sharing unavailable', { description: message });
         }
     }
 
@@ -559,10 +558,18 @@ function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: 
      * Toggles Stream microphone publishing after Gracon token checks have passed.
      */
     async function handleToggleMute() {
-        if (muted) {
-            await call.microphone.enable();
-        } else {
-            await call.microphone.disable();
+        try {
+            if (muted) {
+                await call.microphone.enable();
+                toast.success('Microphone enabled');
+            } else {
+                await call.microphone.disable();
+                toast.info('Microphone muted');
+            }
+        } catch {
+            toast.error('Microphone unavailable', {
+                description: 'The live provider could not update your microphone.',
+            });
         }
     }
 
@@ -570,10 +577,18 @@ function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: 
      * Toggles Stream camera publishing after Gracon token checks have passed.
      */
     async function handleToggleCamera() {
-        if (cameraOff) {
-            await call.camera.enable();
-        } else {
-            await call.camera.disable();
+        try {
+            if (cameraOff) {
+                await call.camera.enable();
+                toast.success('Camera started');
+            } else {
+                await call.camera.disable();
+                toast.info('Camera stopped');
+            }
+        } catch {
+            toast.error('Camera unavailable', {
+                description: 'The live provider could not update your camera.',
+            });
         }
     }
 
@@ -581,10 +596,18 @@ function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: 
      * Toggles Stream screen sharing while keeping the custom Gracon room surface.
      */
     async function handleToggleScreenShare() {
-        if (sharingScreen) {
-            await call.screenShare.disable();
-        } else {
-            await call.screenShare.enable();
+        try {
+            if (sharingScreen) {
+                await call.screenShare.disable();
+                toast.info('Screen sharing stopped');
+            } else {
+                await call.screenShare.enable();
+                toast.success('Screen sharing started');
+            }
+        } catch {
+            toast.error('Screen sharing unavailable', {
+                description: 'The live provider could not update screen sharing.',
+            });
         }
     }
 
@@ -641,9 +664,9 @@ function RoomExperience({
 }: RoomExperienceProps) {
     const [recording, setRecording] = useState(false);
     const [recordingBusy, setRecordingBusy] = useState(false);
+    const [recordingStopOpen, setRecordingStopOpen] = useState(false);
     const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
     const [recordingElapsedSeconds, setRecordingElapsedSeconds] = useState(0);
-    const [captionsEnabled, setCaptionsEnabled] = useState(false);
     const [handRaised, setHandRaised] = useState(false);
     const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
@@ -651,7 +674,6 @@ function RoomExperience({
     const [ended, setEnded] = useState(false);
     const [ending, setEnding] = useState(false);
     const [endError, setEndError] = useState<string | null>(null);
-    const [roomActionMessage, setRoomActionMessage] = useState<string | null>(null);
     const [messages, setMessages] = useState<RoomMessage[]>(INITIAL_MESSAGES);
     const recordingElapsedLabel = formatElapsedTime(recordingElapsedSeconds);
 
@@ -687,10 +709,15 @@ function RoomExperience({
             }
 
             setEnded(true);
+            toast.success('Meeting ended', {
+                description: 'This room is now closed for everyone.',
+            });
         } catch (err) {
-            setEndError(
-                err instanceof Error ? err.message : 'Unable to end this meeting right now.',
-            );
+            const message = err instanceof Error
+                ? err.message
+                : 'Unable to end this meeting right now.';
+            setEndError(message);
+            toast.error('Meeting could not be ended', { description: message });
         } finally {
             setEnding(false);
         }
@@ -699,12 +726,11 @@ function RoomExperience({
     /**
      * Starts or stops recording through api/meetings when the room is persisted.
      */
-    async function handleToggleRecording() {
-        if (recordingBusy) return;
+    async function handleToggleRecording(): Promise<boolean> {
+        if (recordingBusy) return false;
 
         setRecordingBusy(true);
         setEndError(null);
-        setRoomActionMessage(null);
 
         try {
             if (isUuid(meeting.id)) {
@@ -716,43 +742,74 @@ function RoomExperience({
                 setRecording(nextRecording);
                 setRecordingStartedAt(nextRecording ? Date.now() : null);
                 setRecordingElapsedSeconds(0);
-                setRoomActionMessage(
-                    result.status === 'PROCESSING'
-                        ? 'Recording stopped. The meeting file is processing.'
-                        : 'Recording started and will be attached to this meeting.',
+                toast.success(
+                    result.status === 'PROCESSING' ? 'Recording stopped' : 'Recording started',
+                    {
+                        description: result.status === 'PROCESSING'
+                            ? 'The meeting file is processing before it appears in recordings.'
+                            : 'Recording evidence is now being audit logged.',
+                    },
                 );
             } else {
                 const nextRecording = !recording;
                 setRecording(nextRecording);
                 setRecordingStartedAt(nextRecording ? Date.now() : null);
                 setRecordingElapsedSeconds(0);
-                setRoomActionMessage(
-                    recording
-                        ? 'Recording stopped for this local preview room.'
-                        : 'Recording started for this local preview room.',
+                toast.success(
+                    recording ? 'Recording stopped' : 'Recording started',
+                    {
+                        description: recording
+                            ? 'The local preview recording is now stopped.'
+                            : 'The local preview recording timer has started.',
+                    },
                 );
             }
+
+            return true;
         } catch (err) {
-            setEndError(
-                err instanceof Error ? err.message : 'Unable to update recording right now.',
-            );
+            const message = err instanceof Error
+                ? err.message
+                : 'Unable to update recording right now.';
+            setEndError(message);
+            toast.error('Recording update failed', { description: message });
+            return false;
         } finally {
             setRecordingBusy(false);
         }
     }
 
     /**
-     * Toggles local captions display until server-side transcription is connected.
+     * Guards against accidental recording stops by requiring confirmation first.
      */
-    function handleToggleCaptions() {
-        setCaptionsEnabled((value) => !value);
+    function handleRecordingRequest() {
+        if (recording) {
+            setRecordingStopOpen(true);
+            return;
+        }
+
+        void handleToggleRecording();
+    }
+
+    /**
+     * Stops recording only after the user confirms the destructive room action.
+     */
+    async function handleConfirmStopRecording() {
+        const stopped = await handleToggleRecording();
+
+        if (stopped) {
+            setRecordingStopOpen(false);
+        }
     }
 
     /**
      * Toggles the local raised-hand state and surfaces it in the room chrome.
      */
     function handleToggleRaiseHand() {
-        setHandRaised((value) => !value);
+        setHandRaised((value) => {
+            const nextValue = !value;
+            toast.info(nextValue ? 'Hand raised' : 'Hand lowered');
+            return nextValue;
+        });
     }
 
     /**
@@ -770,22 +827,7 @@ function RoomExperience({
     }
 
     if (ended) {
-        return (
-            <section className={styles.room}>
-                <div className={styles.endedState}>
-                    <span className={styles.endedIcon}>
-                        <Home size={22} />
-                    </span>
-                    <p className={styles.eyebrow}>Meeting ended</p>
-                    <h1>{meeting.title}</h1>
-                    <p>
-                        This room is closed. Participants can no longer speak, chat, or
-                        record in this session.
-                    </p>
-                    <Link href="/home">Go back home</Link>
-                </div>
-            </section>
-        );
+        return <MeetingEndedState title={meeting.title} />;
     }
 
     return (
@@ -809,12 +851,6 @@ function RoomExperience({
                             Hand raised
                         </span>
                     )}
-                    {captionsEnabled && (
-                        <span className={styles.liveStatusPill}>
-                            <Captions size={14} />
-                            Captions on
-                        </span>
-                    )}
                     <button type="button" onClick={() => setInviteOpen(true)}>
                         <UserPlus size={16} />
                         Invite
@@ -822,71 +858,23 @@ function RoomExperience({
                 </div>
             </header>
 
-            {(endError || roomNotice || roomActionMessage) && (
-                <p className={styles.roomError}>{endError ?? roomNotice ?? roomActionMessage}</p>
+            {(endError || roomNotice) && (
+                <p className={styles.roomError}>{endError ?? roomNotice}</p>
             )}
 
             <motion.div
                 layout
                 className={`${styles.stageLayout} ${activePanel ? styles.stageLayoutWithPanel : ''}`}
             >
-                <motion.main layout className={styles.stage} aria-label="Meeting stage">
-                    <div
-                        className={`${styles.videoGrid} ${
-                            stageParticipants.length === 1 ? styles.videoGridSingle : ''
-                        }`}
-                    >
-                        {stageParticipants.map((participant, index) => (
-                            <motion.article
-                                layout
-                                key={participant.streamParticipant?.sessionId ?? `${participant.name}-${participant.role}`}
-                                className={`${styles.videoTile} ${
-                                    participant.speaking ? styles.videoTileSpeaking : ''
-                                } ${
-                                    stageParticipants.length === 3 && index === 2
-                                        ? styles.videoTileFull
-                                        : ''
-                                }`}
-                                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-                            >
-                                {participant.speaking && recording && (
-                                    <div className={styles.recordingPill}>
-                                        <Circle size={8} fill="currentColor" />
-                                        Recording {recordingElapsedLabel}
-                                    </div>
-                                )}
-                                {handRaised
-                                    && (participant.role.includes('You')
-                                        || participant.name === meeting.hostName)
-                                    && (
-                                        <div className={styles.handRaisedPill}>
-                                            <Hand size={12} />
-                                            Hand raised
-                                        </div>
-                                    )}
-                                {renderParticipantMedia(participant)}
-                                <div className={styles.videoMeta}>
-                                    <strong>{participant.name}</strong>
-                                    <small>
-                                        {participant.speaking && !muted
-                                            ? 'Speaking · Mic on'
-                                            : participant.role}
-                                    </small>
-                                </div>
-                            </motion.article>
-                        ))}
-                    </div>
-                    {captionsEnabled && (
-                        <div className={styles.captionBar} aria-live="polite">
-                            <Captions size={15} />
-                            <span>
-                                {muted
-                                    ? 'Captions are ready. Unmute to speak in this meeting.'
-                                    : `${meeting.hostName}: Audio is live in the room.`}
-                            </span>
-                        </div>
-                    )}
-                </motion.main>
+                <MeetingStage
+                    participants={stageParticipants}
+                    recording={recording}
+                    recordingElapsedLabel={recordingElapsedLabel}
+                    muted={muted}
+                    handRaised={handRaised}
+                    hostName={meeting.hostName}
+                    renderParticipantMedia={renderParticipantMedia}
+                />
 
                 <AnimatePresence initial={false}>
                     {activePanel && (
@@ -915,14 +903,12 @@ function RoomExperience({
                 recordingBusy={recordingBusy}
                 recordingElapsedLabel={recording ? recordingElapsedLabel : undefined}
                 sharingScreen={sharingScreen}
-                captionsEnabled={captionsEnabled}
                 handRaised={handRaised}
                 activePanel={activePanel}
                 onToggleMute={() => void onToggleMute()}
                 onToggleCamera={() => void onToggleCamera()}
                 onToggleScreenShare={() => void onToggleScreenShare()}
-                onToggleRecording={() => void handleToggleRecording()}
-                onToggleCaptions={handleToggleCaptions}
+                onToggleRecording={handleRecordingRequest}
                 onToggleRaiseHand={handleToggleRaiseHand}
                 onToggleMembers={() => openPanel('members')}
                 onToggleChat={() => openPanel('chat')}
@@ -943,11 +929,18 @@ function RoomExperience({
                 <MeetingSettingsDialog
                     muted={muted}
                     cameraOff={cameraOff}
-                    captionsEnabled={captionsEnabled}
                     onToggleMute={() => void onToggleMute()}
                     onToggleCamera={() => void onToggleCamera()}
-                    onToggleCaptions={handleToggleCaptions}
                     onClose={() => setSettingsOpen(false)}
+                />
+            )}
+
+            {recordingStopOpen && (
+                <RecordingStopDialog
+                    elapsedLabel={recordingElapsedLabel}
+                    busy={recordingBusy}
+                    onConfirm={() => void handleConfirmStopRecording()}
+                    onClose={() => setRecordingStopOpen(false)}
                 />
             )}
         </section>
