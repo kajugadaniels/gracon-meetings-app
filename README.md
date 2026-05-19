@@ -42,6 +42,9 @@ metadata, and audit history through `api/meetings`.
 - `/meetings/:id` renders a static in-meeting room UI for design validation with mute, video, recording, share, captions, members, chat, and invite controls.
 - `/meetings/:id` now uses a full-screen participant stage, a fixed bottom `MeetingControlDock`, and a Framer Motion-powered collaboration panel that opens Members or Chat as tabs only when requested.
 - `/meetings/:id` now includes an ended-room state so static workflow validation matches the real meeting lifecycle.
+- `/meetings/:id` now connects API-backed UUID meetings to Stream behind the custom Gracon room surface, so participant presence, microphone publishing, camera publishing, remote audio, and remote video tiles are live while seeded rooms keep the local fallback.
+- Stream rooms start with microphone and camera disabled by default so joining a call never publishes media before the user explicitly chooses it.
+- The custom Gracon room remains the user-facing meeting surface; Stream default UI stays isolated to `/meetings/join/:meetingId` for lower-level integration validation only.
 - If `api/meetings` is offline, same-origin proxy routes now return a clean 503 response instead of crashing the Next.js route.
 - The authenticated shell uses a flush top navbar, left meetings sidebar, account avatar dropdown, and `/home` as the post-login landing route.
 - The topbar and sidebar live in dedicated `src/components/layout` components; protected layout owns only session recovery and shell placement.
@@ -125,7 +128,9 @@ npm run lint
 - `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for seeded list pages.
 - `src/components/meetings/live/MeetingRoom.tsx` owns the Stream room mount/unmount lifecycle and live recording toggles.
 - `src/components/meetings/MeetingRoom.tsx` owns the custom Gracon meeting room surface used for the user-facing meeting experience.
-- `src/components/meetings/MeetingRoom.tsx` also owns local browser mic/camera permission state for the custom room and must stop tracks when users disable media or leave the room.
+- `src/components/meetings/MeetingRoom.tsx` owns Stream session setup for API-backed meetings and local browser mic/camera fallback for seeded rooms.
+- Stream-backed rooms must keep the custom Gracon stage, controls, collaboration panel, and invite dialog instead of mounting Stream's default call UI.
+- Local fallback rooms must stop browser media tracks when users disable media or leave the room.
 - `src/components/meetings/MeetingControlDock.tsx` owns the static room action controls so media actions can evolve independently from room layout.
 - `src/components/meetings/MeetingCollaborationPanel.tsx` owns the animated Members/Chat tab shell, while `MeetingMembersPanel.tsx`, `MeetingChatPanel.tsx`, and `MeetingInviteDialog.tsx` keep their focused room responsibilities.
 - `MeetingInviteDialog.tsx` builds public meeting links from `NEXT_PUBLIC_MEETINGS_PUBLIC_URL` or the current localhost origin, and API-backed rooms send invitations through same-origin proxy routes.
