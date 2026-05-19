@@ -58,18 +58,20 @@ metadata, and audit history through `api/meetings`.
 - The topbar and sidebar live in dedicated `src/components/layout` components; protected layout owns only session recovery and shell placement.
 - `/home` renders a light-mode dashboard with quick actions, real upcoming meeting cards from `api/meetings`, and a short skeleton loading state.
 - `/home` uses a compact premium dashboard layout with smaller action cards and three meeting cards per desktop row.
-- `/home` uses the same backend-backed meeting view models as the list pages and only renders the first 6 upcoming meetings.
+- `/home` uses the same backend-backed meeting view models as the list pages and only renders the first 6 future meetings with `SCHEDULED` status.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - `NewMeetingDialog` starts instant meetings dynamically by creating a meeting, starting it through `api/meetings`, and navigating to the live room.
 - Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
 - `/invitations/:token` renders the secure meeting invitation acceptance flow. It previews the invite, sends/verifies email OTP when required, completes the identity gate for verified users, and accepts only through `api/meetings`.
 - `/upcoming` renders a backend-backed scheduled-meetings dashboard using the reusable `MeetingCard` component.
+- `/upcoming` only displays future meetings with `SCHEDULED` status, ordered by nearest scheduled date first.
 - `/upcoming` follows the compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
 - `/upcoming` paginates real visible meeting data at 18 meeting cards per page.
 - `/upcoming` uses `UpcomingMeetingsExplorer` for title search, active filters, custom date ranges, and paginated results.
 - `/upcoming` keeps search, filters, custom dates, and scheduling on one compact desktop row with reduced-motion-safe filter feedback.
 - `/upcoming` opens the reusable `ScheduleMeetingDialog` through `UpcomingScheduleButton` so the page can remain server-rendered.
 - `/previous` renders a backend-backed completed-meetings dashboard using the reusable `MeetingCard` component.
+- `/previous` only displays meetings with `ENDED` or `CANCELLED` status, ordered from newest to oldest.
 - `/previous` follows the same compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
 - `/previous` paginates real visible meeting data at 18 meeting cards per page.
 - `/previous` uses `PreviousMeetingsExplorer` for title search, recorded/this-month/follow-up filters, custom date ranges, and one-row desktop controls.
