@@ -3,12 +3,13 @@
  */
 .card {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
-  padding: 16px;
+  min-height: 176px;
+  padding: 14px;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -25,33 +26,49 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
 }
 
-.icon {
-  display: inline-grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
+.dateBadge {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
   border: 1px solid rgba(91, 35, 255, 0.14);
-  border-radius: 12px;
+  border-radius: 999px;
   background: rgba(91, 35, 255, 0.06);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 7px 10px;
 }
 
-.icon svg,
+.dateBadge span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dateBadge svg,
 .card svg {
   color: var(--color-primary);
 }
 
 .status {
+  flex: 0 0 auto;
   border: 1px solid rgba(91, 35, 255, 0.14);
   border-radius: 999px;
   color: var(--color-primary);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  padding: 5px 8px;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  padding: 6px 9px;
+}
+
+.body {
+  display: grid;
+  gap: 9px;
+  align-self: start;
 }
 
 .title {
@@ -60,28 +77,42 @@
   font-size: 15px;
   font-weight: 500;
   letter-spacing: 0;
-  line-height: 1.28;
+  line-height: 1.32;
 }
 
-.schedule {
-  margin: -2px 0 4px;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  font-weight: 400;
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
 }
 
-.startNotice {
+.timeMeta,
+.startNotice,
+.duration {
   display: inline-flex;
   width: fit-content;
   align-items: center;
   gap: 6px;
-  border: 1px solid rgba(245, 158, 11, 0.2);
   border-radius: 999px;
-  background: rgba(245, 158, 11, 0.08);
-  color: #92400e;
   font-size: 11px;
   font-weight: 500;
-  padding: 5px 9px;
+  padding: 6px 9px;
+}
+
+.timeMeta {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(248, 250, 252, 0.9);
+  color: var(--color-text-secondary);
+}
+
+.timeMeta svg {
+  color: currentColor;
+}
+
+.startNotice {
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: rgba(245, 158, 11, 0.08);
+  color: #92400e;
 }
 
 .startNotice svg {
@@ -89,17 +120,9 @@
 }
 
 .duration {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  gap: 6px;
   border: 1px solid rgba(91, 35, 255, 0.14);
-  border-radius: 999px;
   background: rgba(91, 35, 255, 0.06);
   color: var(--color-primary);
-  font-size: 11px;
-  font-weight: 500;
-  padding: 5px 9px;
 }
 
 .duration svg {
@@ -111,7 +134,10 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+  align-self: end;
+  border-top: 1px solid rgba(226, 232, 240, 0.72);
+  padding-top: 11px;
 }
 
 .avatarStack {
@@ -154,25 +180,25 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
 }
 
 .actions button,
 .actions a {
   display: inline-flex;
-  min-height: 34px;
+  min-height: 36px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
   border: 1px solid var(--color-border);
-  border-radius: 9px;
+  border-radius: 10px;
   background: white;
   color: var(--color-text-primary);
   cursor: pointer;
   font: inherit;
   font-size: 12px;
   font-weight: 500;
-  padding: 0 11px;
+  padding: 0 12px;
   text-decoration: none;
   transition:
     background 140ms ease,
@@ -213,6 +239,15 @@
   .footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions button,
+  .actions a {
+    flex: 1 1 120px;
   }
 }
 
