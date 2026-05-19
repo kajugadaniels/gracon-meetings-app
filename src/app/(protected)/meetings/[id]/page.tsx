@@ -4,11 +4,18 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { MeetingRoom } from '@/components/meetings/MeetingRoom';
-import { getDefaultMeetingRoom, getMeetingRoomById } from '@/lib/meetings/static-meetings';
+import {
+    createMeetingRoomFallback,
+    getDefaultMeetingRoom,
+    getMeetingRoomById,
+} from '@/lib/meetings/static-meetings';
 
 interface MeetingRoomPageProps {
     params: Promise<{
         id: string;
+    }>;
+    searchParams: Promise<{
+        title?: string;
     }>;
 }
 
@@ -20,9 +27,14 @@ export const metadata: Metadata = {
 /**
  * Renders a static Zoom-style meeting interface for one seeded meeting.
  */
-export default async function MeetingRoomPage({ params }: MeetingRoomPageProps) {
+export default async function MeetingRoomPage({
+    params,
+    searchParams,
+}: MeetingRoomPageProps) {
     const { id } = await params;
-    const meeting = getMeetingRoomById(id) ?? getDefaultMeetingRoom();
+    const { title } = await searchParams;
+    const meeting = getMeetingRoomById(id)
+        ?? (title ? createMeetingRoomFallback(id, title) : getDefaultMeetingRoom());
 
     if (!meeting) notFound();
 
