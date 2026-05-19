@@ -22,6 +22,9 @@ interface MeetingControlDockProps {
     cameraOff: boolean;
     recording: boolean;
     sharingScreen: boolean;
+    captionsEnabled: boolean;
+    handRaised: boolean;
+    recordingElapsedLabel?: string;
     recordingBusy?: boolean;
     ending?: boolean;
     activePanel: 'members' | 'chat' | null;
@@ -29,6 +32,8 @@ interface MeetingControlDockProps {
     onToggleCamera: () => void;
     onToggleScreenShare: () => void;
     onToggleRecording: () => void;
+    onToggleCaptions: () => void;
+    onToggleRaiseHand: () => void;
     onToggleMembers: () => void;
     onToggleChat: () => void;
     onEndMeeting: () => void;
@@ -42,6 +47,9 @@ export function MeetingControlDock({
     cameraOff,
     recording,
     sharingScreen,
+    captionsEnabled,
+    handRaised,
+    recordingElapsedLabel,
     recordingBusy = false,
     ending = false,
     activePanel,
@@ -49,6 +57,8 @@ export function MeetingControlDock({
     onToggleCamera,
     onToggleScreenShare,
     onToggleRecording,
+    onToggleCaptions,
+    onToggleRaiseHand,
     onToggleMembers,
     onToggleChat,
     onEndMeeting,
@@ -78,15 +88,27 @@ export function MeetingControlDock({
                 onClick={onToggleRecording}
             >
                 <Circle size={14} fill="currentColor" />
-                {recordingBusy ? 'Saving' : recording ? 'Stop recording' : 'Record'}
+                {recordingBusy
+                    ? 'Saving'
+                    : recording
+                        ? `Stop ${recordingElapsedLabel ?? ''}`.trim()
+                        : 'Record'}
             </button>
-            <button type="button">
+            <button
+                type="button"
+                className={captionsEnabled ? styles.activeButton : ''}
+                onClick={onToggleCaptions}
+            >
                 <Captions size={18} />
-                Captions
+                {captionsEnabled ? 'Hide captions' : 'Captions'}
             </button>
-            <button type="button">
+            <button
+                type="button"
+                className={handRaised ? styles.activeButton : ''}
+                onClick={onToggleRaiseHand}
+            >
                 <Hand size={18} />
-                Raise hand
+                {handRaised ? 'Lower hand' : 'Raise hand'}
             </button>
             <button
                 type="button"
