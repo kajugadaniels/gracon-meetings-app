@@ -4,7 +4,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { RecordingCardView } from '@/lib/meetings/static-meetings';
+import type { RecordingCardView } from '@/lib/meetings/meeting-view-models';
 import { RecordingCard } from './RecordingCard';
 import styles from './paginated-recording-grid.module.css';
 
@@ -12,6 +12,7 @@ interface PaginatedRecordingGridProps {
     recordings: RecordingCardView[];
     pageSize?: number;
     ariaLabel: string;
+    loading?: boolean;
 }
 
 /**
@@ -21,6 +22,7 @@ export function PaginatedRecordingGrid({
     recordings,
     pageSize = 18,
     ariaLabel,
+    loading = false,
 }: PaginatedRecordingGridProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.max(Math.ceil(recordings.length / pageSize), 1);
@@ -41,7 +43,13 @@ export function PaginatedRecordingGrid({
 
     return (
         <div className={styles.wrapper}>
-            {visibleRecordings.length > 0 ? (
+            {loading ? (
+                <div className={styles.grid} aria-label={`${ariaLabel} loading`}>
+                    {Array.from({ length: 6 }, (_, index) => (
+                        <div key={index} className={styles.skeletonCard} />
+                    ))}
+                </div>
+            ) : visibleRecordings.length > 0 ? (
                 <div className={styles.grid} aria-label={ariaLabel}>
                     {visibleRecordings.map((recording) => (
                         <RecordingCard
