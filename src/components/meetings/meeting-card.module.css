@@ -31,6 +31,24 @@
   font-weight: 400;
 }
 
+.duration {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(91, 35, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(91, 35, 255, 0.06);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 9px;
+}
+
+.duration svg {
+  color: currentColor;
+}
+
 .footer {
   display: flex;
   flex-wrap: wrap;
