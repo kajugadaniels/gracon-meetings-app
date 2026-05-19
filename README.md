@@ -35,7 +35,8 @@ metadata, and audit history through `api/meetings`.
 - Same-origin `/api/meetings` route handlers proxy meeting actions to `api/meetings` with server-resolved auth tokens, so production HttpOnly cookies keep working.
 - Same-origin recording proxy routes live under `/api/meetings/:id/recordings/*`; browser components never call `api/meetings` directly for recording control.
 - The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
-- `/meetings/join/:meetingId` opens the live Stream room after requesting a call-scoped token from `api/meetings`.
+- `/meetings/:id` is the active meeting-room experience. Newly created instant meetings are routed here so users see the custom Gracon room instead of the raw Stream SDK surface.
+- `/meetings/join/:meetingId` remains available only as a lower-level Stream SDK integration route while provider configuration matures.
 - `/meetings/join/:meetingId` can start and stop host-controlled recordings through same-origin proxy routes, so recording actions stay audited in `api/meetings`.
 - `/meetings/join/:meetingId` can end the meeting lifecycle without reloading the page and then shows a clear ended-room state with a Home action.
 - `/meetings/:id` renders a static in-meeting room UI for design validation with mute, video, recording, share, captions, members, chat, and invite controls.
@@ -122,7 +123,7 @@ npm run lint
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
 - `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for seeded list pages.
 - `src/components/meetings/live/MeetingRoom.tsx` owns the Stream room mount/unmount lifecycle and live recording toggles.
-- `src/components/meetings/MeetingRoom.tsx` owns the static Zoom-style meeting room surface used before full media integration.
+- `src/components/meetings/MeetingRoom.tsx` owns the custom Gracon meeting room surface used for the user-facing meeting experience.
 - `src/components/meetings/MeetingControlDock.tsx` owns the static room action controls so media actions can evolve independently from room layout.
 - `src/components/meetings/MeetingCollaborationPanel.tsx` owns the animated Members/Chat tab shell, while `MeetingMembersPanel.tsx`, `MeetingChatPanel.tsx`, and `MeetingInviteDialog.tsx` keep their focused room responsibilities.
 - `src/components/invitations/MeetingInvitationAcceptance.tsx` owns the public invite acceptance flow and must keep backend verification gates authoritative.
