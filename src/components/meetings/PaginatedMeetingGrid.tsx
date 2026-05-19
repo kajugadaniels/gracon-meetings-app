@@ -13,6 +13,7 @@ interface PaginatedMeetingGridProps {
     pageSize?: number;
     ariaLabel: string;
     loading?: boolean;
+    showActions?: boolean;
 }
 
 /**
@@ -23,6 +24,7 @@ export function PaginatedMeetingGrid({
     pageSize = 18,
     ariaLabel,
     loading = false,
+    showActions = true,
 }: PaginatedMeetingGridProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.max(Math.ceil(meetings.length / pageSize), 1);
@@ -60,6 +62,8 @@ export function PaginatedMeetingGrid({
                             attendees={meeting.attendees}
                             overflowCount={meeting.overflowCount}
                             meetingId={meeting.id}
+                            durationLabel={meeting.durationLabel}
+                            showActions={showActions}
                         />
                     ))}
                 </div>
