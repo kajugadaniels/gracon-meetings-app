@@ -82,6 +82,8 @@ metadata, and audit history through `api/meetings`.
 - `/recordings` follows the compact dashboard direction with minimal recording cards and three recordings per desktop row.
 - `/recordings` fetches accessible recording metadata through same-origin recording routes and paginates it at 18 recording cards per page.
 - `/recordings` uses `RecordingsExplorer` for title search, ready/shared/this-month filters, custom date ranges, and one-row desktop controls.
+- `/recordings` opens recordings in `RecordingPlayerDialog`. The dialog plays provider asset URLs when available and shows a processing state when metadata exists before the media file is ready.
+- Recording cards must display derived duration from `durationSeconds` or recording timestamps; avoid showing `00:00` for processing recordings.
 - `/personal-room` renders a static reusable-room management page with room link, quick actions, settings, and readiness details.
 - `/personal-room` follows the compact dashboard direction with four room setting cards in one desktop row.
 - `src/lib/meetings/meeting-view-models.ts` converts backend meetings and recordings into card-ready UI contracts; local seeded meeting data has been removed from active pages.
@@ -139,6 +141,7 @@ npm run lint
 - `src/lib/server/meetings-api-proxy.ts` is the server-side bridge to `api/meetings`.
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
 - `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for backend-backed list pages.
+- `src/components/meetings/RecordingPlayerDialog.tsx` owns secure recording playback, metadata display, and processing fallback states.
 - `src/components/meetings/MeetingRoom.tsx` owns the custom Gracon meeting room surface used for the user-facing meeting experience.
 - `src/components/meetings/MeetingRoom.tsx` owns meeting detail loading, authenticated host derivation, Stream session setup for API-backed meetings, and local browser mic/camera fallback.
 - Stream-backed rooms must keep the custom Gracon stage, controls, collaboration panel, and invite dialog instead of mounting Stream's default call UI.
