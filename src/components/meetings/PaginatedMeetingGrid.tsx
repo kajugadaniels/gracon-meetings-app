@@ -57,8 +57,10 @@ export function PaginatedMeetingGrid({
                         <MeetingCard
                             key={meeting.id}
                             title={meeting.title}
+                            status={meeting.status}
                             date={meeting.date}
                             time={meeting.time}
+                            scheduledStartAt={meeting.scheduledStartAt}
                             attendees={meeting.attendees}
                             overflowCount={meeting.overflowCount}
                             meetingId={meeting.id}
