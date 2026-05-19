@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { ComponentType } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSessionUser } from '@/app/(protected)/layout';
 import {
     createMeeting,
@@ -139,15 +139,22 @@ export function MeetingsWorkspace() {
     const today = useMemo(() => formatToday(), []);
     const clock = useMemo(() => formatCurrentTime(), []);
     const nextMeeting = meetings[0];
+    const loadHomeMeetings = useCallback(async (showInitialSkeleton = false) => {
+        if (showInitialSkeleton) setShowSkeleton(true);
+
+        const visibleMeetings = await listAllVisibleMeetings(20, {
+            status: 'SCHEDULED',
+        });
+        setMeetings(splitMeetingCards(visibleMeetings).upcoming.slice(0, 6));
+        setShowSkeleton(false);
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
 
-        async function loadHomeMeetings() {
+        async function loadInitialHomeMeetings() {
             try {
-                const visibleMeetings = await listAllVisibleMeetings(20, {
-                    status: 'SCHEDULED',
-                });
+                const visibleMeetings = await listAllVisibleMeetings(20, { status: 'SCHEDULED' });
                 if (cancelled) return;
                 setMeetings(splitMeetingCards(visibleMeetings).upcoming.slice(0, 6));
             } finally {
@@ -155,7 +162,7 @@ export function MeetingsWorkspace() {
             }
         }
 
-        void loadHomeMeetings();
+        void loadInitialHomeMeetings();
 
         return () => {
             cancelled = true;
@@ -312,7 +319,10 @@ export function MeetingsWorkspace() {
             )}
 
             {activeDialog === 'schedule' && (
-                <ScheduleMeetingDialog onClose={closeDialog} />
+                <ScheduleMeetingDialog
+                    onClose={closeDialog}
+                    onScheduled={() => void loadHomeMeetings()}
+                />
             )}
         </section>
     );
