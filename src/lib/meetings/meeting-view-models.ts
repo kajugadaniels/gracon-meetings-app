@@ -26,6 +26,7 @@ export interface MeetingCardView {
     readiness: MeetingReadiness;
     hasRecording: boolean;
     needsFollowUp: boolean;
+    durationLabel?: string;
 }
 
 export interface RecordingCardView {
@@ -189,6 +190,9 @@ export function toMeetingCardView(
             : 'READY',
         hasRecording: hasReadyRecording,
         needsFollowUp: meeting.status === 'ENDED' && !hasReadyRecording,
+        durationLabel: isPreviousMeeting(meeting)
+            ? formatMeetingDuration(meeting)
+            : undefined,
     };
 }
 
@@ -333,6 +337,37 @@ function formatDuration(totalSeconds: number): string {
     }
 
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+/**
+ * Formats the amount of time a completed meeting took using readable units.
+ */
+function formatMeetingDuration(meeting: Meeting): string {
+    const startedAt = meeting.startedAt
+        ?? meeting.scheduledStartAt
+        ?? meeting.createdAt;
+    const endedAt = meeting.endedAt
+        ?? meeting.scheduledEndAt
+        ?? meeting.updatedAt;
+    const durationMs = new Date(endedAt).getTime() - new Date(startedAt).getTime();
+
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
+        return 'No duration recorded';
+    }
+
+    const totalSeconds = Math.max(Math.round(durationMs / 1000), 1);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const parts: string[] = [];
+
+    if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
+    if (minutes > 0) parts.push(`${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`);
+    if (seconds > 0 || parts.length === 0) {
+        parts.push(`${seconds} ${seconds === 1 ? 'second' : 'seconds'}`);
+    }
+
+    return parts.join(', ');
 }
 
 /**
