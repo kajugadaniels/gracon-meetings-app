@@ -41,6 +41,7 @@ metadata, and audit history through `api/meetings`.
 - `/meetings/:id` now includes an ended-room state so static workflow validation matches the real meeting lifecycle.
 - `/meetings/:id` now connects API-backed UUID meetings to Stream behind the custom Gracon room surface, so participant presence, microphone publishing, camera publishing, remote audio, and remote video tiles are live while seeded rooms keep the local fallback.
 - `/meetings/:id` collapses duplicate Stream browser sessions for the same visible participant and keeps the richest media tile, so a single local camera feed fills the stage instead of showing an avatar duplicate.
+- `/meetings/:id` overrides Stream's tall-camera containment inside the custom stage, so camera video always covers its tile while screen sharing still preserves its full aspect ratio.
 - `/meetings/:id` now supports Stream-backed screen sharing from the custom Gracon control dock; seeded rooms use browser `getDisplayMedia` as a local fallback.
 - `/meetings/:id` starts and stops recordings through same-origin audited backend routes instead of flipping UI state only.
 - `/meetings/:id` keeps recording off by default, starts recording only after the user clicks Record, and shows an elapsed recording timer while active.
@@ -137,6 +138,7 @@ npm run lint
 - `src/components/meetings/MeetingRoom.tsx` owns Stream session setup for API-backed meetings and local browser mic/camera fallback for seeded rooms.
 - Stream-backed rooms must keep the custom Gracon stage, controls, collaboration panel, and invite dialog instead of mounting Stream's default call UI.
 - Stream participant normalization must prefer screen share, active camera, dominant speaker, speaking state, then local participant status when duplicate sessions exist.
+- Stream camera tiles must use cover-fit inside the Gracon stage. Only screen-share tracks should use contain-fit to avoid cropping shared content.
 - Local fallback rooms must stop browser media tracks when users disable media or leave the room.
 - `src/components/meetings/MeetingControlDock.tsx` owns the static room action controls so media actions can evolve independently from room layout.
 - `src/components/meetings/MeetingCollaborationPanel.tsx` owns the animated Members/Chat tab shell, while `MeetingMembersPanel.tsx`, `MeetingChatPanel.tsx`, and `MeetingInviteDialog.tsx` keep their focused room responsibilities.
