@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
     listAllVisibleMeetings,
     listVisibleMeetingRecordings,
+    refreshMeetingRecordings,
 } from '@/lib/meetings/api-client';
 import {
     buildMeetingsSummary,
@@ -15,6 +16,7 @@ import {
     type MeetingsSummary,
     type RecordingCardView,
 } from '@/lib/meetings/meeting-view-models';
+import type { Meeting } from '@/lib/meetings/types';
 import { RecordingsExplorer } from './RecordingsExplorer';
 import styles from '@/app/(protected)/recordings/page.module.css';
 
@@ -32,6 +34,7 @@ const EMPTY_SUMMARY: MeetingsSummary = {
 export function RecordingsDashboard() {
     const [recordings, setRecordings] = useState<RecordingCardView[]>([]);
     const [summary, setSummary] = useState<MeetingsSummary>(EMPTY_SUMMARY);
+    const [meetingsById, setMeetingsById] = useState<Map<string, Meeting>>(new Map());
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -62,6 +65,7 @@ export function RecordingsDashboard() {
 
                 if (cancelled) return;
 
+                setMeetingsById(new Map(visibleMeetings.map((meeting) => [meeting.id, meeting])));
                 setRecordings(nextRecordings);
                 setSummary(buildMeetingsSummary(visibleMeetings, nextRecordings));
             } catch (err) {
@@ -105,6 +109,36 @@ export function RecordingsDashboard() {
             icon: Clock3,
         },
     ], [estimatedStorageGb, loading, summary.recordedCount, summary.sharedRecordingCount]);
+
+    /**
+     * Refreshes one meeting's provider playback metadata and keeps local cards in sync.
+     */
+    async function handleRefreshRecording(
+        recording: RecordingCardView,
+    ): Promise<RecordingCardView | null> {
+        const meeting = meetingsById.get(recording.meetingId);
+        if (!meeting) return null;
+
+        const refreshedRows = await refreshMeetingRecordings(recording.meetingId);
+        const refreshedViews = refreshedRows
+            .map((row) => toRecordingCardView(row, meeting))
+            .sort((first, second) => (
+                new Date(second.recordedAtIso).getTime()
+                - new Date(first.recordedAtIso).getTime()
+            ));
+
+        setRecordings((currentRecordings) => {
+            const otherRecordings = currentRecordings.filter(
+                (currentRecording) => currentRecording.meetingId !== recording.meetingId,
+            );
+            return [...otherRecordings, ...refreshedViews].sort((first, second) => (
+                new Date(second.recordedAtIso).getTime()
+                - new Date(first.recordedAtIso).getTime()
+            ));
+        });
+
+        return refreshedViews.find((view) => view.id === recording.id) ?? null;
+    }
 
     return (
         <section className={styles.page}>
@@ -156,7 +190,11 @@ export function RecordingsDashboard() {
             )}
 
             <section className={styles.contentGrid} aria-label="Recorded meetings">
-                <RecordingsExplorer recordings={recordings} loading={loading} />
+                <RecordingsExplorer
+                    recordings={recordings}
+                    loading={loading}
+                    onRefreshRecording={handleRefreshRecording}
+                />
 
                 <aside className={styles.sidePanel} aria-label="Recording access rules">
                     <p className={styles.eyebrow}>Access rules</p>
