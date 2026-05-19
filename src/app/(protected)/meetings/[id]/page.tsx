@@ -1,14 +1,9 @@
 /**
- * Static in-meeting room page.
+ * In-meeting room page.
  */
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { MeetingRoom } from '@/components/meetings/MeetingRoom';
-import {
-    createMeetingRoomFallback,
-    getDefaultMeetingRoom,
-    getMeetingRoomById,
-} from '@/lib/meetings/static-meetings';
+import { createMeetingRoomFallback } from '@/lib/meetings/meeting-view-models';
 
 interface MeetingRoomPageProps {
     params: Promise<{
@@ -21,11 +16,11 @@ interface MeetingRoomPageProps {
 
 export const metadata: Metadata = {
     title: 'Meeting Room',
-    description: 'Static Gracon meeting room interface.',
+    description: 'Gracon meeting room interface.',
 };
 
 /**
- * Renders a static Zoom-style meeting interface for one seeded meeting.
+ * Renders the Gracon meeting room interface with a safe local fallback.
  */
 export default async function MeetingRoomPage({
     params,
@@ -33,10 +28,7 @@ export default async function MeetingRoomPage({
 }: MeetingRoomPageProps) {
     const { id } = await params;
     const { title } = await searchParams;
-    const meeting = getMeetingRoomById(id)
-        ?? (title ? createMeetingRoomFallback(id, title) : getDefaultMeetingRoom());
-
-    if (!meeting) notFound();
+    const meeting = createMeetingRoomFallback(id, title);
 
     return <MeetingRoom meeting={meeting} />;
 }
