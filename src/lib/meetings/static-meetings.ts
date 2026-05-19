@@ -237,6 +237,39 @@ export function getMeetingRoomById(id: string): MeetingRoomView | null {
 }
 
 /**
+ * Creates a safe custom-room fallback for meetings created through the API.
+ */
+export function createMeetingRoomFallback(
+    id: string,
+    title = 'Secure meeting room',
+): MeetingRoomView {
+    const now = new Date();
+
+    return {
+        id,
+        title,
+        description: 'Live Gracon meeting room.',
+        date: DATE_FORMATTER.format(now),
+        time: TIME_FORMATTER.format(now),
+        scheduledStartAt: now.toISOString(),
+        scheduledEndAt: now.toISOString(),
+        visibility: 'INVITE_ONLY',
+        readiness: 'READY',
+        hostName: 'Daniel KAJUGA',
+        attendees: [
+            {
+                initials: 'DK',
+                name: 'Daniel KAJUGA',
+                email: 'host@gracon360.com',
+                role: 'Host',
+            },
+        ],
+        attendeeCount: 1,
+        agendaItems: ['Open discussion', 'Share decisions', 'Confirm next steps'],
+    };
+}
+
+/**
  * Returns the first seeded meeting as a development-safe room fallback.
  */
 export function getDefaultMeetingRoom(): MeetingRoomView | null {
