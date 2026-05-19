@@ -36,14 +36,14 @@ metadata, and audit history through `api/meetings`.
 - Same-origin recording proxy routes live under `/api/meetings/:id/recordings/*`; browser components never call `api/meetings` directly for recording control.
 - The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
 - `/meetings/:id` is the active meeting-room experience. Newly created instant meetings are routed here so users see the custom Gracon room instead of the raw Stream SDK surface.
-- `/meetings/:id` renders a static in-meeting room UI for design validation with mute, video, recording, share, captions, members, chat, and invite controls.
+- `/meetings/:id` renders a static in-meeting room UI for design validation with mute, video, recording, share, members, chat, and invite controls.
 - `/meetings/:id` now uses a full-screen participant stage, a fixed bottom `MeetingControlDock`, and a Framer Motion-powered collaboration panel that opens Members or Chat as tabs only when requested.
 - `/meetings/:id` now includes an ended-room state so static workflow validation matches the real meeting lifecycle.
 - `/meetings/:id` now connects API-backed UUID meetings to Stream behind the custom Gracon room surface, so participant presence, microphone publishing, camera publishing, remote audio, and remote video tiles are live while seeded rooms keep the local fallback.
 - `/meetings/:id` now supports Stream-backed screen sharing from the custom Gracon control dock; seeded rooms use browser `getDisplayMedia` as a local fallback.
 - `/meetings/:id` starts and stops recordings through same-origin audited backend routes instead of flipping UI state only.
 - `/meetings/:id` keeps recording off by default, starts recording only after the user clicks Record, and shows an elapsed recording timer while active.
-- `/meetings/:id` now has active raised-hand and caption controls in the custom room chrome, with visible room and tile feedback.
+- `/meetings/:id` now has active raised-hand controls in the custom room chrome, with visible room and tile feedback.
 - `/meetings/:id` keeps chat messages in room-level state, so switching between Members and Chat does not reset local messages.
 - Stream rooms start with microphone and camera disabled by default so joining a call never publishes media before the user explicitly chooses it.
 - The custom Gracon room is the only active in-meeting surface. The old isolated Stream SDK validation route has been removed to prevent users from seeing two different room designs.
@@ -135,8 +135,10 @@ npm run lint
 - `src/components/meetings/MeetingControlDock.tsx` owns the static room action controls so media actions can evolve independently from room layout.
 - `src/components/meetings/MeetingCollaborationPanel.tsx` owns the animated Members/Chat tab shell, while `MeetingMembersPanel.tsx`, `MeetingChatPanel.tsx`, and `MeetingInviteDialog.tsx` keep their focused room responsibilities.
 - `src/components/meetings/MeetingRoom.tsx` owns Stream-backed screen share toggles, audited recording calls, and room-level chat state for the custom live room.
-- `src/components/meetings/MeetingRoom.tsx` also owns lightweight live-room UI states such as raised hand, captions display, and recording elapsed time until those states are backed by provider webhooks or dedicated API events.
-- `src/components/meetings/MeetingSettingsDialog.tsx` owns the lightweight room settings surface for microphone, camera, and captions controls.
+- `src/components/meetings/MeetingRoom.tsx` also owns lightweight live-room UI states such as raised hand and recording elapsed time until those states are backed by provider webhooks or dedicated API events.
+- `src/components/meetings/MeetingStage.tsx`, `MeetingEndedState.tsx`, and `RecordingStopDialog.tsx` keep the live room layout, closed-room state, and stop-recording confirmation isolated from provider wiring.
+- `src/components/meetings/MeetingSettingsDialog.tsx` owns the lightweight room settings surface for microphone and camera controls.
+- `src/components/ui/Toast.tsx` mirrors the document workspace toast design and is the required feedback surface for meeting room success/error messages.
 - `MeetingInviteDialog.tsx` builds public meeting links from `NEXT_PUBLIC_MEETINGS_PUBLIC_URL` or the current localhost origin, and API-backed rooms send invitations through same-origin proxy routes.
 - `src/components/invitations/MeetingInvitationAcceptance.tsx` owns the public invite acceptance flow and must keep backend verification gates authoritative.
 - `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
@@ -155,4 +157,4 @@ npm run lint
 
 - Add invite link acceptance and email notification surfaces.
 - Add recording library and access checks.
-- Add recording controls and transcript surfaces inside the live Stream Video room.
+- Add recording playback and access checks for completed meeting files.
