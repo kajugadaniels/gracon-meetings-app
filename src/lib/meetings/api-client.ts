@@ -114,8 +114,11 @@ export function stopMeetingRecording(meetingId: string): Promise<MeetingRecordin
 }
 
 /**
- * Builds the local live-room route for a Gracon meeting id.
+ * Builds the local custom meeting-room route for a Gracon meeting id.
  */
-export function getMeetingJoinPath(meetingId: string): string {
-    return `/meetings/join/${encodeURIComponent(meetingId)}`;
+export function getMeetingJoinPath(meetingId: string, title?: string): string {
+    const path = `/meetings/${encodeURIComponent(meetingId)}`;
+    if (!title) return path;
+
+    return `${path}?title=${encodeURIComponent(title)}`;
 }
