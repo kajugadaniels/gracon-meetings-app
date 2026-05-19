@@ -7,12 +7,13 @@ import styles from './meeting-room.module.css';
 
 interface MeetingEndedStateProps {
     title: string;
+    endedByHost?: boolean;
 }
 
 /**
  * Renders the closed-room message after the host ends a meeting.
  */
-export function MeetingEndedState({ title }: MeetingEndedStateProps) {
+export function MeetingEndedState({ title, endedByHost = true }: MeetingEndedStateProps) {
     return (
         <section className={styles.room}>
             <div className={styles.endedState}>
@@ -22,8 +23,9 @@ export function MeetingEndedState({ title }: MeetingEndedStateProps) {
                 <p className={styles.eyebrow}>Meeting ended</p>
                 <h1>{title}</h1>
                 <p>
-                    This room is closed. Participants can no longer speak, chat, or
-                    record in this session.
+                    {endedByHost
+                        ? 'The host ended this meeting. Everyone has been moved out of the live room.'
+                        : 'This room is closed. Participants can no longer speak, chat, or record in this session.'}
                 </p>
                 <Link href="/home">Go back home</Link>
             </div>
