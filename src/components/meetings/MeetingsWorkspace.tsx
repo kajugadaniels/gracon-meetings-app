@@ -16,9 +16,13 @@ import { useSessionUser } from '@/app/(protected)/layout';
 import {
     createMeeting,
     getMeetingJoinPath,
+    listAllVisibleMeetings,
     startMeeting,
 } from '@/lib/meetings/api-client';
-import type { MeetingCardView } from '@/lib/meetings/static-meetings';
+import {
+    splitMeetingCards,
+    type MeetingCardView,
+} from '@/lib/meetings/meeting-view-models';
 import { JoinMeetingDialog } from './JoinMeetingDialog';
 import { MeetingCard } from './MeetingCard';
 import { NewMeetingDialog } from './NewMeetingDialog';
@@ -34,10 +38,6 @@ interface ActionCard {
     tone: 'coral' | 'blue' | 'purple' | 'amber';
     icon: ComponentType<{ size?: number; strokeWidth?: number }>;
     action: QuickAction;
-}
-
-interface MeetingsWorkspaceProps {
-    meetings: MeetingCardView[];
 }
 
 const ACTION_CARDS: ActionCard[] = [
@@ -121,10 +121,11 @@ function MeetingsHomeSkeleton() {
 /**
  * Renders the static home dashboard shown after protected session recovery.
  */
-export function MeetingsWorkspace({ meetings }: MeetingsWorkspaceProps) {
+export function MeetingsWorkspace() {
     const user = useSessionUser();
     const router = useRouter();
     const [showSkeleton, setShowSkeleton] = useState(true);
+    const [meetings, setMeetings] = useState<MeetingCardView[]>([]);
     const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
     const [joinUrl, setJoinUrl] = useState('');
     const [instantStarting, setInstantStarting] = useState(false);
@@ -140,8 +141,23 @@ export function MeetingsWorkspace({ meetings }: MeetingsWorkspaceProps) {
     const nextMeeting = meetings[0];
 
     useEffect(() => {
-        const timeoutId = window.setTimeout(() => setShowSkeleton(false), 520);
-        return () => window.clearTimeout(timeoutId);
+        let cancelled = false;
+
+        async function loadHomeMeetings() {
+            try {
+                const visibleMeetings = await listAllVisibleMeetings(4);
+                if (cancelled) return;
+                setMeetings(splitMeetingCards(visibleMeetings).upcoming.slice(0, 6));
+            } finally {
+                if (!cancelled) setShowSkeleton(false);
+            }
+        }
+
+        void loadHomeMeetings();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     function closeDialog() {
