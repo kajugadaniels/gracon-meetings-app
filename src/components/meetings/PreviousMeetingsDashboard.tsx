@@ -50,10 +50,12 @@ export function PreviousMeetingsDashboard() {
             setError(null);
 
             try {
-                const visibleMeetings = await listAllVisibleMeetings();
-                const previousSourceMeetings = visibleMeetings.filter((meeting) => (
-                    meeting.status === 'ENDED' || meeting.status === 'CANCELLED'
-                ));
+                const [endedMeetings, cancelledMeetings] = await Promise.all([
+                    listAllVisibleMeetings(20, { status: 'ENDED' }),
+                    listAllVisibleMeetings(20, { status: 'CANCELLED' }),
+                ]);
+                const visibleMeetings = [...endedMeetings, ...cancelledMeetings];
+                const previousSourceMeetings = visibleMeetings;
                 const recordingState = await listVisibleMeetingRecordings(previousSourceMeetings);
 
                 if (cancelled) return;
