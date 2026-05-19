@@ -13,6 +13,8 @@ interface PaginatedRecordingGridProps {
     pageSize?: number;
     ariaLabel: string;
     loading?: boolean;
+    onPlay: (recording: RecordingCardView) => void;
+    onShare: (recording: RecordingCardView) => void;
 }
 
 /**
@@ -23,6 +25,8 @@ export function PaginatedRecordingGrid({
     pageSize = 18,
     ariaLabel,
     loading = false,
+    onPlay,
+    onShare,
 }: PaginatedRecordingGridProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.max(Math.ceil(recordings.length / pageSize), 1);
@@ -60,6 +64,9 @@ export function PaginatedRecordingGrid({
                             size={recording.size}
                             status={recording.status}
                             owner={recording.owner}
+                            playable={Boolean(recording.playbackUrl)}
+                            onPlay={() => onPlay(recording)}
+                            onShare={() => onShare(recording)}
                         />
                     ))}
                 </div>
