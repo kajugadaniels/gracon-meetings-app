@@ -2,8 +2,10 @@
  * Typed same-origin client for Gracon meetings browser components.
  */
 import type {
+    CreateMeetingInviteInput,
     CreateMeetingInput,
     Meeting,
+    MeetingInvite,
     MeetingRecording,
     MeetingStreamAccess,
 } from './types';
@@ -110,6 +112,19 @@ export function startMeetingRecording(meetingId: string): Promise<MeetingRecordi
 export function stopMeetingRecording(meetingId: string): Promise<MeetingRecording> {
     return requestJson<MeetingRecording>(`/api/meetings/${meetingId}/recordings/stop`, {
         method: 'POST',
+    });
+}
+
+/**
+ * Sends a meeting invitation with host-selected verification gates.
+ */
+export function createMeetingInvite(
+    meetingId: string,
+    input: CreateMeetingInviteInput,
+): Promise<MeetingInvite> {
+    return requestJson<MeetingInvite>(`/api/meetings/${meetingId}/invites`, {
+        method: 'POST',
+        body: JSON.stringify(input),
     });
 }
 
