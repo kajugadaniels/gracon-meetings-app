@@ -103,3 +103,11 @@ export interface MeetingInvite {
     expiresAt: string;
     emailSent?: boolean;
 }
+
+export interface MeetingUserSearchResult {
+    id: string;
+    email: string;
+    displayName: string;
+    initials: string;
+    imageUrl: string | null;
+}
