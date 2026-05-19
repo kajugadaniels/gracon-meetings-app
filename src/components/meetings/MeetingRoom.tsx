@@ -123,6 +123,37 @@ function hasPublishedTrack(participant: StreamVideoParticipant | undefined, trac
 }
 
 /**
+ * Collapses duplicate Stream sessions for the same Gracon user before rendering.
+ */
+function getUniqueStreamParticipants(participants: StreamVideoParticipant[]) {
+    const byUserId = new Map<string, StreamVideoParticipant>();
+
+    participants.forEach((participant) => {
+        const key = participant.userId || participant.sessionId;
+        const current = byUserId.get(key);
+
+        if (!current) {
+            byUserId.set(key, participant);
+            return;
+        }
+
+        const currentHasVideo = hasPublishedTrack(current, STREAM_TRACK_TYPE_VIDEO);
+        const participantHasVideo = hasPublishedTrack(participant, STREAM_TRACK_TYPE_VIDEO);
+
+        if (
+            participant.isLocalParticipant
+            || (!current.isSpeaking && participant.isSpeaking)
+            || (!current.isDominantSpeaker && participant.isDominantSpeaker)
+            || (!currentHasVideo && participantHasVideo)
+        ) {
+            byUserId.set(key, participant);
+        }
+    });
+
+    return Array.from(byUserId.values());
+}
+
+/**
  * Returns the visible seeded participants using the host as the active speaker.
  */
 function getStaticStageParticipants(meeting: MeetingRoomView): StageParticipant[] {
@@ -220,7 +251,7 @@ function useStreamSession(meeting: MeetingRoomView) {
 
             try {
                 const access = await issueMeetingStreamToken(meeting.id);
-                const client = new StreamVideoClient({
+                const client = StreamVideoClient.getOrCreateInstance({
                     apiKey: access.apiKey,
                     user: {
                         id: access.userId,
@@ -261,7 +292,6 @@ function useStreamSession(meeting: MeetingRoomView) {
             cancelled = true;
             const cleanupSession = nextSession;
             cleanupSession?.call.leave().catch(() => undefined);
-            cleanupSession?.client.disconnectUser().catch(() => undefined);
         };
     }, [meeting.hostName, meeting.id]);
 
@@ -385,11 +415,18 @@ function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: 
     const participants = useParticipants();
     const remoteParticipants = useRemoteParticipants();
     const localParticipant = useLocalParticipant();
-    const participantCount = useParticipantCount();
+    const rawParticipantCount = useParticipantCount();
+    const visibleParticipants = getUniqueStreamParticipants(participants);
+    const remoteAudioParticipants = getUniqueStreamParticipants(remoteParticipants)
+        .filter((participant) => (
+            !participant.isLocalParticipant
+            && participant.userId !== localParticipant?.userId
+        ));
     const muted = !hasPublishedTrack(localParticipant, STREAM_TRACK_TYPE_AUDIO);
     const cameraOff = !hasPublishedTrack(localParticipant, STREAM_TRACK_TYPE_VIDEO);
-    const stageParticipants = getStreamStageParticipants(participants, meeting);
-    const attendees = getStreamAttendees(participants, meeting);
+    const stageParticipants = getStreamStageParticipants(visibleParticipants, meeting);
+    const attendees = getStreamAttendees(visibleParticipants, meeting);
+    const participantCount = visibleParticipants.length || rawParticipantCount;
 
     /**
      * Toggles Stream microphone publishing after Gracon token checks have passed.
@@ -415,7 +452,9 @@ function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: 
 
     return (
         <>
-            <ParticipantsAudio participants={remoteParticipants} />
+            {remoteAudioParticipants.length > 0 && (
+                <ParticipantsAudio participants={remoteAudioParticipants} />
+            )}
             <RoomExperience
                 meeting={meeting}
                 attendees={attendees}
@@ -546,7 +585,7 @@ function RoomExperience({
                         {stageParticipants.map((participant, index) => (
                             <motion.article
                                 layout
-                                key={`${participant.name}-${participant.role}`}
+                                key={participant.streamParticipant?.sessionId ?? `${participant.name}-${participant.role}`}
                                 className={`${styles.videoTile} ${
                                     participant.speaking ? styles.videoTileSpeaking : ''
                                 } ${
