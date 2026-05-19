@@ -5,7 +5,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { MessageSquare, Mic, MicOff, UsersRound, Video, VideoOff, X } from 'lucide-react';
-import type { MeetingRoomAttendeeView } from '@/lib/meetings/static-meetings';
+import type { MeetingRoomAttendeeView } from '@/lib/meetings/meeting-view-models';
 import { MeetingChatPanel, type MeetingRoomMessage } from './MeetingChatPanel';
 import { MeetingMembersPanel } from './MeetingMembersPanel';
 import styles from './meeting-collaboration-panel.module.css';
