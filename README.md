@@ -43,6 +43,9 @@ metadata, and audit history through `api/meetings`.
 - `/meetings/:id` now uses a full-screen participant stage, a fixed bottom `MeetingControlDock`, and a Framer Motion-powered collaboration panel that opens Members or Chat as tabs only when requested.
 - `/meetings/:id` now includes an ended-room state so static workflow validation matches the real meeting lifecycle.
 - `/meetings/:id` now connects API-backed UUID meetings to Stream behind the custom Gracon room surface, so participant presence, microphone publishing, camera publishing, remote audio, and remote video tiles are live while seeded rooms keep the local fallback.
+- `/meetings/:id` now supports Stream-backed screen sharing from the custom Gracon control dock; seeded rooms use browser `getDisplayMedia` as a local fallback.
+- `/meetings/:id` starts and stops recordings through same-origin audited backend routes instead of flipping UI state only.
+- `/meetings/:id` keeps chat messages in room-level state, so switching between Members and Chat does not reset local messages.
 - Stream rooms start with microphone and camera disabled by default so joining a call never publishes media before the user explicitly chooses it.
 - The custom Gracon room remains the user-facing meeting surface; Stream default UI stays isolated to `/meetings/join/:meetingId` for lower-level integration validation only.
 - If `api/meetings` is offline, same-origin proxy routes now return a clean 503 response instead of crashing the Next.js route.
@@ -133,6 +136,7 @@ npm run lint
 - Local fallback rooms must stop browser media tracks when users disable media or leave the room.
 - `src/components/meetings/MeetingControlDock.tsx` owns the static room action controls so media actions can evolve independently from room layout.
 - `src/components/meetings/MeetingCollaborationPanel.tsx` owns the animated Members/Chat tab shell, while `MeetingMembersPanel.tsx`, `MeetingChatPanel.tsx`, and `MeetingInviteDialog.tsx` keep their focused room responsibilities.
+- `src/components/meetings/MeetingRoom.tsx` owns Stream-backed screen share toggles, audited recording calls, and room-level chat state for the custom live room.
 - `MeetingInviteDialog.tsx` builds public meeting links from `NEXT_PUBLIC_MEETINGS_PUBLIC_URL` or the current localhost origin, and API-backed rooms send invitations through same-origin proxy routes.
 - `src/components/invitations/MeetingInvitationAcceptance.tsx` owns the public invite acceptance flow and must keep backend verification gates authoritative.
 - `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
