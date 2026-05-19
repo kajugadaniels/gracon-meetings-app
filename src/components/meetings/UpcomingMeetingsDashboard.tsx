@@ -44,7 +44,9 @@ export function UpcomingMeetingsDashboard() {
             setError(null);
 
             try {
-                const visibleMeetings = await listAllVisibleMeetings();
+                const visibleMeetings = await listAllVisibleMeetings(20, {
+                    status: 'SCHEDULED',
+                });
 
                 if (cancelled) return;
 
@@ -105,7 +107,7 @@ export function UpcomingMeetingsDashboard() {
                 <aside className={styles.focusPanel} aria-label="Next meeting">
                     <span>Next meeting</span>
                     <strong>{nextMeeting?.title ?? (loading ? 'Loading meetings...' : 'No scheduled meeting')}</strong>
-                    <p>{nextMeeting ? `${nextMeeting.date} · ${nextMeeting.time}` : 'Schedule a secure room'}</p>
+                    <p>{nextMeeting ? `Takes place ${nextMeeting.date} · ${nextMeeting.time}` : 'Schedule a secure room'}</p>
                     <div className={styles.focusMeta}>
                         <small>{nextMeeting?.visibility.replace('_', ' ').toLowerCase() ?? 'Private'}</small>
                         <small>{nextMeeting?.readiness.replace('_', ' ').toLowerCase() ?? 'Ready'}</small>
