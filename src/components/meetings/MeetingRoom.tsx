@@ -25,7 +25,7 @@ import {
 import type {
     MeetingRoomAttendeeView,
     MeetingRoomView,
-} from '@/lib/meetings/static-meetings';
+} from '@/lib/meetings/meeting-view-models';
 import { toast } from '@/components/ui';
 import { MeetingCollaborationPanel } from './MeetingCollaborationPanel';
 import { MeetingControlDock } from './MeetingControlDock';
