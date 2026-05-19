@@ -1,5 +1,5 @@
 /**
- * Static meetings home dashboard.
+ * Meetings home dashboard.
  */
 'use client';
 
@@ -119,7 +119,7 @@ function MeetingsHomeSkeleton() {
 }
 
 /**
- * Renders the static home dashboard shown after protected session recovery.
+ * Renders the home dashboard shown after protected session recovery.
  */
 export function MeetingsWorkspace() {
     const user = useSessionUser();
@@ -145,7 +145,9 @@ export function MeetingsWorkspace() {
 
         async function loadHomeMeetings() {
             try {
-                const visibleMeetings = await listAllVisibleMeetings(4);
+                const visibleMeetings = await listAllVisibleMeetings(20, {
+                    status: 'SCHEDULED',
+                });
                 if (cancelled) return;
                 setMeetings(splitMeetingCards(visibleMeetings).upcoming.slice(0, 6));
             } finally {
