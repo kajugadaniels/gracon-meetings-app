@@ -15,7 +15,7 @@ import {
     Video,
     VideoOff,
 } from 'lucide-react';
-import type { MeetingRoomView } from '@/lib/meetings/static-meetings';
+import type { MeetingRoomView } from '@/lib/meetings/meeting-view-models';
 import styles from './meeting-room-header.module.css';
 
 interface MeetingRoomHeaderProps {
