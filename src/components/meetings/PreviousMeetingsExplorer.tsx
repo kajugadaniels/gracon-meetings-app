@@ -158,6 +158,7 @@ export function PreviousMeetingsExplorer({
                     pageSize={18}
                     ariaLabel="Completed meetings"
                     loading={loading}
+                    showActions={false}
                 />
             </div>
         </div>
