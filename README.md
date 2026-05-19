@@ -162,6 +162,7 @@ npm run lint
 - `src/components/meetings/MeetingSettingsDialog.tsx` owns the lightweight room settings surface for microphone and camera controls.
 - `src/components/ui/Toast.tsx` mirrors the document workspace toast design and is the required feedback surface for meeting room success/error messages.
 - `MeetingInviteDialog.tsx` builds public meeting links from `NEXT_PUBLIC_MEETINGS_PUBLIC_URL` or the current localhost origin, and API-backed rooms send invitations through same-origin proxy routes.
+- `MeetingInviteDialog.tsx` searches active verified invitees by email through the same-origin `/api/users/search` route after the user types at least 3 characters.
 - `src/components/invitations/MeetingInvitationAcceptance.tsx` owns the public invite acceptance flow and must keep backend verification gates authoritative.
 - `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
