@@ -37,6 +37,9 @@ interface InviteStatus {
     expiresAt: string;
     emailVerified?: boolean;
     identityVerified?: boolean;
+    identityChallengeStartedAt?: string | null;
+    identityVerificationAttemptId?: string | null;
+    identityVerifiedAt?: string | null;
     gatesComplete?: boolean;
     meetingId?: string;
 }
@@ -69,7 +72,7 @@ async function callInviteApi<T>(
     body?: unknown,
 ): Promise<T> {
     const response = await fetch(`/api/invites/${encodeURIComponent(token)}${path}`, {
-        method: path === '/preview' ? 'GET' : 'POST',
+        method: path === '/preview' || path === '/status' ? 'GET' : 'POST',
         headers: body ? { 'Content-Type': 'application/json' } : undefined,
         body: body ? JSON.stringify(body) : undefined,
         credentials: 'include',
@@ -218,6 +221,38 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
 
                 if (session.status === 'unavailable') {
                     setError(session.message);
+                    return;
+                }
+
+                const gateStatus = await callInviteApi<InviteStatus>(token, '/status');
+                if (!active) return;
+
+                const returnedFromIdentityChallenge = new URLSearchParams(
+                    window.location.search,
+                ).get('identityReturn') === '1';
+
+                if (
+                    returnedFromIdentityChallenge &&
+                    gateStatus.requiredVerifications.includes('IDENTITY_VERIFICATION') &&
+                    !gateStatus.identityVerified
+                ) {
+                    const syncedStatus = await callInviteApi<InviteStatus>(
+                        token,
+                        '/identity/complete',
+                    );
+                    if (!active) return;
+                    setStatus(syncedStatus);
+                    setStage(syncedStatus.identityVerified ? 'accept' : 'identity');
+                    if (syncedStatus.identityVerified) {
+                        setStepMessageTone('success');
+                        setStepMessage('Identity verification confirmed.');
+                    }
+                    return;
+                }
+
+                setStatus(gateStatus);
+                if (gateStatus.gatesComplete || !gateStatus.requiredVerifications.length) {
+                    setStage('accept');
                 }
             } catch (loadError) {
                 if (active) {
@@ -298,12 +333,13 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
     async function handleCompleteIdentity() {
         setWorking(true);
         setError(null);
+        setStepMessage(null);
 
         try {
             const session = await fetchCurrentUser();
             if (session.status !== 'authenticated') {
                 const returnUrl = `${MEETINGS_URL}/invitations/${token}`;
-                window.location.href = `${APP_URL}/verify-identity?next=${encodeURIComponent(returnUrl)}`;
+                window.location.href = `${APP_URL}/verify-identity?challenge=invitation&next=${encodeURIComponent(returnUrl)}`;
                 return;
             }
 
@@ -313,7 +349,11 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
                 setStepMessageTone('success');
                 setStepMessage('Identity verification confirmed.');
                 setStage('accept');
+                return;
             }
+
+            const returnUrl = `${MEETINGS_URL}/invitations/${token}?identityReturn=1`;
+            window.location.href = `${APP_URL}/verify-identity?challenge=invitation&next=${encodeURIComponent(returnUrl)}`;
         } catch (identityError) {
             setError(identityError instanceof Error
                 ? identityError.message
@@ -491,7 +531,6 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
                 <section className={styles.wizard} aria-labelledby="invite-wizard-title">
                     <div className={styles.wizardHeader}>
                         <div>
-                            <p className={styles.eyebrow}>Acceptance wizard</p>
                             <h2 id="invite-wizard-title">Complete the secure handoff</h2>
                         </div>
                         <button type="button" className={styles.secondaryAction} onClick={handleLogin}>
@@ -617,10 +656,15 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
                                     <p>
                                         {status.identityVerified
                                             ? 'Identity confirmed.'
-                                            : 'Confirm your Gracon verified identity before accepting this room.'}
+                                            : 'Complete a fresh ID-card and face-verification challenge in the main app before accepting this room.'}
                                     </p>
                                 </div>
                             </div>
+                            {status.identityChallengeStartedAt && (
+                                <p className={styles.otpHint}>
+                                    Challenge started {formatExpiry(status.identityChallengeStartedAt)}.
+                                </p>
+                            )}
                             {!status.identityVerified && (
                                 <button
                                     type="button"
@@ -628,7 +672,7 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
                                     disabled={working}
                                     onClick={handleCompleteIdentity}
                                 >
-                                    Verify identity
+                                    Continue to identity verification
                                 </button>
                             )}
                         </div>
