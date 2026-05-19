@@ -72,6 +72,12 @@ export interface MeetingRoomView {
     agendaItems: string[];
 }
 
+export interface MeetingRoomHostProfile {
+    userId: string;
+    email: string;
+    displayName: string;
+}
+
 const DATE_FORMATTER = new Intl.DateTimeFormat('en', {
     day: '2-digit',
     month: 'short',
@@ -288,38 +294,58 @@ export function buildMeetingsSummary(
 }
 
 /**
- * Creates a safe custom-room fallback before the full meeting endpoint is wired
- * into the room server component.
+ * Creates the room view from authenticated user context and optional backend data.
  */
-export function createMeetingRoomFallback(
+export function createMeetingRoomView(
     id: string,
+    host: MeetingRoomHostProfile,
+    meeting?: Meeting | null,
     title = 'Secure meeting room',
 ): MeetingRoomView {
-    const now = new Date();
-    const nowIso = now.toISOString();
+    const scheduledStartAt = meeting ? getMeetingSortDate(meeting) : new Date().toISOString();
+    const scheduledEndAt = meeting?.scheduledEndAt
+        ?? meeting?.endedAt
+        ?? scheduledStartAt;
+    const attendees = buildRoomAttendees(host, meeting?.participants ?? []);
 
     return {
         id,
-        title,
-        description: 'Live Gracon meeting room.',
-        date: formatMeetingDate(nowIso),
-        time: formatMeetingTime(nowIso),
-        scheduledStartAt: nowIso,
-        scheduledEndAt: nowIso,
-        visibility: 'INVITE_ONLY',
-        readiness: 'READY',
-        hostName: 'Daniel KAJUGA',
-        attendees: [
-            {
-                initials: 'DK',
-                name: 'Daniel KAJUGA',
-                email: 'host@gracon360.com',
-                role: 'Host',
-            },
-        ],
-        attendeeCount: 1,
-        agendaItems: ['Open discussion', 'Share decisions', 'Confirm next steps'],
+        title: meeting?.title || title,
+        description: meeting?.description ?? '',
+        date: formatMeetingDate(scheduledStartAt),
+        time: formatMeetingTime(scheduledStartAt),
+        scheduledStartAt,
+        scheduledEndAt,
+        visibility: meeting?.visibility ?? 'INVITE_ONLY',
+        readiness: attendees.length > 1 ? 'READY' : 'WAITING_INVITES',
+        hostName: host.displayName,
+        attendees,
+        attendeeCount: Math.max(attendees.length, meeting?.participants?.length ?? 1),
+        agendaItems: [],
     };
+}
+
+/**
+ * Builds room attendees with the authenticated host as the first stable entry.
+ */
+function buildRoomAttendees(
+    host: MeetingRoomHostProfile,
+    participants: MeetingParticipant[],
+): MeetingRoomAttendeeView[] {
+    const hostAttendee: MeetingRoomAttendeeView = {
+        initials: getParticipantInitials(host.displayName, host.email),
+        name: host.displayName,
+        email: host.email,
+        role: 'Host',
+    };
+    const otherAttendees = participants
+        .filter((participant) => (
+            participant.userId !== host.userId
+            && participant.email.toLowerCase() !== host.email.toLowerCase()
+        ))
+        .map(toMeetingRoomAttendeeView);
+
+    return [hostAttendee, ...otherAttendees];
 }
 
 /**
