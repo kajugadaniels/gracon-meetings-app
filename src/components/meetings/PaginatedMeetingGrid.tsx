@@ -4,7 +4,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { MeetingCardView } from '@/lib/meetings/static-meetings';
+import type { MeetingCardView } from '@/lib/meetings/meeting-view-models';
 import { MeetingCard } from './MeetingCard';
 import styles from './paginated-meeting-grid.module.css';
 
@@ -12,6 +12,7 @@ interface PaginatedMeetingGridProps {
     meetings: MeetingCardView[];
     pageSize?: number;
     ariaLabel: string;
+    loading?: boolean;
 }
 
 /**
@@ -21,6 +22,7 @@ export function PaginatedMeetingGrid({
     meetings,
     pageSize = 18,
     ariaLabel,
+    loading = false,
 }: PaginatedMeetingGridProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.max(Math.ceil(meetings.length / pageSize), 1);
@@ -41,7 +43,13 @@ export function PaginatedMeetingGrid({
 
     return (
         <div className={styles.wrapper}>
-            {visibleMeetings.length > 0 ? (
+            {loading ? (
+                <div className={styles.grid} aria-label={`${ariaLabel} loading`}>
+                    {Array.from({ length: 6 }, (_, index) => (
+                        <div key={index} className={styles.skeletonCard} />
+                    ))}
+                </div>
+            ) : visibleMeetings.length > 0 ? (
                 <div className={styles.grid} aria-label={ariaLabel}>
                     {visibleMeetings.map((meeting) => (
                         <MeetingCard
