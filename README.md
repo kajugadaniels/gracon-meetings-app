@@ -75,6 +75,7 @@ metadata, and audit history through `api/meetings`.
 
 ```env
 NEXT_PUBLIC_MEETINGS_URL=http://localhost:4003
+NEXT_PUBLIC_MEETINGS_PUBLIC_URL=http://localhost:4003
 NEXT_PUBLIC_APP_URL=http://localhost:4000
 NEXT_PUBLIC_MAIN_APP_URL=http://localhost:4000
 NEXT_PUBLIC_MEETINGS_API_URL=http://localhost:3007/api/v1
@@ -124,8 +125,10 @@ npm run lint
 - `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for seeded list pages.
 - `src/components/meetings/live/MeetingRoom.tsx` owns the Stream room mount/unmount lifecycle and live recording toggles.
 - `src/components/meetings/MeetingRoom.tsx` owns the custom Gracon meeting room surface used for the user-facing meeting experience.
+- `src/components/meetings/MeetingRoom.tsx` also owns local browser mic/camera permission state for the custom room and must stop tracks when users disable media or leave the room.
 - `src/components/meetings/MeetingControlDock.tsx` owns the static room action controls so media actions can evolve independently from room layout.
 - `src/components/meetings/MeetingCollaborationPanel.tsx` owns the animated Members/Chat tab shell, while `MeetingMembersPanel.tsx`, `MeetingChatPanel.tsx`, and `MeetingInviteDialog.tsx` keep their focused room responsibilities.
+- `MeetingInviteDialog.tsx` builds public meeting links from `NEXT_PUBLIC_MEETINGS_PUBLIC_URL` or the current localhost origin, and API-backed rooms send invitations through same-origin proxy routes.
 - `src/components/invitations/MeetingInvitationAcceptance.tsx` owns the public invite acceptance flow and must keep backend verification gates authoritative.
 - `src/components/ui/MeetingsLoadingState.tsx` owns branded loading UI and should be reused instead of adding local spinners.
 - Stream tokens returned to the browser are short-lived and call-scoped. `STREAM_API_SECRET` remains only in `api/meetings`.
