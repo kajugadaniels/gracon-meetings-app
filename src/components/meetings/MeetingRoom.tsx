@@ -187,6 +187,10 @@ function getUniqueStreamParticipants(participants: StreamVideoParticipant[]) {
 function getStreamParticipantStableKey(participant: StreamVideoParticipant) {
     const normalizedName = participant.name?.trim().toLowerCase();
 
+    if (participant.isLocalParticipant) {
+        return `local:${participant.userId || normalizedName || 'current-user'}`;
+    }
+
     // Stream can temporarily expose two sessions for one local user. The display
     // name is the safest UI-level key for collapsing those duplicate tiles.
     return normalizedName || participant.userId || participant.sessionId;
