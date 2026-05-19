@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { Download, Headphones, LockKeyhole, Share2, ShieldCheck, X } from 'lucide-react';
+import { Download, Headphones, LockKeyhole, RefreshCw, Share2, ShieldCheck, X } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import type { RecordingCardView } from '@/lib/meetings/meeting-view-models';
 import styles from './recording-player-dialog.module.css';
@@ -11,7 +11,9 @@ import styles from './recording-player-dialog.module.css';
 interface RecordingPlayerDialogProps {
     recording: RecordingCardView;
     onClose: () => void;
+    onRefreshPlayback?: (recording: RecordingCardView) => void;
     onShare: (recording: RecordingCardView) => void;
+    refreshing?: boolean;
 }
 
 /**
@@ -20,7 +22,9 @@ interface RecordingPlayerDialogProps {
 export function RecordingPlayerDialog({
     recording,
     onClose,
+    onRefreshPlayback,
     onShare,
+    refreshing = false,
 }: RecordingPlayerDialogProps) {
     const canPlay = Boolean(recording.playbackUrl);
 
@@ -72,6 +76,17 @@ export function RecordingPlayerDialog({
                                 The recording metadata is available now. The video and audio asset
                                 will become playable after the provider finishes processing it.
                             </p>
+                            {onRefreshPlayback && (
+                                <button
+                                    type="button"
+                                    className={styles.refreshButton}
+                                    disabled={refreshing}
+                                    onClick={() => onRefreshPlayback(recording)}
+                                >
+                                    <RefreshCw size={15} />
+                                    {refreshing ? 'Checking playback...' : 'Refresh playback'}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
