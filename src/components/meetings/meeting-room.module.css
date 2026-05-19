@@ -48,7 +48,8 @@
 
 .headerActions,
 .secureBadge,
-.headerActions button {
+.headerActions button,
+.liveStatusPill {
   display: inline-flex;
   align-items: center;
 }
@@ -60,7 +61,8 @@
 }
 
 .secureBadge,
-.headerActions button {
+.headerActions button,
+.liveStatusPill {
   gap: 7px;
   min-height: 34px;
   border: 1px solid var(--color-border);
@@ -75,6 +77,12 @@
 
 .secureBadge {
   color: var(--color-success);
+}
+
+.liveStatusPill {
+  border-color: rgba(91, 35, 255, 0.18);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
 }
 
 .headerActions button {
@@ -97,6 +105,7 @@
 }
 
 .stage {
+  position: relative;
   display: grid;
   min-width: 0;
 }
@@ -225,6 +234,49 @@
   padding: 7px 10px;
 }
 
+.handRaisedPill {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.24);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 7px 10px;
+}
+
+.captionBar {
+  position: absolute;
+  right: 50%;
+  bottom: 124px;
+  z-index: 75;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(640px, calc(100vw - 52px));
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.88);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.22);
+  color: white;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 10px 14px;
+  transform: translateX(50%);
+}
+
+.captionBar span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .roomError {
   margin: 0;
   border: 1px solid rgba(244, 63, 94, 0.18);
@@ -323,12 +375,14 @@
 
   .headerActions,
   .headerActions button,
-  .secureBadge {
+  .secureBadge,
+  .liveStatusPill {
     width: 100%;
   }
 
   .headerActions button,
-  .secureBadge {
+  .secureBadge,
+  .liveStatusPill {
     justify-content: center;
   }
 
@@ -343,6 +397,12 @@
   .videoMeta {
     align-items: flex-start;
     flex-direction: column;
+    border-radius: 16px;
+  }
+
+  .captionBar {
+    bottom: 188px;
+    max-width: calc(100vw - 20px);
     border-radius: 16px;
   }
 }
