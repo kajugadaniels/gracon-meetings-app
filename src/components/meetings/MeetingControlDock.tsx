@@ -2,7 +2,6 @@
  * Reusable in-room meeting action dock.
  */
 import {
-    Captions,
     Circle,
     Hand,
     MessageSquare,
@@ -22,7 +21,6 @@ interface MeetingControlDockProps {
     cameraOff: boolean;
     recording: boolean;
     sharingScreen: boolean;
-    captionsEnabled: boolean;
     handRaised: boolean;
     recordingElapsedLabel?: string;
     recordingBusy?: boolean;
@@ -32,7 +30,6 @@ interface MeetingControlDockProps {
     onToggleCamera: () => void;
     onToggleScreenShare: () => void;
     onToggleRecording: () => void;
-    onToggleCaptions: () => void;
     onToggleRaiseHand: () => void;
     onToggleMembers: () => void;
     onToggleChat: () => void;
@@ -48,7 +45,6 @@ export function MeetingControlDock({
     cameraOff,
     recording,
     sharingScreen,
-    captionsEnabled,
     handRaised,
     recordingElapsedLabel,
     recordingBusy = false,
@@ -58,7 +54,6 @@ export function MeetingControlDock({
     onToggleCamera,
     onToggleScreenShare,
     onToggleRecording,
-    onToggleCaptions,
     onToggleRaiseHand,
     onToggleMembers,
     onToggleChat,
@@ -95,14 +90,6 @@ export function MeetingControlDock({
                     : recording
                         ? `Stop ${recordingElapsedLabel ?? ''}`.trim()
                         : 'Record'}
-            </button>
-            <button
-                type="button"
-                className={captionsEnabled ? styles.activeButton : ''}
-                onClick={onToggleCaptions}
-            >
-                <Captions size={18} />
-                {captionsEnabled ? 'Hide captions' : 'Captions'}
             </button>
             <button
                 type="button"
