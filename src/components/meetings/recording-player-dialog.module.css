@@ -1,0 +1,284 @@
+/**
+ * Recording playback dialog styles.
+ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 8, 28, 0.34);
+  backdrop-filter: blur(16px);
+  padding: clamp(10px, 2vw, 22px);
+  animation: overlayIn 160ms ease both;
+}
+
+.dialog {
+  display: grid;
+  gap: 14px;
+  width: min(100%, 980px);
+  max-height: min(92dvh, 820px);
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.24);
+  padding: clamp(14px, 2vw, 20px);
+  animation: dialogIn 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.header,
+.footer,
+.actions,
+.securityNote {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header,
+.footer {
+  justify-content: space-between;
+}
+
+.header div {
+  min-width: 0;
+}
+
+.header p,
+.header h2,
+.header span {
+  margin: 0;
+}
+
+.header p {
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin-top: 5px;
+  color: var(--color-text-primary);
+  font-size: clamp(18px, 3vw, 23px);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.18;
+}
+
+.header span,
+.securityNote {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.header button {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font: inherit;
+}
+
+.header button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.playerShell {
+  display: grid;
+  min-height: clamp(260px, 52dvh, 520px);
+  overflow: hidden;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 20px;
+  background: #111827;
+}
+
+.player {
+  width: 100%;
+  height: 100%;
+  min-height: clamp(260px, 52dvh, 520px);
+  background: #111827;
+  object-fit: contain;
+}
+
+.processingState {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: clamp(260px, 52dvh, 520px);
+  color: white;
+  padding: 28px;
+  text-align: center;
+}
+
+.processingState span {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.processingState strong {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.processingState p {
+  max-width: 460px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.metaGrid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.metaGrid article {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 15px;
+  background: var(--color-bg-subtle);
+  padding: 12px;
+}
+
+.metaGrid span {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.metaGrid strong {
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.securityNote svg {
+  color: var(--color-success);
+}
+
+.actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.actions button,
+.actions a,
+.actions span {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 12px;
+  text-decoration: none;
+}
+
+.actions button {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+}
+
+.actions span {
+  color: var(--color-text-muted);
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 760px) {
+  .dialog {
+    max-height: 96dvh;
+    border-radius: 20px;
+  }
+
+  .header,
+  .footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .header button {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+  }
+
+  .metaGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .actions button,
+  .actions a,
+  .actions span {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .dialog {
+    animation: none;
+  }
+}
