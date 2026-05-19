@@ -9,6 +9,7 @@ import type {
     Meeting,
     MeetingParticipant,
     MeetingRecording,
+    MeetingStatus,
     MeetingVisibility,
 } from './types';
 
@@ -19,6 +20,7 @@ export type MeetingReadiness = 'READY' | 'WAITING_INVITES' | 'NEEDS_REVIEW';
 export interface MeetingCardView {
     id: string;
     title: string;
+    status: MeetingStatus;
     date: string;
     time: string;
     scheduledStartAt: string;
@@ -197,6 +199,7 @@ export function toMeetingCardView(
     return {
         id: meeting.id,
         title: meeting.title,
+        status: meeting.status,
         date: formatMeetingDate(scheduledStartAt),
         time: formatMeetingTime(scheduledStartAt),
         scheduledStartAt,
