@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2, KeyRound, LockKeyhole, MailCheck, ShieldCheck } from 'lucide-react';
 import { APP_URL, MEETINGS_URL, fetchCurrentUser, redirectToLogin } from '@/lib/session';
+import { getMeeting } from '@/lib/meetings/api-client';
 import styles from './meeting-invitation-acceptance.module.css';
 
 type VerificationRequirement = 'EMAIL_OTP' | 'IDENTITY_VERIFICATION';
@@ -202,7 +203,16 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
         try {
             const accepted = await callInviteApi<InviteStatus>(token, '/accept');
             if (accepted.meetingId) {
-                router.push(`/meetings/${accepted.meetingId}`);
+                try {
+                    const meeting = await getMeeting(accepted.meetingId);
+                    router.push(meeting.status === 'SCHEDULED'
+                        ? '/home'
+                        : `/meetings/${accepted.meetingId}`);
+                } catch {
+                    // If the metadata refresh fails after a successful accept, keep the user
+                    // in the safe meetings dashboard where the accepted room can load later.
+                    router.push('/home');
+                }
                 return;
             }
 
