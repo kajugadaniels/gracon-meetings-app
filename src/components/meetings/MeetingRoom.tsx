@@ -15,17 +15,22 @@ import {
     type Call,
     type StreamVideoParticipant,
 } from '@stream-io/video-react-sdk';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSessionUser, type SessionUser } from '@/app/(protected)/layout';
 import {
     endMeeting,
+    getMeeting,
     issueMeetingStreamToken,
     startMeetingRecording,
     stopMeetingRecording,
 } from '@/lib/meetings/api-client';
-import type {
+import {
+    createMeetingRoomView,
+    type MeetingRoomHostProfile,
     MeetingRoomAttendeeView,
     MeetingRoomView,
 } from '@/lib/meetings/meeting-view-models';
+import type { Meeting } from '@/lib/meetings/types';
 import { toast } from '@/components/ui';
 import { MeetingCollaborationPanel } from './MeetingCollaborationPanel';
 import { MeetingControlDock } from './MeetingControlDock';
@@ -42,7 +47,8 @@ import type { CollaborationPanel, RoomMessage, StageParticipant } from './meetin
 import styles from './meeting-room.module.css';
 
 interface MeetingRoomProps {
-    meeting: MeetingRoomView;
+    meetingId: string;
+    initialTitle?: string;
 }
 
 interface StreamSession {
@@ -74,29 +80,12 @@ function isEditableShortcutTarget(target: EventTarget | null): boolean {
     return target.closest('input, textarea, select, [contenteditable="true"]') !== null;
 }
 
-const INITIAL_MESSAGES: RoomMessage[] = [
-    {
-        sender: 'Olive UHIRIWE',
-        body: 'Agenda is ready. I added the compliance section before the review starts.',
-        time: '09:56',
-    },
-    {
-        sender: 'Jean MUGISHA',
-        body: 'I will share the document package after Daniel opens screen sharing.',
-        time: '09:58',
-    },
-    {
-        sender: 'Daniel KAJUGA',
-        body: 'Thanks. Let us keep recording enabled for the decision summary.',
-        time: '10:01',
-    },
-];
 const STREAM_TRACK_TYPE_AUDIO = 1;
 const STREAM_TRACK_TYPE_VIDEO = 2;
 const STREAM_TRACK_TYPE_SCREEN_SHARE = 3;
 
 /**
- * Detects API-backed meeting ids so seeded design rooms do not call Stream.
+ * Detects API-backed meeting ids so local-only rooms do not call Stream.
  */
 function isUuid(value: string): boolean {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -130,6 +119,24 @@ function getCurrentTimeLabel() {
         minute: '2-digit',
         hour12: false,
     }).format(new Date());
+}
+
+/**
+ * Resolves the current authenticated user's display name for room ownership.
+ */
+function getSessionDisplayName(user: SessionUser): string {
+    return `${user.postNames} ${user.surName}`.trim() || user.email;
+}
+
+/**
+ * Converts the authenticated user into the room host profile contract.
+ */
+function getRoomHostProfile(user: SessionUser): MeetingRoomHostProfile {
+    return {
+        userId: user.userId,
+        email: user.email,
+        displayName: getSessionDisplayName(user),
+    };
 }
 
 /**
@@ -212,9 +219,9 @@ function getStreamParticipantScore(participant: StreamVideoParticipant) {
 }
 
 /**
- * Returns the visible seeded participants using the host as the active speaker.
+ * Returns visible local participants using the authenticated host as the active speaker.
  */
-function getStaticStageParticipants(meeting: MeetingRoomView): StageParticipant[] {
+function getLocalStageParticipants(meeting: MeetingRoomView): StageParticipant[] {
     const hostParticipant: StageParticipant = {
         initials: getInitials(meeting.hostName),
         name: meeting.hostName,
@@ -243,7 +250,7 @@ function getStreamStageParticipants(
     meeting: MeetingRoomView,
 ): StageParticipant[] {
     if (participants.length === 0) {
-        return getStaticStageParticipants(meeting);
+        return getLocalStageParticipants(meeting);
     }
 
     const screenSharingParticipant = participants.find((participant) => (
@@ -286,7 +293,7 @@ function getStreamStageParticipants(
 }
 
 /**
- * Converts Stream presence into member-panel attendees while preserving seeded fallbacks.
+ * Converts Stream presence into member-panel attendees while preserving local fallbacks.
  */
 function getStreamAttendees(
     participants: StreamVideoParticipant[],
@@ -307,7 +314,7 @@ function getStreamAttendees(
 }
 
 /**
- * Initializes the Stream client and joins the call only for API-backed meetings.
+ * Initializes the Stream client and joins the call only for persisted API meetings.
  */
 function useStreamSession(meeting: MeetingRoomView) {
     const [session, setSession] = useState<StreamSession | null>(null);
@@ -376,7 +383,7 @@ function useStreamSession(meeting: MeetingRoomView) {
 }
 
 /**
- * Renders a local browser-media fallback for seeded rooms and Stream failures.
+ * Renders a local browser-media fallback for non-persisted rooms and Stream failures.
  */
 function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; roomNotice?: string | null }) {
     const [muted, setMuted] = useState(true);
@@ -388,7 +395,7 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
     const screenShareStreamRef = useRef<MediaStream | null>(null);
     const localVideoRef = useRef<HTMLVideoElement | null>(null);
     const screenShareVideoRef = useRef<HTMLVideoElement | null>(null);
-    const staticParticipants = getStaticStageParticipants(meeting);
+    const localParticipants = getLocalStageParticipants(meeting);
     const stageParticipants: StageParticipant[] = sharingScreen
         ? [
             {
@@ -399,13 +406,13 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
                 hasVideo: true,
                 trackType: 'screenShareTrack' as const,
             },
-            ...staticParticipants.map((participant) => ({
+            ...localParticipants.map((participant) => ({
                 ...participant,
                 speaking: false,
                 role: participant.name === meeting.hostName ? 'Host' : participant.role,
             })),
         ].slice(0, 4)
-        : staticParticipants;
+        : localParticipants;
 
     useEffect(() => {
         if (localVideoRef.current) {
@@ -489,7 +496,7 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
     }
 
     /**
-     * Requests or stops browser screen capture for static and fallback rooms.
+     * Requests or stops browser screen capture for local fallback rooms.
      */
     async function handleToggleScreenShare() {
         setMediaError(null);
@@ -710,7 +717,7 @@ function RoomExperience({
     const [ended, setEnded] = useState(false);
     const [ending, setEnding] = useState(false);
     const [endError, setEndError] = useState<string | null>(null);
-    const [messages, setMessages] = useState<RoomMessage[]>(INITIAL_MESSAGES);
+    const [messages, setMessages] = useState<RoomMessage[]>([]);
     const recordingElapsedLabel = formatElapsedTime(recordingElapsedSeconds);
 
     useEffect(() => {
@@ -784,7 +791,7 @@ function RoomExperience({
     }
 
     /**
-     * Ends API-backed meetings, while keeping seeded design rooms usable locally.
+     * Ends persisted meetings, while keeping local fallback rooms usable.
      */
     async function handleEndMeeting() {
         if (ending) return;
@@ -1043,10 +1050,71 @@ function RoomExperience({
 }
 
 /**
- * Renders the meeting room with Stream presence for API meetings and local media for seeded rooms.
+ * Renders the meeting room with Stream presence for persisted meetings and local media fallback.
  */
-export function MeetingRoom({ meeting }: MeetingRoomProps) {
+export function MeetingRoom({ meetingId, initialTitle }: MeetingRoomProps) {
+    const user = useSessionUser();
+    const hostProfile = useMemo(() => (
+        user ? getRoomHostProfile(user) : null
+    ), [user]);
+    const [persistedMeeting, setPersistedMeeting] = useState<Meeting | null>(null);
+    const [meetingLoading, setMeetingLoading] = useState(isUuid(meetingId));
+    const [meetingError, setMeetingError] = useState<string | null>(null);
+    const meeting = useMemo(() => (
+        createMeetingRoomView(
+            meetingId,
+            hostProfile ?? {
+                userId: '',
+                email: '',
+                displayName: 'Loading host',
+            },
+            persistedMeeting,
+            initialTitle,
+        )
+    ), [hostProfile, initialTitle, meetingId, persistedMeeting]);
     const { session, loading, error } = useStreamSession(meeting);
+
+    useEffect(() => {
+        if (!hostProfile || !isUuid(meetingId)) {
+            return undefined;
+        }
+
+        let cancelled = false;
+
+        async function loadMeeting() {
+            setMeetingLoading(true);
+            setMeetingError(null);
+
+            try {
+                const persistedMeeting = await getMeeting(meetingId);
+                if (cancelled) return;
+
+                setPersistedMeeting(persistedMeeting);
+            } catch (err) {
+                if (cancelled) return;
+                setMeetingError(
+                    err instanceof Error
+                        ? err.message
+                        : 'Unable to load meeting details.',
+                );
+            } finally {
+                if (!cancelled) setMeetingLoading(false);
+            }
+        }
+
+        void loadMeeting();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        hostProfile,
+        meetingId,
+    ]);
+
+    const roomNotice = meetingLoading
+        ? 'Loading meeting details...'
+        : meetingError ?? (loading ? 'Preparing secure live media...' : error);
 
     if (session) {
         return (
@@ -1061,7 +1129,7 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
     return (
         <LocalMeetingRoom
             meeting={meeting}
-            roomNotice={loading ? 'Preparing secure live media...' : error}
+            roomNotice={roomNotice}
         />
     );
 }
