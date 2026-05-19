@@ -3,6 +3,7 @@
  */
 import type { Metadata } from 'next';
 import { DM_Sans } from 'next/font/google';
+import { AppToaster } from '@/components/ui';
 import './globals.css';
 
 const dmSans = DM_Sans({
@@ -28,7 +29,10 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className={dmSans.variable}>
-            <body>{children}</body>
+            <body>
+                {children}
+                <AppToaster />
+            </body>
         </html>
     );
 }
