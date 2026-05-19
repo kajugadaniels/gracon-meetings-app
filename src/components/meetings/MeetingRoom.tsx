@@ -48,7 +48,6 @@ import styles from './meeting-room.module.css';
 
 interface MeetingRoomProps {
     meetingId: string;
-    initialTitle?: string;
 }
 
 interface StreamSession {
@@ -373,6 +372,7 @@ function useStreamSession(meeting: MeetingRoomView) {
             cancelled = true;
             const cleanupSession = nextSession;
             cleanupSession?.call.leave().catch(() => undefined);
+            cleanupSession?.client.disconnectUser().catch(() => undefined);
         };
     }, [meeting.hostName, meeting.id]);
 
@@ -1049,7 +1049,7 @@ function RoomExperience({
 /**
  * Renders the meeting room with Stream presence for persisted meetings and local media fallback.
  */
-export function MeetingRoom({ meetingId, initialTitle }: MeetingRoomProps) {
+export function MeetingRoom({ meetingId }: MeetingRoomProps) {
     const user = useSessionUser();
     const hostProfile = useMemo(() => (
         user ? getRoomHostProfile(user) : null
@@ -1057,7 +1057,21 @@ export function MeetingRoom({ meetingId, initialTitle }: MeetingRoomProps) {
     const [persistedMeeting, setPersistedMeeting] = useState<Meeting | null>(null);
     const [meetingLoading, setMeetingLoading] = useState(isUuid(meetingId));
     const [meetingError, setMeetingError] = useState<string | null>(null);
-    const safeInitialTitle = isUuid(meetingId) ? undefined : initialTitle;
+
+    useEffect(() => {
+        const currentUrl = new URL(window.location.href);
+        if (!currentUrl.searchParams.has('title')) return;
+
+        // Legacy room links carried mutable display names in the URL. Strip the
+        // parameter in place so only API/session data can identify the room host.
+        currentUrl.searchParams.delete('title');
+        window.history.replaceState(
+            null,
+            '',
+            `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`,
+        );
+    }, []);
+
     const meeting = useMemo(() => (
         createMeetingRoomView(
             meetingId,
@@ -1067,9 +1081,8 @@ export function MeetingRoom({ meetingId, initialTitle }: MeetingRoomProps) {
                 displayName: 'Loading host',
             },
             persistedMeeting,
-            safeInitialTitle,
         )
-    ), [hostProfile, meetingId, persistedMeeting, safeInitialTitle]);
+    ), [hostProfile, meetingId, persistedMeeting]);
     const { session, loading, error } = useStreamSession(meeting);
 
     useEffect(() => {
