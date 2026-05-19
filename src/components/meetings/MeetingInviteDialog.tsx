@@ -6,7 +6,7 @@
 import { Check, Copy, MailCheck, Search, ShieldCheck, UserCheck, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { createMeetingInvite } from '@/lib/meetings/api-client';
-import type { MeetingRoomAttendeeView } from '@/lib/meetings/static-meetings';
+import type { MeetingRoomAttendeeView } from '@/lib/meetings/meeting-view-models';
 import type { MeetingInviteVerificationRequirement as ApiMeetingInviteVerificationRequirement } from '@/lib/meetings/types';
 import styles from './meeting-invite-dialog.module.css';
 
