@@ -36,6 +36,7 @@ interface MeetingControlDockProps {
     onToggleRaiseHand: () => void;
     onToggleMembers: () => void;
     onToggleChat: () => void;
+    onOpenSettings: () => void;
     onEndMeeting: () => void;
 }
 
@@ -61,6 +62,7 @@ export function MeetingControlDock({
     onToggleRaiseHand,
     onToggleMembers,
     onToggleChat,
+    onOpenSettings,
     onEndMeeting,
 }: MeetingControlDockProps) {
     return (
@@ -126,7 +128,7 @@ export function MeetingControlDock({
                 <MessageSquare size={18} />
                 Chat
             </button>
-            <button type="button">
+            <button type="button" onClick={onOpenSettings}>
                 <Settings size={18} />
                 Settings
             </button>
