@@ -5,12 +5,22 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, KeyRound, LockKeyhole, MailCheck, ShieldCheck } from 'lucide-react';
+import {
+    ArrowRight,
+    CalendarCheck2,
+    CheckCircle2,
+    KeyRound,
+    LockKeyhole,
+    MailCheck,
+    ShieldCheck,
+    UserRoundCheck,
+} from 'lucide-react';
 import { APP_URL, MEETINGS_URL, fetchCurrentUser, redirectToLogin } from '@/lib/session';
 import { getMeeting } from '@/lib/meetings/api-client';
 import styles from './meeting-invitation-acceptance.module.css';
 
 type VerificationRequirement = 'EMAIL_OTP' | 'IDENTITY_VERIFICATION';
+type WizardStepState = 'complete' | 'active' | 'locked';
 
 interface InviteStatus {
     meetingTitle: string;
@@ -28,6 +38,11 @@ interface InviteStatus {
 
 interface MeetingInvitationAcceptanceProps {
     token: string;
+}
+
+interface WizardStep {
+    label: string;
+    state: WizardStepState;
 }
 
 /**
@@ -65,6 +80,56 @@ async function callInviteApi<T>(
 }
 
 /**
+ * Formats invitation expiration without exposing unnecessary backend metadata.
+ */
+function formatExpiry(expiresAt: string): string {
+    return new Intl.DateTimeFormat('en', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    }).format(new Date(expiresAt));
+}
+
+/**
+ * Produces compact wizard steps from backend-selected verification gates.
+ */
+function buildWizardSteps(
+    status: InviteStatus,
+    emailRequired: boolean,
+    identityRequired: boolean,
+    gatesComplete: boolean,
+): WizardStep[] {
+    const steps: WizardStep[] = [{ label: 'Account', state: 'complete' }];
+
+    if (emailRequired) {
+        steps.push({
+            label: 'Email',
+            state: status.emailVerified ? 'complete' : 'active',
+        });
+    }
+
+    if (identityRequired) {
+        const emailGateComplete = !emailRequired || Boolean(status.emailVerified);
+        steps.push({
+            label: 'Identity',
+            state: status.identityVerified
+                ? 'complete'
+                : emailGateComplete ? 'active' : 'locked',
+        });
+    }
+
+    steps.push({
+        label: 'Accept',
+        state: gatesComplete ? 'active' : 'locked',
+    });
+
+    return steps;
+}
+
+/**
  * Renders the secure invitation acceptance journey.
  */
 export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptanceProps) {
@@ -81,14 +146,12 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
         ?? ((!emailRequired || Boolean(status?.emailVerified))
             && (!identityRequired || Boolean(status?.identityVerified)));
 
-    const requirementCopy = useMemo(() => {
-        if (!status?.requiredVerifications.length) return 'No extra verification after login';
-        return status.requiredVerifications
-            .map((requirement) => (
-                requirement === 'EMAIL_OTP' ? 'Email verification' : 'Identity verification'
-            ))
-            .join(' + ');
-    }, [status]);
+    const wizardSteps = useMemo(() => (
+        status
+            ? buildWizardSteps(status, emailRequired, identityRequired, gatesComplete)
+            : []
+    ), [emailRequired, gatesComplete, identityRequired, status]);
+    const canWorkOnIdentity = !emailRequired || Boolean(status?.emailVerified);
 
     useEffect(() => {
         let active = true;
@@ -236,9 +299,10 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
     if (loading) {
         return (
             <main className={styles.shell}>
-                <section className={styles.card}>
-                    <div className={styles.loadingMark} />
-                    <p>Loading secure invitation...</p>
+                <section className={styles.stateCard}>
+                    <span className={styles.loadingMark} />
+                    <p className={styles.stateTitle}>Loading invitation</p>
+                    <p className={styles.stateCopy}>Checking the secure meeting link.</p>
                 </section>
             </main>
         );
@@ -247,7 +311,10 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
     if (!status) {
         return (
             <main className={styles.shell}>
-                <section className={styles.card}>
+                <section className={styles.stateCard}>
+                    <span className={styles.unavailableIcon}>
+                        <LockKeyhole size={20} />
+                    </span>
                     <h1>Invitation unavailable</h1>
                     <p>{error ?? 'This meeting invitation could not be loaded.'}</p>
                 </section>
@@ -258,101 +325,150 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
     return (
         <main className={styles.shell}>
             <section className={styles.card}>
-                <div className={styles.header}>
-                    <span className={styles.icon}>
+                <aside className={styles.summary}>
+                    <span className={styles.brandMark}>
                         <LockKeyhole size={20} />
                     </span>
-                    <div>
-                        <p className={styles.eyebrow}>Secure meeting invitation</p>
-                        <h1>{status.meetingTitle}</h1>
-                        <p>Invited account: {status.email}</p>
+                    <p className={styles.eyebrow}>Secure invitation</p>
+                    <h1>{status.meetingTitle}</h1>
+                    <div className={styles.summaryMeta}>
+                        <span>
+                            <MailCheck size={14} />
+                            {status.email}
+                        </span>
+                        <span>
+                            <CalendarCheck2 size={14} />
+                            Expires {formatExpiry(status.expiresAt)}
+                        </span>
                     </div>
-                </div>
-
-                <div className={styles.requirementCard}>
-                    <span>Required verification</span>
-                    <strong>{requirementCopy}</strong>
-                    <p>The host selected these gates before the meeting room can open.</p>
-                </div>
-
-                <div className={styles.steps}>
-                    <article className={styles.stepComplete}>
-                        <CheckCircle2 size={18} />
+                    <div className={styles.securityGrid}>
                         <div>
-                            <strong>Sign in with invited account</strong>
-                            <p>Login is always required before accepting a secure meeting invite.</p>
+                            <strong>{emailRequired ? 'Required' : 'Not required'}</strong>
+                            <span>Email OTP</span>
                         </div>
-                        <button type="button" onClick={handleLogin}>Sign in</button>
-                    </article>
+                        <div>
+                            <strong>{identityRequired ? 'Required' : 'Not required'}</strong>
+                            <span>Identity check</span>
+                        </div>
+                    </div>
+                </aside>
+
+                <section className={styles.wizard} aria-labelledby="invite-wizard-title">
+                    <div className={styles.wizardHeader}>
+                        <div>
+                            <p className={styles.eyebrow}>Acceptance wizard</p>
+                            <h2 id="invite-wizard-title">Complete the secure handoff</h2>
+                        </div>
+                        <button type="button" className={styles.secondaryAction} onClick={handleLogin}>
+                            Change account
+                        </button>
+                    </div>
+
+                    <ol className={styles.progress} aria-label="Invitation acceptance progress">
+                        {wizardSteps.map((step, index) => (
+                            <li
+                                key={`${step.label}-${index}`}
+                                className={styles[`${step.state}Step`]}
+                            >
+                                <span>{step.state === 'complete' ? <CheckCircle2 size={15} /> : index + 1}</span>
+                                {step.label}
+                            </li>
+                        ))}
+                    </ol>
+
+                    <div className={styles.stepPanel}>
+                        <div className={styles.stepPanelHeader}>
+                            <span className={styles.stepIcon}>
+                                <UserRoundCheck size={20} />
+                            </span>
+                            <div>
+                                <strong>Signed in as invited account</strong>
+                                <p>{status.email}</p>
+                            </div>
+                        </div>
+                    </div>
 
                     {emailRequired && (
-                        <article className={status.emailVerified ? styles.stepComplete : ''}>
-                            <MailCheck size={18} />
-                            <div>
-                                <strong>Email verification</strong>
-                                <p>Confirm the invited email with a one-time code.</p>
-                                {!status.emailVerified && (
-                                    <div className={styles.inlineForm}>
-                                        <input
-                                            value={emailCode}
-                                            onChange={(event) => setEmailCode(event.target.value)}
-                                            placeholder="6-digit code"
-                                            inputMode="numeric"
-                                        />
-                                        <button
-                                            type="button"
-                                            disabled={working}
-                                            onClick={handleVerifyEmailCode}
-                                        >
-                                            Verify
-                                        </button>
-                                    </div>
-                                )}
+                        <div className={status.emailVerified ? styles.completePanel : styles.stepPanel}>
+                            <div className={styles.stepPanelHeader}>
+                                <span className={styles.stepIcon}>
+                                    <MailCheck size={20} />
+                                </span>
+                                <div>
+                                    <strong>Email verification</strong>
+                                    <p>{status.emailVerified ? 'Email confirmed.' : 'Enter the code sent to the invited email.'}</p>
+                                </div>
                             </div>
-                            <button type="button" disabled={working || status.emailVerified} onClick={handleSendEmailCode}>
-                                {status.emailVerified ? 'Verified' : 'Send code'}
-                            </button>
-                        </article>
+                            {!status.emailVerified && (
+                                <div className={styles.inlineForm}>
+                                    <input
+                                        value={emailCode}
+                                        onChange={(event) => setEmailCode(event.target.value)}
+                                        placeholder="6-digit code"
+                                        inputMode="numeric"
+                                        aria-label="Email verification code"
+                                    />
+                                    <button type="button" disabled={working} onClick={handleSendEmailCode}>
+                                        Send
+                                    </button>
+                                    <button type="button" disabled={working || emailCode.trim().length < 4} onClick={handleVerifyEmailCode}>
+                                        Verify
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     {identityRequired && (
-                        <article className={status.identityVerified ? styles.stepComplete : ''}>
-                            <ShieldCheck size={18} />
-                            <div>
-                                <strong>Identity verification</strong>
-                                <p>Use your verified Gracon identity before joining this meeting.</p>
+                        <div className={status.identityVerified ? styles.completePanel : styles.stepPanel}>
+                            <div className={styles.stepPanelHeader}>
+                                <span className={styles.stepIcon}>
+                                    <ShieldCheck size={20} />
+                                </span>
+                                <div>
+                                    <strong>Identity verification</strong>
+                                    <p>{status.identityVerified ? 'Identity confirmed.' : 'Confirm your Gracon verified identity.'}</p>
+                                </div>
                             </div>
-                            <button
-                                type="button"
-                                disabled={working || status.identityVerified}
-                                onClick={handleCompleteIdentity}
-                            >
-                                {status.identityVerified ? 'Verified' : 'Verify identity'}
-                            </button>
-                        </article>
+                            {!status.identityVerified && (
+                                <button
+                                    type="button"
+                                    className={styles.panelAction}
+                                    disabled={working || !canWorkOnIdentity}
+                                    onClick={handleCompleteIdentity}
+                                >
+                                    Verify identity
+                                </button>
+                            )}
+                        </div>
                     )}
 
                     {!status.requiredVerifications.length && (
-                        <article className={styles.stepComplete}>
-                            <KeyRound size={18} />
-                            <div>
-                                <strong>No extra verification</strong>
-                                <p>After signing in with the invited account, you can accept this invite.</p>
+                        <div className={styles.completePanel}>
+                            <div className={styles.stepPanelHeader}>
+                                <span className={styles.stepIcon}>
+                                    <KeyRound size={20} />
+                                </span>
+                                <div>
+                                    <strong>No extra gate</strong>
+                                    <p>This invite only needs the invited account session.</p>
+                                </div>
                             </div>
-                        </article>
+                        </div>
                     )}
-                </div>
 
-                {error && <p className={styles.error}>{error}</p>}
+                    {error && <p className={styles.error}>{error}</p>}
 
-                <button
-                    type="button"
-                    className={styles.primaryAction}
-                    disabled={working || !status.canAccept || !gatesComplete}
-                    onClick={handleAccept}
-                >
-                    {working ? 'Processing...' : 'Accept and join meeting'}
-                </button>
+                    <button
+                        type="button"
+                        className={styles.primaryAction}
+                        disabled={working || !status.canAccept || !gatesComplete}
+                        onClick={handleAccept}
+                    >
+                        <span>{working ? 'Processing...' : 'Accept invitation'}</span>
+                        <ArrowRight size={16} />
+                    </button>
+                </section>
             </section>
         </main>
     );
