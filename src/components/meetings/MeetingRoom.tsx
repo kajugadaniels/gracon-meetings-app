@@ -34,8 +34,10 @@ import { MeetingInviteDialog } from './MeetingInviteDialog';
 import { MeetingRoomHeader } from './MeetingRoomHeader';
 import { MeetingRoomNotice } from './MeetingRoomNotice';
 import { MeetingSettingsDialog } from './MeetingSettingsDialog';
+import { MeetingShortcutsDialog } from './MeetingShortcutsDialog';
 import { MeetingStage } from './MeetingStage';
 import { RecordingStopDialog } from './RecordingStopDialog';
+import { EndMeetingDialog } from './EndMeetingDialog';
 import type { CollaborationPanel, RoomMessage, StageParticipant } from './meeting-room-types';
 import styles from './meeting-room.module.css';
 
@@ -681,6 +683,8 @@ function RoomExperience({
     const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [shortcutsOpen, setShortcutsOpen] = useState(false);
+    const [endDialogOpen, setEndDialogOpen] = useState(false);
     const [ended, setEnded] = useState(false);
     const [ending, setEnding] = useState(false);
     const [endError, setEndError] = useState<string | null>(null);
@@ -709,6 +713,8 @@ function RoomExperience({
                 setActivePanel(null);
                 setInviteOpen(false);
                 setSettingsOpen(false);
+                setShortcutsOpen(false);
+                setEndDialogOpen(false);
                 setRecordingStopOpen(false);
                 return;
             }
@@ -770,6 +776,7 @@ function RoomExperience({
             }
 
             setEnded(true);
+            setEndDialogOpen(false);
             toast.success('Meeting ended', {
                 description: 'This room is now closed for everyone.',
             });
@@ -963,8 +970,9 @@ function RoomExperience({
                 onToggleMembers={() => openPanel('members')}
                 onToggleChat={() => openPanel('chat')}
                 onOpenSettings={() => setSettingsOpen(true)}
+                onOpenShortcuts={() => setShortcutsOpen(true)}
                 ending={ending}
-                onEndMeeting={handleEndMeeting}
+                onEndMeeting={() => setEndDialogOpen(true)}
             />
 
             {inviteOpen && (
@@ -992,6 +1000,21 @@ function RoomExperience({
                     onConfirm={() => void handleConfirmStopRecording()}
                     onClose={() => setRecordingStopOpen(false)}
                 />
+            )}
+
+            {endDialogOpen && (
+                <EndMeetingDialog
+                    attendeeCount={attendeeCount}
+                    recording={recording}
+                    recordingElapsedLabel={recordingElapsedLabel}
+                    ending={ending}
+                    onConfirm={() => void handleEndMeeting()}
+                    onClose={() => setEndDialogOpen(false)}
+                />
+            )}
+
+            {shortcutsOpen && (
+                <MeetingShortcutsDialog onClose={() => setShortcutsOpen(false)} />
             )}
         </section>
     );
