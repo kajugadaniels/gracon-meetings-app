@@ -22,6 +22,7 @@ interface MeetingControlDockProps {
     muted: boolean;
     cameraOff: boolean;
     recording: boolean;
+    ending?: boolean;
     activePanel: 'members' | 'chat' | null;
     onToggleMute: () => void;
     onToggleCamera: () => void;
@@ -38,6 +39,7 @@ export function MeetingControlDock({
     muted,
     cameraOff,
     recording,
+    ending = false,
     activePanel,
     onToggleMute,
     onToggleCamera,
@@ -96,9 +98,14 @@ export function MeetingControlDock({
                 <MoreHorizontal size={18} />
                 More
             </button>
-            <button type="button" className={styles.leaveButton} onClick={onEndMeeting}>
+            <button
+                type="button"
+                className={styles.leaveButton}
+                disabled={ending}
+                onClick={onEndMeeting}
+            >
                 <PhoneOff size={18} />
-                End
+                {ending ? 'Ending' : 'End'}
             </button>
         </div>
     );
