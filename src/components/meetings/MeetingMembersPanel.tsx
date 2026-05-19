@@ -2,7 +2,7 @@
  * Members panel for the static meeting room.
  */
 import { Mic, MicOff, ShieldCheck, Video, VideoOff } from 'lucide-react';
-import type { MeetingRoomAttendeeView } from '@/lib/meetings/static-meetings';
+import type { MeetingRoomAttendeeView } from '@/lib/meetings/meeting-view-models';
 import styles from './meeting-members-panel.module.css';
 
 interface MeetingMembersPanelProps {
