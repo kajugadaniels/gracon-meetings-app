@@ -159,6 +159,15 @@
   transform: scaleX(-1);
 }
 
+.localScreenShareVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #111827;
+  object-fit: contain;
+}
+
 .streamParticipantView {
   position: absolute;
   inset: 0;
