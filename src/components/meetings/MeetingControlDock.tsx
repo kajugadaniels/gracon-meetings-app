@@ -9,7 +9,6 @@ import {
     Mic,
     MicOff,
     MonitorUp,
-    MoreHorizontal,
     PhoneOff,
     Settings,
     UsersRound,
@@ -93,10 +92,6 @@ export function MeetingControlDock({
             <button type="button">
                 <Settings size={18} />
                 Settings
-            </button>
-            <button type="button">
-                <MoreHorizontal size={18} />
-                More
             </button>
             <button
                 type="button"
