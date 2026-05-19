@@ -109,13 +109,24 @@
 .streamParticipantView {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   background: #111827;
 }
 
-.streamParticipantView video {
+.streamParticipantView video,
+.streamParticipantView :global(.str-video__video) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.streamParticipantView :global(.str-video__video--tall:not(.str-video__video--screen-share)) {
+  object-fit: cover;
+}
+
+.streamParticipantView :global(.str-video__video--screen-share) {
+  object-fit: contain;
 }
 
 .videoMeta {
