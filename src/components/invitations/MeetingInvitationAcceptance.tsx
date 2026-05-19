@@ -3,7 +3,8 @@
  */
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ClipboardEvent, KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     ArrowRight,
@@ -21,6 +22,10 @@ import styles from './meeting-invitation-acceptance.module.css';
 
 type VerificationRequirement = 'EMAIL_OTP' | 'IDENTITY_VERIFICATION';
 type WizardStepState = 'complete' | 'active' | 'locked';
+type InvitationStage = 'account' | 'email' | 'identity' | 'accept';
+type StepMessageTone = 'success' | 'error' | 'info';
+
+const OTP_LENGTH = 6;
 
 interface InviteStatus {
     meetingTitle: string;
@@ -101,32 +106,57 @@ function buildWizardSteps(
     emailRequired: boolean,
     identityRequired: boolean,
     gatesComplete: boolean,
+    stage: InvitationStage,
 ): WizardStep[] {
-    const steps: WizardStep[] = [{ label: 'Account', state: 'complete' }];
+    const steps: WizardStep[] = [{
+        label: 'Account',
+        state: stage === 'account' ? 'active' : 'complete',
+    }];
 
     if (emailRequired) {
         steps.push({
             label: 'Email',
-            state: status.emailVerified ? 'complete' : 'active',
+            state: status.emailVerified
+                ? 'complete'
+                : stage === 'email' ? 'active' : 'locked',
         });
     }
 
     if (identityRequired) {
-        const emailGateComplete = !emailRequired || Boolean(status.emailVerified);
         steps.push({
             label: 'Identity',
             state: status.identityVerified
                 ? 'complete'
-                : emailGateComplete ? 'active' : 'locked',
+                : stage === 'identity' ? 'active' : 'locked',
         });
     }
 
     steps.push({
         label: 'Accept',
-        state: gatesComplete ? 'active' : 'locked',
+        state: gatesComplete && stage === 'accept' ? 'active' : 'locked',
     });
 
     return steps;
+}
+
+/**
+ * Returns the first actionable stage after the account check.
+ */
+function getNextStageAfterAccount(
+    status: InviteStatus,
+    emailRequired: boolean,
+    identityRequired: boolean,
+): InvitationStage {
+    if (emailRequired && !status.emailVerified) return 'email';
+    if (identityRequired && !status.identityVerified) return 'identity';
+    return 'accept';
+}
+
+/**
+ * Splits pasted or typed OTP text into individual numeric digits.
+ */
+function getOtpDigits(value: string): string[] {
+    return value.replace(/\D/g, '').slice(0, OTP_LENGTH).split('');
 }
 
 /**
@@ -137,8 +167,16 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
     const [status, setStatus] = useState<InviteStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [working, setWorking] = useState(false);
-    const [emailCode, setEmailCode] = useState('');
+    const [stage, setStage] = useState<InvitationStage>('account');
+    const [emailCodeSent, setEmailCodeSent] = useState(false);
+    const [otpDigits, setOtpDigits] = useState<string[]>(
+        () => Array.from({ length: OTP_LENGTH }, () => ''),
+    );
+    const [stepMessage, setStepMessage] = useState<string | null>(null);
+    const [stepMessageTone, setStepMessageTone] = useState<StepMessageTone>('info');
     const [error, setError] = useState<string | null>(null);
+    const otpInputRefs = useRef<Array<HTMLInputElement | null>>([]);
+    const lastAutoVerifiedCodeRef = useRef<string | null>(null);
 
     const emailRequired = status?.requiredVerifications.includes('EMAIL_OTP') ?? false;
     const identityRequired = status?.requiredVerifications.includes('IDENTITY_VERIFICATION') ?? false;
@@ -148,10 +186,10 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
 
     const wizardSteps = useMemo(() => (
         status
-            ? buildWizardSteps(status, emailRequired, identityRequired, gatesComplete)
+            ? buildWizardSteps(status, emailRequired, identityRequired, gatesComplete, stage)
             : []
-    ), [emailRequired, gatesComplete, identityRequired, status]);
-    const canWorkOnIdentity = !emailRequired || Boolean(status?.emailVerified);
+    ), [emailRequired, gatesComplete, identityRequired, stage, status]);
+    const otpCode = otpDigits.join('');
 
     useEffect(() => {
         let active = true;
@@ -163,7 +201,12 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
                     callInviteApi<InviteStatus>(token, '/open'),
                 ]);
 
-                if (active) setStatus(preview);
+                if (active) {
+                    setStatus(preview);
+                    if (preview.gatesComplete || !preview.requiredVerifications.length) {
+                        setStage('accept');
+                    }
+                }
 
                 const session = await fetchCurrentUser();
                 if (!active) return;
@@ -205,12 +248,19 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
     async function handleSendEmailCode() {
         setWorking(true);
         setError(null);
+        setStepMessage(null);
 
         try {
             const nextStatus = await callInviteApi<InviteStatus>(token, '/email-code/send');
             setStatus(nextStatus);
+            setEmailCodeSent(true);
+            setOtpDigits(Array.from({ length: OTP_LENGTH }, () => ''));
+            setStepMessageTone('success');
+            setStepMessage(`Verification code sent to ${nextStatus.email}.`);
+            window.setTimeout(() => otpInputRefs.current[0]?.focus(), 80);
         } catch (sendError) {
-            setError(sendError instanceof Error
+            setStepMessageTone('error');
+            setStepMessage(sendError instanceof Error
                 ? sendError.message
                 : 'Unable to send verification code.');
         } finally {
@@ -218,23 +268,32 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
         }
     }
 
-    async function handleVerifyEmailCode() {
+    const handleVerifyEmailCode = useCallback(async (code: string) => {
         setWorking(true);
         setError(null);
+        setStepMessage(null);
 
         try {
             const nextStatus = await callInviteApi<InviteStatus>(token, '/email-code/verify', {
-                code: emailCode,
+                code,
             });
             setStatus(nextStatus);
+            setOtpDigits(Array.from({ length: OTP_LENGTH }, () => ''));
+            setStepMessageTone('success');
+            setStepMessage('Email verified.');
+            setStage(identityRequired && !nextStatus.identityVerified ? 'identity' : 'accept');
         } catch (verifyError) {
-            setError(verifyError instanceof Error
+            setStepMessageTone('error');
+            setStepMessage(verifyError instanceof Error
                 ? verifyError.message
                 : 'Unable to verify code.');
+            setOtpDigits(Array.from({ length: OTP_LENGTH }, () => ''));
+            lastAutoVerifiedCodeRef.current = null;
+            window.setTimeout(() => otpInputRefs.current[0]?.focus(), 80);
         } finally {
             setWorking(false);
         }
-    }
+    }, [identityRequired, token]);
 
     async function handleCompleteIdentity() {
         setWorking(true);
@@ -250,6 +309,11 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
 
             const nextStatus = await callInviteApi<InviteStatus>(token, '/identity/complete');
             setStatus(nextStatus);
+            if (nextStatus.identityVerified) {
+                setStepMessageTone('success');
+                setStepMessage('Identity verification confirmed.');
+                setStage('accept');
+            }
         } catch (identityError) {
             setError(identityError instanceof Error
                 ? identityError.message
@@ -258,6 +322,77 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
             setWorking(false);
         }
     }
+
+    function handleContinueFromAccount() {
+        if (!status) return;
+        setError(null);
+        setStepMessage(null);
+        setStage(getNextStageAfterAccount(status, emailRequired, identityRequired));
+    }
+
+    function handleOtpChange(index: number, value: string) {
+        const digits = getOtpDigits(value);
+        if (!digits.length && value) return;
+
+        setOtpDigits((currentDigits) => {
+            const nextDigits = [...currentDigits];
+
+            if (!digits.length) {
+                nextDigits[index] = '';
+                return nextDigits;
+            }
+
+            digits.forEach((digit, digitIndex) => {
+                if (index + digitIndex < OTP_LENGTH) {
+                    nextDigits[index + digitIndex] = digit;
+                }
+            });
+
+            return nextDigits;
+        });
+
+        const nextIndex = Math.min(index + Math.max(digits.length, 1), OTP_LENGTH - 1);
+        if (digits.length) {
+            window.setTimeout(() => otpInputRefs.current[nextIndex]?.focus(), 0);
+        }
+    }
+
+    function handleOtpKeyDown(index: number, event: KeyboardEvent<HTMLInputElement>) {
+        if (event.key === 'Backspace' && !otpDigits[index] && index > 0) {
+            otpInputRefs.current[index - 1]?.focus();
+        }
+    }
+
+    function handleOtpPaste(event: ClipboardEvent<HTMLInputElement>) {
+        event.preventDefault();
+        const digits = getOtpDigits(event.clipboardData.getData('text'));
+        if (!digits.length) return;
+
+        setOtpDigits((currentDigits) => {
+            const nextDigits = [...currentDigits];
+            digits.forEach((digit, index) => {
+                nextDigits[index] = digit;
+            });
+            return nextDigits;
+        });
+
+        window.setTimeout(() => {
+            otpInputRefs.current[Math.min(digits.length, OTP_LENGTH) - 1]?.focus();
+        }, 0);
+    }
+
+    useEffect(() => {
+        const codeIsReady = stage === 'email'
+            && emailCodeSent
+            && otpCode.length === OTP_LENGTH
+            && !working
+            && !status?.emailVerified;
+
+        if (!codeIsReady || lastAutoVerifiedCodeRef.current === otpCode) return;
+
+        lastAutoVerifiedCodeRef.current = otpCode;
+        void handleVerifyEmailCode(otpCode);
+    }, [emailCodeSent, handleVerifyEmailCode, otpCode, stage, status?.emailVerified, working]);
 
     async function handleAccept() {
         setWorking(true);
@@ -376,65 +511,121 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
                         ))}
                     </ol>
 
-                    <div className={styles.stepPanel}>
-                        <div className={styles.stepPanelHeader}>
-                            <span className={styles.stepIcon}>
-                                <UserRoundCheck size={20} />
-                            </span>
-                            <div>
-                                <strong>Signed in as invited account</strong>
-                                <p>{status.email}</p>
+                    {stage === 'account' && (
+                        <div className={styles.stagePanel}>
+                            <div className={styles.stepPanelHeader}>
+                                <span className={styles.stepIcon}>
+                                    <UserRoundCheck size={20} />
+                                </span>
+                                <div>
+                                    <strong>Signed in as invited account</strong>
+                                    <p>{status.email}</p>
+                                </div>
                             </div>
+                            <div className={styles.accountGrid}>
+                                <div>
+                                    <span>Invitation email</span>
+                                    <strong>{status.email}</strong>
+                                </div>
+                                <div>
+                                    <span>Required checks</span>
+                                    <strong>
+                                        {status.requiredVerifications.length
+                                            ? `${status.requiredVerifications.length} selected`
+                                            : 'Session only'}
+                                    </strong>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.primaryAction}
+                                disabled={working}
+                                onClick={handleContinueFromAccount}
+                            >
+                                <span>{status.requiredVerifications.length ? 'Continue securely' : 'Review invitation'}</span>
+                                <ArrowRight size={16} />
+                            </button>
                         </div>
-                    </div>
+                    )}
 
-                    {emailRequired && (
-                        <div className={status.emailVerified ? styles.completePanel : styles.stepPanel}>
+                    {stage === 'email' && emailRequired && (
+                        <div className={status.emailVerified ? styles.completePanel : styles.stagePanel}>
                             <div className={styles.stepPanelHeader}>
                                 <span className={styles.stepIcon}>
                                     <MailCheck size={20} />
                                 </span>
                                 <div>
                                     <strong>Email verification</strong>
-                                    <p>{status.emailVerified ? 'Email confirmed.' : 'Enter the code sent to the invited email.'}</p>
+                                    <p>
+                                        {status.emailVerified
+                                            ? 'Email confirmed.'
+                                            : 'Send a one-time code to the invited email, then enter the six digits.'}
+                                    </p>
                                 </div>
                             </div>
                             {!status.emailVerified && (
-                                <div className={styles.inlineForm}>
-                                    <input
-                                        value={emailCode}
-                                        onChange={(event) => setEmailCode(event.target.value)}
-                                        placeholder="6-digit code"
-                                        inputMode="numeric"
-                                        aria-label="Email verification code"
-                                    />
-                                    <button type="button" disabled={working} onClick={handleSendEmailCode}>
-                                        Send
+                                <>
+                                    <button
+                                        type="button"
+                                        className={styles.panelAction}
+                                        disabled={working}
+                                        onClick={handleSendEmailCode}
+                                    >
+                                        {emailCodeSent ? 'Resend verification code' : 'Send verification code'}
                                     </button>
-                                    <button type="button" disabled={working || emailCode.trim().length < 4} onClick={handleVerifyEmailCode}>
-                                        Verify
-                                    </button>
-                                </div>
+
+                                    {emailCodeSent && (
+                                        <div className={styles.otpBlock}>
+                                            <div className={styles.otpGrid} aria-label="Email verification code">
+                                                {otpDigits.map((digit, index) => (
+                                                    <input
+                                                        // The index is stable because OTP length is fixed.
+                                                        key={`email-otp-${index}`}
+                                                        ref={(element) => {
+                                                            otpInputRefs.current[index] = element;
+                                                        }}
+                                                        value={digit}
+                                                        inputMode="numeric"
+                                                        pattern="[0-9]*"
+                                                        maxLength={1}
+                                                        aria-label={`Digit ${index + 1} of ${OTP_LENGTH}`}
+                                                        className={styles.otpInput}
+                                                        onChange={(event) => handleOtpChange(index, event.target.value)}
+                                                        onKeyDown={(event) => handleOtpKeyDown(index, event)}
+                                                        onPaste={handleOtpPaste}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <p className={styles.otpHint}>
+                                                The code verifies automatically after the sixth digit.
+                                            </p>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     )}
 
-                    {identityRequired && (
-                        <div className={status.identityVerified ? styles.completePanel : styles.stepPanel}>
+                    {stage === 'identity' && identityRequired && (
+                        <div className={status.identityVerified ? styles.completePanel : styles.stagePanel}>
                             <div className={styles.stepPanelHeader}>
                                 <span className={styles.stepIcon}>
                                     <ShieldCheck size={20} />
                                 </span>
                                 <div>
                                     <strong>Identity verification</strong>
-                                    <p>{status.identityVerified ? 'Identity confirmed.' : 'Confirm your Gracon verified identity.'}</p>
+                                    <p>
+                                        {status.identityVerified
+                                            ? 'Identity confirmed.'
+                                            : 'Confirm your Gracon verified identity before accepting this room.'}
+                                    </p>
                                 </div>
                             </div>
                             {!status.identityVerified && (
                                 <button
                                     type="button"
                                     className={styles.panelAction}
-                                    disabled={working || !canWorkOnIdentity}
+                                    disabled={working}
                                     onClick={handleCompleteIdentity}
                                 >
                                     Verify identity
@@ -443,7 +634,7 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
                         </div>
                     )}
 
-                    {!status.requiredVerifications.length && (
+                    {stage === 'accept' && !status.requiredVerifications.length && (
                         <div className={styles.completePanel}>
                             <div className={styles.stepPanelHeader}>
                                 <span className={styles.stepIcon}>
@@ -457,17 +648,38 @@ export function MeetingInvitationAcceptance({ token }: MeetingInvitationAcceptan
                         </div>
                     )}
 
+                    {stage === 'accept' && status.requiredVerifications.length > 0 && (
+                        <div className={styles.completePanel}>
+                            <div className={styles.stepPanelHeader}>
+                                <span className={styles.stepIcon}>
+                                    <CheckCircle2 size={20} />
+                                </span>
+                                <div>
+                                    <strong>Verification complete</strong>
+                                    <p>All host-selected checks are complete for this invited account.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {stepMessage && (
+                        <p className={`${styles.stepMessage} ${styles[`${stepMessageTone}Message`]}`}>
+                            {stepMessage}
+                        </p>
+                    )}
                     {error && <p className={styles.error}>{error}</p>}
 
-                    <button
-                        type="button"
-                        className={styles.primaryAction}
-                        disabled={working || !status.canAccept || !gatesComplete}
-                        onClick={handleAccept}
-                    >
-                        <span>{working ? 'Processing...' : 'Accept invitation'}</span>
-                        <ArrowRight size={16} />
-                    </button>
+                    {stage === 'accept' && (
+                        <button
+                            type="button"
+                            className={styles.primaryAction}
+                            disabled={working || !status.canAccept || !gatesComplete}
+                            onClick={handleAccept}
+                        >
+                            <span>{working ? 'Processing...' : 'Accept invitation'}</span>
+                            <ArrowRight size={16} />
+                        </button>
+                    )}
                 </section>
             </section>
         </main>
