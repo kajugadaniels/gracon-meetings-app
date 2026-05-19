@@ -16,6 +16,7 @@ type RecordingFilter = 'all' | 'ready' | 'shared' | 'month';
 interface RecordingsExplorerProps {
     recordings: RecordingCardView[];
     loading?: boolean;
+    onRefreshRecording?: (recording: RecordingCardView) => Promise<RecordingCardView | null>;
 }
 
 const FILTERS: Array<{ id: RecordingFilter; label: string }> = [
@@ -61,12 +62,14 @@ function isInsideDateRange(isoDate: string, fromDate: string, toDate: string) {
 export function RecordingsExplorer({
     recordings,
     loading = false,
+    onRefreshRecording,
 }: RecordingsExplorerProps) {
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState<RecordingFilter>('all');
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
     const [activeRecording, setActiveRecording] = useState<RecordingCardView | null>(null);
+    const [refreshingRecordingId, setRefreshingRecordingId] = useState<string | null>(null);
 
     const filteredRecordings = useMemo(() => {
         const normalizedSearch = search.trim().toLowerCase();
@@ -114,6 +117,34 @@ export function RecordingsExplorer({
             toast.success('Recording link copied');
         } catch {
             toast.error('Unable to copy recording link');
+        }
+    }
+
+    /**
+     * Asks the backend to pull finalized Stream playback metadata for this row.
+     */
+    async function handleRefreshPlayback(recording: RecordingCardView) {
+        if (!onRefreshRecording) return;
+
+        setRefreshingRecordingId(recording.id);
+
+        try {
+            const refreshedRecording = await onRefreshRecording(recording);
+            if (refreshedRecording?.playbackUrl) {
+                setActiveRecording(refreshedRecording);
+                toast.success('Recording is ready to play');
+                return;
+            }
+
+            toast.info('Recording is still processing', {
+                description: 'Try again in a moment after Stream finishes preparing playback.',
+            });
+        } catch (err) {
+            toast.error('Unable to refresh recording', {
+                description: err instanceof Error ? err.message : 'Please try again.',
+            });
+        } finally {
+            setRefreshingRecordingId(null);
         }
     }
 
@@ -189,6 +220,12 @@ export function RecordingsExplorer({
                 <RecordingPlayerDialog
                     recording={activeRecording}
                     onClose={() => setActiveRecording(null)}
+                    onRefreshPlayback={
+                        onRefreshRecording
+                            ? (recording) => void handleRefreshPlayback(recording)
+                            : undefined
+                    }
+                    refreshing={refreshingRecordingId === activeRecording.id}
                     onShare={(recording) => void handleShare(recording)}
                 />
             )}
