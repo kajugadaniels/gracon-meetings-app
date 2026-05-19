@@ -25,6 +25,14 @@
   text-align: center;
 }
 
+.skeletonCard {
+  min-height: 188px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  animation: cardSkeleton 1.2s ease-in-out infinite;
+}
+
 .emptyState strong {
   color: var(--color-text-primary);
   font-size: 15px;
@@ -79,6 +87,17 @@
   opacity: 0.45;
 }
 
+@keyframes cardSkeleton {
+  0%,
+  100% {
+    opacity: 0.62;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 980px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -93,5 +112,11 @@
   .pagination {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonCard {
+    animation: none;
   }
 }
