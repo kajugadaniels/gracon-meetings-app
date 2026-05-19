@@ -40,7 +40,7 @@ metadata, and audit history through `api/meetings`.
 - `/meetings/:id` now uses a full-screen participant stage, a fixed bottom `MeetingControlDock`, and a Framer Motion-powered collaboration panel that opens Members or Chat as tabs only when requested.
 - `/meetings/:id` now includes an ended-room state so workflow validation matches the real meeting lifecycle.
 - `/meetings/:id` now fetches persisted meeting details from `api/meetings`, derives host identity from the authenticated session user, and connects API-backed UUID meetings to Stream behind the custom Gracon room surface.
-- `/meetings/:id` must ignore query-string titles for API-backed UUID rooms; persisted room data and the authenticated session determine the room title and host so stale links cannot show the wrong host.
+- `/meetings/:id` routes must not include title query parameters. Room title and host identity are resolved after route entry from API/session data so stale shared links cannot show the wrong host.
 - `/meetings/:id` collapses duplicate Stream browser sessions for the same visible participant and keeps the richest media tile, so a single local camera feed fills the stage instead of showing an avatar duplicate.
 - `/meetings/:id` only renders non-host room attendees from active invitation states. Declined or removed participants must not inflate the visible member count.
 - `/meetings/:id` overrides Stream's tall-camera containment inside the custom stage, so camera video always covers its tile while screen sharing still preserves its full aspect ratio.
@@ -143,6 +143,7 @@ npm run lint
 - `src/components/meetings/MeetingRoom.tsx` owns meeting detail loading, authenticated host derivation, Stream session setup for API-backed meetings, and local browser mic/camera fallback.
 - Stream-backed rooms must keep the custom Gracon stage, controls, collaboration panel, and invite dialog instead of mounting Stream's default call UI.
 - Stream participant normalization must key by Stream user identity before session identity, then prefer screen share, active camera, dominant speaker, speaking state, and local participant status when duplicate sessions exist.
+- Stream clients must disconnect on room cleanup, not just leave the call, so changing accounts during development cannot leave a previous user's media identity attached to a new room.
 - Stream camera tiles must use cover-fit inside the Gracon stage. Only screen-share tracks should use contain-fit to avoid cropping shared content.
 - Local fallback rooms must stop browser media tracks when users disable media or leave the room.
 - `src/components/meetings/MeetingControlDock.tsx` owns the room action controls so media actions can evolve independently from room layout.
