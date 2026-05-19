@@ -187,7 +187,7 @@ export function MeetingsWorkspace() {
 
         try {
             const createdMeeting = await createMeeting({
-                title: `Instant meeting with ${hostName}`,
+                title: 'Instant meeting',
                 description: 'Instant secure meeting room.',
                 visibility: 'INVITE_ONLY',
                 recordingEnabled: false,
@@ -195,7 +195,7 @@ export function MeetingsWorkspace() {
                 joinBeforeHost: false,
             });
             const liveMeeting = await startMeeting(createdMeeting.id);
-            router.push(getMeetingJoinPath(liveMeeting.id, liveMeeting.title));
+            router.push(getMeetingJoinPath(liveMeeting.id));
         } catch (err) {
             setInstantError(
                 err instanceof Error
