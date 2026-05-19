@@ -96,6 +96,7 @@ const ACTIVE_ROOM_PARTICIPANT_STATUSES = new Set<MeetingParticipantStatus>([
     'JOINED',
     'LEFT',
 ]);
+const INSTANT_WITH_HOST_TITLE_PATTERN = /^instant meeting with\s+.+$/i;
 
 /**
  * Formats a persisted meeting timestamp for card and header surfaces.
@@ -318,7 +319,7 @@ export function createMeetingRoomView(
 
     return {
         id,
-        title: meeting?.title || title,
+        title: normalizeMeetingRoomTitle(meeting?.title || title),
         description: meeting?.description ?? '',
         date: formatMeetingDate(scheduledStartAt),
         time: formatMeetingTime(scheduledStartAt),
@@ -331,6 +332,18 @@ export function createMeetingRoomView(
         attendeeCount: attendees.length,
         agendaItems: [],
     };
+}
+
+/**
+ * Removes user names from legacy instant-room titles so host identity is shown
+ * only from verified session/API context.
+ */
+function normalizeMeetingRoomTitle(title: string): string {
+    if (INSTANT_WITH_HOST_TITLE_PATTERN.test(title.trim())) {
+        return 'Instant meeting';
+    }
+
+    return title;
 }
 
 /**
