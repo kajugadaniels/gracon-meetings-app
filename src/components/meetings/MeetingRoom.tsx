@@ -1,18 +1,28 @@
 /**
- * Zoom-style meeting room surface for design and workflow validation.
+ * Custom Gracon meeting room surface with optional Stream-backed live media.
  */
 'use client';
 
-import {
-    Circle,
-    Home,
-    UserPlus,
-} from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Circle, Home, UserPlus } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
+import {
+    ParticipantView,
+    ParticipantsAudio,
+    StreamCall,
+    StreamVideo,
+    StreamVideoClient,
+    useCallStateHooks,
+    type Call,
+    type StreamVideoParticipant,
+} from '@stream-io/video-react-sdk';
 import { useEffect, useRef, useState } from 'react';
-import { endMeeting } from '@/lib/meetings/api-client';
-import type { MeetingRoomView } from '@/lib/meetings/static-meetings';
+import { endMeeting, issueMeetingStreamToken } from '@/lib/meetings/api-client';
+import type {
+    MeetingRoomAttendeeView,
+    MeetingRoomView,
+} from '@/lib/meetings/static-meetings';
 import { MeetingCollaborationPanel } from './MeetingCollaborationPanel';
 import { MeetingControlDock } from './MeetingControlDock';
 import { MeetingInviteDialog } from './MeetingInviteDialog';
@@ -35,6 +45,26 @@ interface StageParticipant {
     name: string;
     role: string;
     speaking: boolean;
+    hasVideo?: boolean;
+    streamParticipant?: StreamVideoParticipant;
+}
+
+interface StreamSession {
+    client: StreamVideoClient;
+    call: Call;
+}
+
+interface RoomExperienceProps {
+    meeting: MeetingRoomView;
+    attendees: MeetingRoomAttendeeView[];
+    attendeeCount: number;
+    stageParticipants: StageParticipant[];
+    muted: boolean;
+    cameraOff: boolean;
+    roomNotice?: string | null;
+    renderParticipantMedia: (participant: StageParticipant) => ReactNode;
+    onToggleMute: () => void | Promise<void>;
+    onToggleCamera: () => void | Promise<void>;
 }
 
 const INITIAL_MESSAGES: RoomMessage[] = [
@@ -54,9 +84,11 @@ const INITIAL_MESSAGES: RoomMessage[] = [
         time: '10:01',
     },
 ];
+const STREAM_TRACK_TYPE_AUDIO = 1;
+const STREAM_TRACK_TYPE_VIDEO = 2;
 
 /**
- * Detects API-backed meeting ids so seeded design rooms do not call the backend.
+ * Detects API-backed meeting ids so seeded design rooms do not call Stream.
  */
 function isUuid(value: string): boolean {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -70,7 +102,7 @@ function stopMediaStream(stream: MediaStream | null) {
 }
 
 /**
- * Builds a stable initials fallback for the meeting host when seed data does not expose one.
+ * Builds a stable initials fallback for participants without profile images.
  */
 function getInitials(name: string) {
     return name
@@ -82,9 +114,18 @@ function getInitials(name: string) {
 }
 
 /**
- * Returns the visible stage participants using the host as the active speaker.
+ * Checks Stream's numeric published-track list without importing non-browser enum exports.
  */
-function getStageParticipants(meeting: MeetingRoomView): StageParticipant[] {
+function hasPublishedTrack(participant: StreamVideoParticipant | undefined, trackType: number) {
+    return participant?.publishedTracks.some(
+        (publishedTrack) => Number(publishedTrack) === trackType,
+    ) ?? false;
+}
+
+/**
+ * Returns the visible seeded participants using the host as the active speaker.
+ */
+function getStaticStageParticipants(meeting: MeetingRoomView): StageParticipant[] {
     const hostParticipant: StageParticipant = {
         initials: getInitials(meeting.hostName),
         name: meeting.hostName,
@@ -106,22 +147,138 @@ function getStageParticipants(meeting: MeetingRoomView): StageParticipant[] {
 }
 
 /**
- * Renders a non-media static meeting room with controls, chat, members, and invite flow.
+ * Converts Stream participants into the custom stage model used by Gracon UI.
  */
-export function MeetingRoom({ meeting }: MeetingRoomProps) {
+function getStreamStageParticipants(
+    participants: StreamVideoParticipant[],
+    meeting: MeetingRoomView,
+): StageParticipant[] {
+    if (participants.length === 0) {
+        return getStaticStageParticipants(meeting);
+    }
+
+    return participants
+        .slice(0, 4)
+        .map((participant, index) => {
+            const name = participant.name || participant.userId || `Participant ${index + 1}`;
+            const speaking = participant.isSpeaking || participant.isDominantSpeaker || index === 0;
+            const hasVideo = hasPublishedTrack(participant, STREAM_TRACK_TYPE_VIDEO);
+
+            return {
+                initials: getInitials(name),
+                name,
+                role: speaking
+                    ? participant.isLocalParticipant ? 'Speaking · You' : 'Speaking'
+                    : participant.isLocalParticipant ? 'You' : 'Listening',
+                speaking,
+                hasVideo,
+                streamParticipant: participant,
+            };
+        });
+}
+
+/**
+ * Converts Stream presence into member-panel attendees while preserving seeded fallbacks.
+ */
+function getStreamAttendees(
+    participants: StreamVideoParticipant[],
+    meeting: MeetingRoomView,
+): MeetingRoomAttendeeView[] {
+    if (participants.length === 0) return meeting.attendees;
+
+    return participants.map((participant, index) => {
+        const name = participant.name || participant.userId || `Participant ${index + 1}`;
+
+        return {
+            initials: getInitials(name),
+            name,
+            email: `${participant.userId || `participant-${index + 1}`}@meeting.local`,
+            role: participant.isLocalParticipant ? 'You' : participant.roles[0] ?? 'Participant',
+        };
+    });
+}
+
+/**
+ * Initializes the Stream client and joins the call only for API-backed meetings.
+ */
+function useStreamSession(meeting: MeetingRoomView) {
+    const [session, setSession] = useState<StreamSession | null>(null);
+    const [loading, setLoading] = useState(isUuid(meeting.id));
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!isUuid(meeting.id)) {
+            return undefined;
+        }
+
+        let cancelled = false;
+        let nextSession: StreamSession | null = null;
+
+        async function connect() {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const access = await issueMeetingStreamToken(meeting.id);
+                const client = new StreamVideoClient({
+                    apiKey: access.apiKey,
+                    user: {
+                        id: access.userId,
+                        name: meeting.hostName,
+                    },
+                    token: access.token,
+                });
+                const call = client.call(access.callType, access.callId);
+
+                await call.join({
+                    create: false,
+                    joinResponseTimeout: 10000,
+                });
+
+                // Start muted with camera off so joining a room never leaks media unexpectedly.
+                await Promise.allSettled([
+                    call.microphone.disable(true),
+                    call.camera.disable(true),
+                ]);
+
+                nextSession = { client, call };
+
+                if (!cancelled) {
+                    setSession(nextSession);
+                }
+            } catch {
+                setError('Live media is unavailable right now. You can still review the room layout.');
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        }
+
+        void connect();
+
+        return () => {
+            cancelled = true;
+            const cleanupSession = nextSession;
+            cleanupSession?.call.leave().catch(() => undefined);
+            cleanupSession?.client.disconnectUser().catch(() => undefined);
+        };
+    }, [meeting.hostName, meeting.id]);
+
+    return { session, loading, error };
+}
+
+/**
+ * Renders a local browser-media fallback for seeded rooms and Stream failures.
+ */
+function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; roomNotice?: string | null }) {
     const [muted, setMuted] = useState(true);
     const [cameraOff, setCameraOff] = useState(true);
-    const [recording, setRecording] = useState(true);
-    const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
-    const [inviteOpen, setInviteOpen] = useState(false);
-    const [ended, setEnded] = useState(false);
-    const [ending, setEnding] = useState(false);
-    const [endError, setEndError] = useState<string | null>(null);
     const [mediaError, setMediaError] = useState<string | null>(null);
     const audioStreamRef = useRef<MediaStream | null>(null);
     const videoStreamRef = useRef<MediaStream | null>(null);
     const localVideoRef = useRef<HTMLVideoElement | null>(null);
-    const stageParticipants = getStageParticipants(meeting);
+    const stageParticipants = getStaticStageParticipants(meeting);
 
     useEffect(() => {
         if (localVideoRef.current) {
@@ -134,6 +291,181 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
         stopMediaStream(videoStreamRef.current);
     }, []);
 
+    /**
+     * Requests or stops the local microphone track for non-Stream fallback rooms.
+     */
+    async function handleToggleMute() {
+        setMediaError(null);
+
+        if (!muted) {
+            stopMediaStream(audioStreamRef.current);
+            audioStreamRef.current = null;
+            setMuted(true);
+            return;
+        }
+
+        try {
+            audioStreamRef.current = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: false,
+            });
+            setMuted(false);
+        } catch {
+            setMediaError('Microphone permission was blocked or unavailable.');
+        }
+    }
+
+    /**
+     * Requests or stops the local camera track for non-Stream fallback rooms.
+     */
+    async function handleToggleCamera() {
+        setMediaError(null);
+
+        if (!cameraOff) {
+            stopMediaStream(videoStreamRef.current);
+            videoStreamRef.current = null;
+            setCameraOff(true);
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user',
+                },
+            });
+            videoStreamRef.current = stream;
+            setCameraOff(false);
+        } catch {
+            setMediaError('Camera permission was blocked or unavailable.');
+        }
+    }
+
+    return (
+        <RoomExperience
+            meeting={meeting}
+            attendees={meeting.attendees}
+            attendeeCount={meeting.attendeeCount}
+            stageParticipants={stageParticipants}
+            muted={muted}
+            cameraOff={cameraOff}
+            roomNotice={mediaError ?? roomNotice}
+            renderParticipantMedia={(participant) => (
+                participant.speaking && !cameraOff ? (
+                    <video
+                        ref={localVideoRef}
+                        className={styles.localVideo}
+                        autoPlay
+                        muted
+                        playsInline
+                    />
+                ) : (
+                    <span className={styles.videoAvatar}>{participant.initials}</span>
+                )
+            )}
+            onToggleMute={handleToggleMute}
+            onToggleCamera={handleToggleCamera}
+        />
+    );
+}
+
+/**
+ * Renders the custom Gracon room while sourcing presence and media from Stream.
+ */
+function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: Call }) {
+    const {
+        useLocalParticipant,
+        useParticipantCount,
+        useParticipants,
+        useRemoteParticipants,
+    } = useCallStateHooks();
+    const participants = useParticipants();
+    const remoteParticipants = useRemoteParticipants();
+    const localParticipant = useLocalParticipant();
+    const participantCount = useParticipantCount();
+    const muted = !hasPublishedTrack(localParticipant, STREAM_TRACK_TYPE_AUDIO);
+    const cameraOff = !hasPublishedTrack(localParticipant, STREAM_TRACK_TYPE_VIDEO);
+    const stageParticipants = getStreamStageParticipants(participants, meeting);
+    const attendees = getStreamAttendees(participants, meeting);
+
+    /**
+     * Toggles Stream microphone publishing after Gracon token checks have passed.
+     */
+    async function handleToggleMute() {
+        if (muted) {
+            await call.microphone.enable();
+        } else {
+            await call.microphone.disable();
+        }
+    }
+
+    /**
+     * Toggles Stream camera publishing after Gracon token checks have passed.
+     */
+    async function handleToggleCamera() {
+        if (cameraOff) {
+            await call.camera.enable();
+        } else {
+            await call.camera.disable();
+        }
+    }
+
+    return (
+        <>
+            <ParticipantsAudio participants={remoteParticipants} />
+            <RoomExperience
+                meeting={meeting}
+                attendees={attendees}
+                attendeeCount={Math.max(participantCount, attendees.length)}
+                stageParticipants={stageParticipants}
+                muted={muted}
+                cameraOff={cameraOff}
+                renderParticipantMedia={(participant) => (
+                    participant.streamParticipant && participant.hasVideo ? (
+                        <ParticipantView
+                            participant={participant.streamParticipant}
+                            ParticipantViewUI={null}
+                            className={styles.streamParticipantView}
+                        />
+                    ) : (
+                        <span className={styles.videoAvatar}>{participant.initials}</span>
+                    )
+                )}
+                onToggleMute={handleToggleMute}
+                onToggleCamera={handleToggleCamera}
+            />
+        </>
+    );
+}
+
+/**
+ * Renders the shared custom room chrome used by both Stream and fallback rooms.
+ */
+function RoomExperience({
+    meeting,
+    attendees,
+    attendeeCount,
+    stageParticipants,
+    muted,
+    cameraOff,
+    roomNotice,
+    renderParticipantMedia,
+    onToggleMute,
+    onToggleCamera,
+}: RoomExperienceProps) {
+    const [recording, setRecording] = useState(true);
+    const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
+    const [inviteOpen, setInviteOpen] = useState(false);
+    const [ended, setEnded] = useState(false);
+    const [ending, setEnding] = useState(false);
+    const [endError, setEndError] = useState<string | null>(null);
+
+    /**
+     * Opens the requested collaboration panel or closes it when selected twice.
+     */
     function openPanel(panel: CollaborationPanel) {
         setActivePanel((currentPanel) => (currentPanel === panel ? null : panel));
     }
@@ -159,59 +491,6 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
             );
         } finally {
             setEnding(false);
-        }
-    }
-
-    /**
-     * Requests or stops the microphone track based on the current muted state.
-     */
-    async function handleToggleMute() {
-        setMediaError(null);
-
-        if (!muted) {
-            stopMediaStream(audioStreamRef.current);
-            audioStreamRef.current = null;
-            setMuted(true);
-            return;
-        }
-
-        try {
-            audioStreamRef.current = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: false,
-            });
-            setMuted(false);
-        } catch {
-            setMediaError('Microphone permission was blocked or unavailable.');
-        }
-    }
-
-    /**
-     * Requests or stops the camera track based on the current camera state.
-     */
-    async function handleToggleCamera() {
-        setMediaError(null);
-
-        if (!cameraOff) {
-            stopMediaStream(videoStreamRef.current);
-            videoStreamRef.current = null;
-            setCameraOff(true);
-            return;
-        }
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: false,
-                video: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    facingMode: 'user',
-                },
-            });
-            videoStreamRef.current = stream;
-            setCameraOff(false);
-        } catch {
-            setMediaError('Camera permission was blocked or unavailable.');
         }
     }
 
@@ -250,8 +529,8 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                 </div>
             </header>
 
-            {(endError || mediaError) && (
-                <p className={styles.roomError}>{endError ?? mediaError}</p>
+            {(endError || roomNotice) && (
+                <p className={styles.roomError}>{endError ?? roomNotice}</p>
             )}
 
             <motion.div
@@ -283,21 +562,13 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                                         Recording
                                     </div>
                                 )}
-                                {participant.speaking && !cameraOff ? (
-                                    <video
-                                        ref={localVideoRef}
-                                        className={styles.localVideo}
-                                        autoPlay
-                                        muted
-                                        playsInline
-                                    />
-                                ) : (
-                                    <span className={styles.videoAvatar}>{participant.initials}</span>
-                                )}
+                                {renderParticipantMedia(participant)}
                                 <div className={styles.videoMeta}>
                                     <strong>{participant.name}</strong>
                                     <small>
-                                        {participant.speaking && !muted ? 'Speaking · Mic on' : participant.role}
+                                        {participant.speaking && !muted
+                                            ? 'Speaking · Mic on'
+                                            : participant.role}
                                     </small>
                                 </div>
                             </motion.article>
@@ -310,13 +581,13 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                         <MeetingCollaborationPanel
                             key="meeting-collaboration-panel"
                             activePanel={activePanel}
-                            attendees={meeting.attendees}
-                            attendeeCount={meeting.attendeeCount}
+                            attendees={attendees}
+                            attendeeCount={attendeeCount}
                             muted={muted}
                             cameraOff={cameraOff}
                             initialMessages={INITIAL_MESSAGES}
-                            onToggleMute={handleToggleMute}
-                            onToggleCamera={handleToggleCamera}
+                            onToggleMute={onToggleMute}
+                            onToggleCamera={onToggleCamera}
                             onChangePanel={setActivePanel}
                             onClose={() => setActivePanel(null)}
                         />
@@ -329,8 +600,8 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                 cameraOff={cameraOff}
                 recording={recording}
                 activePanel={activePanel}
-                onToggleMute={() => void handleToggleMute()}
-                onToggleCamera={() => void handleToggleCamera()}
+                onToggleMute={() => void onToggleMute()}
+                onToggleCamera={() => void onToggleCamera()}
                 onToggleRecording={() => setRecording((value) => !value)}
                 onToggleMembers={() => openPanel('members')}
                 onToggleChat={() => openPanel('chat')}
@@ -341,10 +612,34 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
             {inviteOpen && (
                 <MeetingInviteDialog
                     meetingId={meeting.id}
-                    attendees={meeting.attendees}
+                    attendees={attendees}
                     onClose={() => setInviteOpen(false)}
                 />
             )}
         </section>
+    );
+}
+
+/**
+ * Renders the meeting room with Stream presence for API meetings and local media for seeded rooms.
+ */
+export function MeetingRoom({ meeting }: MeetingRoomProps) {
+    const { session, loading, error } = useStreamSession(meeting);
+
+    if (session) {
+        return (
+            <StreamVideo client={session.client}>
+                <StreamCall call={session.call}>
+                    <StreamMeetingRoom meeting={meeting} call={session.call} />
+                </StreamCall>
+            </StreamVideo>
+        );
+    }
+
+    return (
+        <LocalMeetingRoom
+            meeting={meeting}
+            roomNotice={loading ? 'Preparing secure live media...' : error}
+        />
     );
 }
