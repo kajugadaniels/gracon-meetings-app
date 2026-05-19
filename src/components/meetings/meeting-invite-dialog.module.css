@@ -357,6 +357,23 @@
   color: var(--color-success);
 }
 
+.inviteList button:disabled {
+  cursor: not-allowed;
+  opacity: 0.64;
+}
+
+.inviteError {
+  margin: 0;
+  border: 1px solid rgba(244, 63, 94, 0.18);
+  border-radius: 14px;
+  background: rgba(244, 63, 94, 0.08);
+  color: var(--color-error);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 10px 12px;
+}
+
 .emptyState {
   margin: 0;
   border: 1px dashed var(--color-border);
