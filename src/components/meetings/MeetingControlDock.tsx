@@ -62,17 +62,29 @@ export function MeetingControlDock({
 }: MeetingControlDockProps) {
     return (
         <div className={styles.controlDock} aria-label="Meeting actions">
-            <button type="button" onClick={onToggleMute}>
+            <button
+                type="button"
+                title={muted ? 'Unmute microphone (M)' : 'Mute microphone (M)'}
+                aria-pressed={!muted}
+                onClick={onToggleMute}
+            >
                 {muted ? <MicOff size={18} /> : <Mic size={18} />}
                 {muted ? 'Unmute' : 'Mute'}
             </button>
-            <button type="button" onClick={onToggleCamera}>
+            <button
+                type="button"
+                title={cameraOff ? 'Start camera (V)' : 'Stop camera (V)'}
+                aria-pressed={!cameraOff}
+                onClick={onToggleCamera}
+            >
                 {cameraOff ? <VideoOff size={18} /> : <Video size={18} />}
                 {cameraOff ? 'Start video' : 'Stop video'}
             </button>
             <button
                 type="button"
                 className={sharingScreen ? styles.activeButton : ''}
+                title={sharingScreen ? 'Stop screen sharing (S)' : 'Share screen (S)'}
+                aria-pressed={sharingScreen}
                 onClick={onToggleScreenShare}
             >
                 <MonitorUp size={18} />
@@ -82,6 +94,8 @@ export function MeetingControlDock({
                 type="button"
                 className={recording ? styles.activeButton : ''}
                 disabled={recordingBusy}
+                title={recording ? 'Stop recording (R)' : 'Start recording (R)'}
+                aria-pressed={recording}
                 onClick={onToggleRecording}
             >
                 <Circle size={14} fill="currentColor" />
@@ -94,6 +108,8 @@ export function MeetingControlDock({
             <button
                 type="button"
                 className={handRaised ? styles.activeButton : ''}
+                title={handRaised ? 'Lower hand (H)' : 'Raise hand (H)'}
+                aria-pressed={handRaised}
                 onClick={onToggleRaiseHand}
             >
                 <Hand size={18} />
@@ -102,6 +118,8 @@ export function MeetingControlDock({
             <button
                 type="button"
                 className={activePanel === 'members' ? styles.activeButton : ''}
+                title="Open members panel"
+                aria-pressed={activePanel === 'members'}
                 onClick={onToggleMembers}
             >
                 <UsersRound size={18} />
@@ -110,12 +128,14 @@ export function MeetingControlDock({
             <button
                 type="button"
                 className={activePanel === 'chat' ? styles.activeButton : ''}
+                title="Open chat panel"
+                aria-pressed={activePanel === 'chat'}
                 onClick={onToggleChat}
             >
                 <MessageSquare size={18} />
                 Chat
             </button>
-            <button type="button" onClick={onOpenSettings}>
+            <button type="button" title="Open room settings" onClick={onOpenSettings}>
                 <Settings size={18} />
                 Settings
             </button>
@@ -123,6 +143,7 @@ export function MeetingControlDock({
                 type="button"
                 className={styles.leaveButton}
                 disabled={ending}
+                title="End meeting for everyone"
                 onClick={onEndMeeting}
             >
                 <PhoneOff size={18} />
