@@ -165,7 +165,7 @@ function getUniqueStreamParticipants(participants: StreamVideoParticipant[]) {
     const byUserId = new Map<string, StreamVideoParticipant>();
 
     participants.forEach((participant) => {
-        const key = participant.userId || participant.sessionId;
+        const key = getStreamParticipantStableKey(participant);
         const current = byUserId.get(key);
 
         if (!current) {
@@ -173,20 +173,38 @@ function getUniqueStreamParticipants(participants: StreamVideoParticipant[]) {
             return;
         }
 
-        const currentHasVideo = hasPublishedTrack(current, STREAM_TRACK_TYPE_VIDEO);
-        const participantHasVideo = hasPublishedTrack(participant, STREAM_TRACK_TYPE_VIDEO);
-
-        if (
-            participant.isLocalParticipant
-            || (!current.isSpeaking && participant.isSpeaking)
-            || (!current.isDominantSpeaker && participant.isDominantSpeaker)
-            || (!currentHasVideo && participantHasVideo)
-        ) {
+        if (getStreamParticipantScore(participant) > getStreamParticipantScore(current)) {
             byUserId.set(key, participant);
         }
     });
 
     return Array.from(byUserId.values());
+}
+
+/**
+ * Builds a stable stage key that collapses duplicate browser sessions for one person.
+ */
+function getStreamParticipantStableKey(participant: StreamVideoParticipant) {
+    const normalizedName = participant.name?.trim().toLowerCase();
+
+    // Stream can temporarily expose two sessions for one local user. The display
+    // name is the safest UI-level key for collapsing those duplicate tiles.
+    return normalizedName || participant.userId || participant.sessionId;
+}
+
+/**
+ * Scores duplicate Stream sessions so the richest active media tile is retained.
+ */
+function getStreamParticipantScore(participant: StreamVideoParticipant) {
+    let score = 0;
+
+    if (hasPublishedTrack(participant, STREAM_TRACK_TYPE_SCREEN_SHARE)) score += 8;
+    if (hasPublishedTrack(participant, STREAM_TRACK_TYPE_VIDEO)) score += 5;
+    if (participant.isDominantSpeaker) score += 3;
+    if (participant.isSpeaking) score += 2;
+    if (participant.isLocalParticipant) score += 1;
+
+    return score;
 }
 
 /**
