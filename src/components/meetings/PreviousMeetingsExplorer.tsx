@@ -5,7 +5,7 @@
 
 import { FileDown, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import type { MeetingCardView } from '@/lib/meetings/static-meetings';
+import type { MeetingCardView } from '@/lib/meetings/meeting-view-models';
 import { PaginatedMeetingGrid } from './PaginatedMeetingGrid';
 import styles from './previous-meetings-explorer.module.css';
 
@@ -13,6 +13,7 @@ type PreviousFilter = 'all' | 'recorded' | 'month' | 'follow-up';
 
 interface PreviousMeetingsExplorerProps {
     meetings: MeetingCardView[];
+    loading?: boolean;
 }
 
 const FILTERS: Array<{ id: PreviousFilter; label: string }> = [
@@ -55,7 +56,10 @@ function isInsideDateRange(isoDate: string, fromDate: string, toDate: string) {
 /**
  * Renders completed meeting controls and paginated meeting results.
  */
-export function PreviousMeetingsExplorer({ meetings }: PreviousMeetingsExplorerProps) {
+export function PreviousMeetingsExplorer({
+    meetings,
+    loading = false,
+}: PreviousMeetingsExplorerProps) {
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState<PreviousFilter>('all');
     const [fromDate, setFromDate] = useState('');
@@ -87,7 +91,9 @@ export function PreviousMeetingsExplorer({ meetings }: PreviousMeetingsExplorerP
 
     const searchHint = search.trim().length > 0 && search.trim().length < 3
         ? 'Type at least 3 characters to search by title.'
-        : `${filteredMeetings.length.toLocaleString('en')} completed meeting${filteredMeetings.length === 1 ? '' : 's'} found`;
+        : loading
+            ? 'Loading completed meetings from the secure backend...'
+            : `${filteredMeetings.length.toLocaleString('en')} completed meeting${filteredMeetings.length === 1 ? '' : 's'} found`;
 
     return (
         <div className={styles.explorer}>
@@ -151,6 +157,7 @@ export function PreviousMeetingsExplorer({ meetings }: PreviousMeetingsExplorerP
                     meetings={filteredMeetings}
                     pageSize={18}
                     ariaLabel="Completed meetings"
+                    loading={loading}
                 />
             </div>
         </div>
