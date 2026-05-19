@@ -18,9 +18,10 @@ interface MeetingCollaborationPanelProps {
     attendeeCount: number;
     muted: boolean;
     cameraOff: boolean;
-    initialMessages: MeetingRoomMessage[];
+    messages: MeetingRoomMessage[];
     onToggleMute: () => void;
     onToggleCamera: () => void;
+    onSendMessage: (body: string) => void;
     onChangePanel: (panel: CollaborationPanel) => void;
     onClose: () => void;
 }
@@ -34,9 +35,10 @@ export function MeetingCollaborationPanel({
     attendeeCount,
     muted,
     cameraOff,
-    initialMessages,
+    messages,
     onToggleMute,
     onToggleCamera,
+    onSendMessage,
     onChangePanel,
     onClose,
 }: MeetingCollaborationPanelProps) {
@@ -121,7 +123,7 @@ export function MeetingCollaborationPanel({
                             onToggleCamera={onToggleCamera}
                         />
                     ) : (
-                        <MeetingChatPanel initialMessages={initialMessages} />
+                        <MeetingChatPanel messages={messages} onSendMessage={onSendMessage} />
                     )}
                 </motion.div>
             </AnimatePresence>
