@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className={dmSans.variable}>
-            <body>
+            <body suppressHydrationWarning>
                 {children}
                 <AppToaster />
             </body>
