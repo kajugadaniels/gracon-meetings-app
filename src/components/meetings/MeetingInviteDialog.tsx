@@ -5,7 +5,9 @@
 
 import { Check, Copy, MailCheck, Search, ShieldCheck, UserCheck, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { createMeetingInvite } from '@/lib/meetings/api-client';
 import type { MeetingRoomAttendeeView } from '@/lib/meetings/static-meetings';
+import type { MeetingInviteVerificationRequirement as ApiMeetingInviteVerificationRequirement } from '@/lib/meetings/types';
 import styles from './meeting-invite-dialog.module.css';
 
 interface MeetingInviteDialogProps {
@@ -45,6 +47,27 @@ const VERIFICATION_OPTIONS: Array<{
 const DEFAULT_VERIFICATION_REQUIREMENTS: Exclude<MeetingInviteVerificationRequirement, 'NONE'>[] = ['EMAIL_OTP'];
 
 /**
+ * Detects real API meeting ids so seeded rooms can stay local-only.
+ */
+function isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+/**
+ * Resolves the public room URL without leaking backend URLs to invitees.
+ */
+function getMeetingPublicUrl(meetingId: string): string {
+    const configuredBaseUrl = process.env.NEXT_PUBLIC_MEETINGS_PUBLIC_URL
+        || process.env.NEXT_PUBLIC_MEETINGS_URL;
+    const runtimeBaseUrl = typeof window === 'undefined'
+        ? 'http://localhost:4003'
+        : window.location.origin;
+    const baseUrl = (configuredBaseUrl || runtimeBaseUrl).replace(/\/$/, '');
+
+    return `${baseUrl}/meetings/${encodeURIComponent(meetingId)}`;
+}
+
+/**
  * Renders the in-meeting invite flow with local invitee search.
  */
 export function MeetingInviteDialog({
@@ -58,9 +81,12 @@ export function MeetingInviteDialog({
             DEFAULT_VERIFICATION_REQUIREMENTS,
         );
     const [invitedEmails, setInvitedEmails] = useState<Set<string>>(() => new Set());
+    const [sendingEmails, setSendingEmails] = useState<Set<string>>(() => new Set());
+    const [inviteError, setInviteError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
-    const meetingLink = `https://meet.gracon360.com/${meetingId}`;
+    const meetingLink = getMeetingPublicUrl(meetingId);
     const noExtraVerification = verificationRequirements.length === 0;
+    const apiBackedMeeting = isUuid(meetingId);
 
     const visibleInvitees = useMemo(() => {
         const normalizedSearch = inviteSearch.trim().toLowerCase();
@@ -74,8 +100,33 @@ export function MeetingInviteDialog({
         ));
     }, [attendees, inviteSearch]);
 
-    function markInvited(email: string) {
-        setInvitedEmails((currentEmails) => new Set(currentEmails).add(email));
+    async function markInvited(email: string) {
+        setInviteError(null);
+
+        if (!apiBackedMeeting) {
+            setInvitedEmails((currentEmails) => new Set(currentEmails).add(email));
+            return;
+        }
+
+        setSendingEmails((currentEmails) => new Set(currentEmails).add(email));
+
+        try {
+            await createMeetingInvite(meetingId, {
+                email,
+                requiredVerifications: verificationRequirements as ApiMeetingInviteVerificationRequirement[],
+            });
+            setInvitedEmails((currentEmails) => new Set(currentEmails).add(email));
+        } catch (err) {
+            setInviteError(
+                err instanceof Error ? err.message : 'Unable to send this meeting invitation.',
+            );
+        } finally {
+            setSendingEmails((currentEmails) => {
+                const nextEmails = new Set(currentEmails);
+                nextEmails.delete(email);
+                return nextEmails;
+            });
+        }
     }
 
     function setNoExtraVerification(enabled: boolean) {
@@ -131,6 +182,8 @@ export function MeetingInviteDialog({
                     </button>
                 </div>
 
+                {inviteError && <p className={styles.inviteError}>{inviteError}</p>}
+
                 <div className={styles.verificationPanel}>
                     <div className={styles.sectionHead}>
                         <div>
@@ -138,6 +191,7 @@ export function MeetingInviteDialog({
                             <strong>Before accepting invitation</strong>
                         </div>
                         <p>Login is always required. Select one extra gate for this invite.</p>
+                        {apiBackedMeeting && <p>Invites are sent through Gracon email.</p>}
                     </div>
 
                     <div className={styles.verificationGrid}>
@@ -204,6 +258,7 @@ export function MeetingInviteDialog({
                     <div className={styles.inviteList}>
                         {visibleInvitees.map((attendee) => {
                             const invited = invitedEmails.has(attendee.email);
+                            const sending = sendingEmails.has(attendee.email);
 
                             return (
                                 <article key={attendee.email}>
@@ -215,9 +270,12 @@ export function MeetingInviteDialog({
                                     <button
                                         type="button"
                                         className={invited ? styles.invitedButton : ''}
-                                        onClick={() => markInvited(attendee.email)}
+                                        disabled={sending}
+                                        onClick={() => void markInvited(attendee.email)}
                                     >
-                                        {invited ? (
+                                        {sending ? (
+                                            'Sending...'
+                                        ) : invited ? (
                                             <>
                                                 <Check size={14} />
                                                 Invited
