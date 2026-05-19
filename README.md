@@ -68,7 +68,7 @@ metadata, and audit history through `api/meetings`.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - `NewMeetingDialog` starts instant meetings dynamically by creating a meeting, starting it through `api/meetings`, and navigating to the live room.
 - Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
-- `/invitations/:token` renders the secure meeting invitation acceptance flow. It previews the invite, sends/verifies email OTP when required, completes the identity gate for verified users, and accepts only through `api/meetings`.
+- `/invitations/:token` renders a wizard-style secure invitation acceptance flow. It previews the invite, shows host-selected verification gates without repeated copy, sends/verifies email OTP when required, completes the identity gate for verified users, and accepts only through `api/meetings`.
 - `/upcoming` renders a backend-backed scheduled-meetings dashboard using the reusable `MeetingCard` component.
 - `/upcoming` only displays future meetings with `SCHEDULED` status, ordered by nearest scheduled date first.
 - `/upcoming` follows the compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
