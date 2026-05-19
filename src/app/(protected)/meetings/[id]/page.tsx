@@ -8,9 +8,6 @@ interface MeetingRoomPageProps {
     params: Promise<{
         id: string;
     }>;
-    searchParams: Promise<{
-        title?: string;
-    }>;
 }
 
 export const metadata: Metadata = {
@@ -23,10 +20,8 @@ export const metadata: Metadata = {
  */
 export default async function MeetingRoomPage({
     params,
-    searchParams,
 }: MeetingRoomPageProps) {
     const { id } = await params;
-    const { title } = await searchParams;
 
-    return <MeetingRoom meetingId={id} initialTitle={title} />;
+    return <MeetingRoom meetingId={id} />;
 }
