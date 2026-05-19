@@ -12,6 +12,8 @@ import type {
     MeetingVisibility,
 } from './types';
 
+type MeetingParticipantStatus = MeetingParticipant['status'];
+
 export type MeetingReadiness = 'READY' | 'WAITING_INVITES' | 'NEEDS_REVIEW';
 
 export interface MeetingCardView {
@@ -88,6 +90,12 @@ const TIME_FORMATTER = new Intl.DateTimeFormat('en', {
     minute: '2-digit',
     hour12: true,
 });
+const ACTIVE_ROOM_PARTICIPANT_STATUSES = new Set<MeetingParticipantStatus>([
+    'INVITED',
+    'ACCEPTED',
+    'JOINED',
+    'LEFT',
+]);
 
 /**
  * Formats a persisted meeting timestamp for card and header surfaces.
@@ -320,7 +328,7 @@ export function createMeetingRoomView(
         readiness: attendees.length > 1 ? 'READY' : 'WAITING_INVITES',
         hostName: host.displayName,
         attendees,
-        attendeeCount: Math.max(attendees.length, meeting?.participants?.length ?? 1),
+        attendeeCount: attendees.length,
         agendaItems: [],
     };
 }
@@ -342,6 +350,7 @@ function buildRoomAttendees(
         .filter((participant) => (
             participant.userId !== host.userId
             && participant.email.toLowerCase() !== host.email.toLowerCase()
+            && ACTIVE_ROOM_PARTICIPANT_STATUSES.has(participant.status)
         ))
         .map(toMeetingRoomAttendeeView);
 
