@@ -104,11 +104,11 @@ export function MeetingCard({
 
     return (
         <article className={styles.card}>
-            <header className={styles.header}>
-                {status && <span className={styles.status}>{formatStatus(status)}</span>}
-            </header>
             <div className={styles.body}>
-                <h2 className={styles.title}>{title}</h2>
+                <div className={styles.titleRow}>
+                    <h2 className={styles.title}>{title}</h2>
+                    {status && <span className={styles.status}>{formatStatus(status)}</span>}
+                </div>
                 <div className={styles.metaRow}>
                     <span className={styles.timeMeta}>
                         <Clock3 size={13} />
