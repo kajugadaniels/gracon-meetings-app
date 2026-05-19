@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { endMeeting } from '@/lib/meetings/api-client';
 import type { MeetingRoomView } from '@/lib/meetings/static-meetings';
 import { MeetingCollaborationPanel } from './MeetingCollaborationPanel';
@@ -63,6 +63,13 @@ function isUuid(value: string): boolean {
 }
 
 /**
+ * Stops every track in a local browser media stream.
+ */
+function stopMediaStream(stream: MediaStream | null) {
+    stream?.getTracks().forEach((track) => track.stop());
+}
+
+/**
  * Builds a stable initials fallback for the meeting host when seed data does not expose one.
  */
 function getInitials(name: string) {
@@ -102,15 +109,30 @@ function getStageParticipants(meeting: MeetingRoomView): StageParticipant[] {
  * Renders a non-media static meeting room with controls, chat, members, and invite flow.
  */
 export function MeetingRoom({ meeting }: MeetingRoomProps) {
-    const [muted, setMuted] = useState(false);
-    const [cameraOff, setCameraOff] = useState(false);
+    const [muted, setMuted] = useState(true);
+    const [cameraOff, setCameraOff] = useState(true);
     const [recording, setRecording] = useState(true);
     const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [ended, setEnded] = useState(false);
     const [ending, setEnding] = useState(false);
     const [endError, setEndError] = useState<string | null>(null);
+    const [mediaError, setMediaError] = useState<string | null>(null);
+    const audioStreamRef = useRef<MediaStream | null>(null);
+    const videoStreamRef = useRef<MediaStream | null>(null);
+    const localVideoRef = useRef<HTMLVideoElement | null>(null);
     const stageParticipants = getStageParticipants(meeting);
+
+    useEffect(() => {
+        if (localVideoRef.current) {
+            localVideoRef.current.srcObject = cameraOff ? null : videoStreamRef.current;
+        }
+    }, [cameraOff]);
+
+    useEffect(() => () => {
+        stopMediaStream(audioStreamRef.current);
+        stopMediaStream(videoStreamRef.current);
+    }, []);
 
     function openPanel(panel: CollaborationPanel) {
         setActivePanel((currentPanel) => (currentPanel === panel ? null : panel));
@@ -137,6 +159,59 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
             );
         } finally {
             setEnding(false);
+        }
+    }
+
+    /**
+     * Requests or stops the microphone track based on the current muted state.
+     */
+    async function handleToggleMute() {
+        setMediaError(null);
+
+        if (!muted) {
+            stopMediaStream(audioStreamRef.current);
+            audioStreamRef.current = null;
+            setMuted(true);
+            return;
+        }
+
+        try {
+            audioStreamRef.current = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: false,
+            });
+            setMuted(false);
+        } catch {
+            setMediaError('Microphone permission was blocked or unavailable.');
+        }
+    }
+
+    /**
+     * Requests or stops the camera track based on the current camera state.
+     */
+    async function handleToggleCamera() {
+        setMediaError(null);
+
+        if (!cameraOff) {
+            stopMediaStream(videoStreamRef.current);
+            videoStreamRef.current = null;
+            setCameraOff(true);
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user',
+                },
+            });
+            videoStreamRef.current = stream;
+            setCameraOff(false);
+        } catch {
+            setMediaError('Camera permission was blocked or unavailable.');
         }
     }
 
@@ -175,7 +250,9 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                 </div>
             </header>
 
-            {endError && <p className={styles.roomError}>{endError}</p>}
+            {(endError || mediaError) && (
+                <p className={styles.roomError}>{endError ?? mediaError}</p>
+            )}
 
             <motion.div
                 layout
@@ -206,10 +283,22 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                                         Recording
                                     </div>
                                 )}
-                                <span className={styles.videoAvatar}>{participant.initials}</span>
+                                {participant.speaking && !cameraOff ? (
+                                    <video
+                                        ref={localVideoRef}
+                                        className={styles.localVideo}
+                                        autoPlay
+                                        muted
+                                        playsInline
+                                    />
+                                ) : (
+                                    <span className={styles.videoAvatar}>{participant.initials}</span>
+                                )}
                                 <div className={styles.videoMeta}>
                                     <strong>{participant.name}</strong>
-                                    <small>{participant.role}</small>
+                                    <small>
+                                        {participant.speaking && !muted ? 'Speaking · Mic on' : participant.role}
+                                    </small>
                                 </div>
                             </motion.article>
                         ))}
@@ -223,7 +312,11 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                             activePanel={activePanel}
                             attendees={meeting.attendees}
                             attendeeCount={meeting.attendeeCount}
+                            muted={muted}
+                            cameraOff={cameraOff}
                             initialMessages={INITIAL_MESSAGES}
+                            onToggleMute={handleToggleMute}
+                            onToggleCamera={handleToggleCamera}
                             onChangePanel={setActivePanel}
                             onClose={() => setActivePanel(null)}
                         />
@@ -236,8 +329,8 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                 cameraOff={cameraOff}
                 recording={recording}
                 activePanel={activePanel}
-                onToggleMute={() => setMuted((value) => !value)}
-                onToggleCamera={() => setCameraOff((value) => !value)}
+                onToggleMute={() => void handleToggleMute()}
+                onToggleCamera={() => void handleToggleCamera()}
                 onToggleRecording={() => setRecording((value) => !value)}
                 onToggleMembers={() => openPanel('members')}
                 onToggleChat={() => openPanel('chat')}
