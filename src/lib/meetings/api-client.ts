@@ -9,6 +9,7 @@ import type {
     MeetingRecording,
     MeetingStatus,
     MeetingStreamAccess,
+    MeetingUserSearchResult,
 } from './types';
 
 interface ListMeetingsInput {
@@ -212,6 +213,14 @@ export function createMeetingInvite(
         method: 'POST',
         body: JSON.stringify(input),
     });
+}
+
+/**
+ * Searches verified Gracon users by email for meeting invitations.
+ */
+export function searchMeetingUsersByEmail(query: string): Promise<MeetingUserSearchResult[]> {
+    const search = new URLSearchParams({ q: query.trim() });
+    return requestJson<MeetingUserSearchResult[]>(`/api/users/search?${search.toString()}`);
 }
 
 /**
