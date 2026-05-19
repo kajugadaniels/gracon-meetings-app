@@ -194,13 +194,10 @@ function getUniqueStreamParticipants(participants: StreamVideoParticipant[]) {
 function getStreamParticipantStableKey(participant: StreamVideoParticipant) {
     const normalizedName = participant.name?.trim().toLowerCase();
 
-    if (participant.isLocalParticipant) {
-        return `local:${participant.userId || normalizedName || 'current-user'}`;
-    }
-
-    // Stream can temporarily expose two sessions for one local user. The display
-    // name is the safest UI-level key for collapsing those duplicate tiles.
-    return normalizedName || participant.userId || participant.sessionId;
+    // Stream can briefly expose the same browser user as both local and remote-like
+    // sessions during reconnects. User identity must win over session identity so
+    // one host cannot render as two different participants.
+    return participant.userId || normalizedName || participant.sessionId;
 }
 
 /**
@@ -1060,6 +1057,7 @@ export function MeetingRoom({ meetingId, initialTitle }: MeetingRoomProps) {
     const [persistedMeeting, setPersistedMeeting] = useState<Meeting | null>(null);
     const [meetingLoading, setMeetingLoading] = useState(isUuid(meetingId));
     const [meetingError, setMeetingError] = useState<string | null>(null);
+    const safeInitialTitle = isUuid(meetingId) ? undefined : initialTitle;
     const meeting = useMemo(() => (
         createMeetingRoomView(
             meetingId,
@@ -1069,9 +1067,9 @@ export function MeetingRoom({ meetingId, initialTitle }: MeetingRoomProps) {
                 displayName: 'Loading host',
             },
             persistedMeeting,
-            initialTitle,
+            safeInitialTitle,
         )
-    ), [hostProfile, initialTitle, meetingId, persistedMeeting]);
+    ), [hostProfile, meetingId, persistedMeeting, safeInitialTitle]);
     const { session, loading, error } = useStreamSession(meeting);
 
     useEffect(() => {
