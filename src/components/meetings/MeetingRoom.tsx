@@ -4,7 +4,6 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Circle, Hand, UserPlus } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     ParticipantView,
@@ -32,6 +31,8 @@ import { MeetingCollaborationPanel } from './MeetingCollaborationPanel';
 import { MeetingControlDock } from './MeetingControlDock';
 import { MeetingEndedState } from './MeetingEndedState';
 import { MeetingInviteDialog } from './MeetingInviteDialog';
+import { MeetingRoomHeader } from './MeetingRoomHeader';
+import { MeetingRoomNotice } from './MeetingRoomNotice';
 import { MeetingSettingsDialog } from './MeetingSettingsDialog';
 import { MeetingStage } from './MeetingStage';
 import { RecordingStopDialog } from './RecordingStopDialog';
@@ -60,6 +61,15 @@ interface RoomExperienceProps {
     onToggleMute: () => void | Promise<void>;
     onToggleCamera: () => void | Promise<void>;
     onToggleScreenShare: () => void | Promise<void>;
+}
+
+/**
+ * Detects editable targets so room keyboard shortcuts do not hijack chat typing.
+ */
+function isEditableShortcutTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
+
+    return target.closest('input, textarea, select, [contenteditable="true"]') !== null;
 }
 
 const INITIAL_MESSAGES: RoomMessage[] = [
@@ -687,6 +697,57 @@ function RoomExperience({
         return () => window.clearInterval(intervalId);
     }, [recording, recordingStartedAt]);
 
+    useEffect(() => {
+        function handleRoomShortcut(event: KeyboardEvent) {
+            if (isEditableShortcutTarget(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
+                return;
+            }
+
+            const shortcut = event.key.toLowerCase();
+
+            if (shortcut === 'escape') {
+                setActivePanel(null);
+                setInviteOpen(false);
+                setSettingsOpen(false);
+                setRecordingStopOpen(false);
+                return;
+            }
+
+            if (shortcut === 'm') {
+                event.preventDefault();
+                void onToggleMute();
+                return;
+            }
+
+            if (shortcut === 'v') {
+                event.preventDefault();
+                void onToggleCamera();
+                return;
+            }
+
+            if (shortcut === 's') {
+                event.preventDefault();
+                void onToggleScreenShare();
+                return;
+            }
+
+            if (shortcut === 'h') {
+                event.preventDefault();
+                handleToggleRaiseHand();
+                return;
+            }
+
+            if (shortcut === 'r') {
+                event.preventDefault();
+                handleRecordingRequest();
+            }
+        }
+
+        window.addEventListener('keydown', handleRoomShortcut);
+
+        return () => window.removeEventListener('keydown', handleRoomShortcut);
+    });
+
     /**
      * Opens the requested collaboration panel or closes it when selected twice.
      */
@@ -832,34 +893,23 @@ function RoomExperience({
 
     return (
         <section className={styles.room}>
-            <header className={styles.header}>
-                <div>
-                    <p className={styles.eyebrow}>Live meeting room</p>
-                    <h1>{meeting.title}</h1>
-                    <p>{meeting.date} · {meeting.time} · Hosted by {meeting.hostName}</p>
-                </div>
-                <div className={styles.headerActions}>
-                    {recording && (
-                        <span className={styles.liveStatusPill}>
-                            <Circle size={8} fill="currentColor" />
-                            Rec {recordingElapsedLabel}
-                        </span>
-                    )}
-                    {handRaised && (
-                        <span className={styles.liveStatusPill}>
-                            <Hand size={14} />
-                            Hand raised
-                        </span>
-                    )}
-                    <button type="button" onClick={() => setInviteOpen(true)}>
-                        <UserPlus size={16} />
-                        Invite
-                    </button>
-                </div>
-            </header>
+            <MeetingRoomHeader
+                meeting={meeting}
+                attendeeCount={attendeeCount}
+                muted={muted}
+                cameraOff={cameraOff}
+                sharingScreen={sharingScreen}
+                recording={recording}
+                recordingElapsedLabel={recordingElapsedLabel}
+                handRaised={handRaised}
+                onInvite={() => setInviteOpen(true)}
+            />
 
             {(endError || roomNotice) && (
-                <p className={styles.roomError}>{endError ?? roomNotice}</p>
+                <MeetingRoomNotice
+                    tone={endError ? 'error' : 'info'}
+                    message={endError ?? roomNotice ?? ''}
+                />
             )}
 
             <motion.div
