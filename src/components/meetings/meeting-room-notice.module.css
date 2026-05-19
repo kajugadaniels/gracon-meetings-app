@@ -1,0 +1,38 @@
+/**
+ * Persistent meeting room notice styles.
+ */
+.notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 9px 11px;
+}
+
+.notice svg {
+  flex: 0 0 auto;
+}
+
+.notice span {
+  min-width: 0;
+}
+
+.error {
+  border-color: rgba(244, 63, 94, 0.18);
+  background: rgba(244, 63, 94, 0.08);
+  color: var(--color-error);
+}
+
+.info {
+  border-color: rgba(91, 35, 255, 0.15);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
