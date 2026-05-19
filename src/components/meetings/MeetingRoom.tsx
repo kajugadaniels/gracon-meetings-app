@@ -31,6 +31,7 @@ import type {
 import { MeetingCollaborationPanel } from './MeetingCollaborationPanel';
 import { MeetingControlDock } from './MeetingControlDock';
 import { MeetingInviteDialog } from './MeetingInviteDialog';
+import { MeetingSettingsDialog } from './MeetingSettingsDialog';
 import styles from './meeting-room.module.css';
 
 interface MeetingRoomProps {
@@ -646,6 +647,7 @@ function RoomExperience({
     const [handRaised, setHandRaised] = useState(false);
     const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const [ended, setEnded] = useState(false);
     const [ending, setEnding] = useState(false);
     const [endError, setEndError] = useState<string | null>(null);
@@ -924,6 +926,7 @@ function RoomExperience({
                 onToggleRaiseHand={handleToggleRaiseHand}
                 onToggleMembers={() => openPanel('members')}
                 onToggleChat={() => openPanel('chat')}
+                onOpenSettings={() => setSettingsOpen(true)}
                 ending={ending}
                 onEndMeeting={handleEndMeeting}
             />
@@ -933,6 +936,18 @@ function RoomExperience({
                     meetingId={meeting.id}
                     attendees={attendees}
                     onClose={() => setInviteOpen(false)}
+                />
+            )}
+
+            {settingsOpen && (
+                <MeetingSettingsDialog
+                    muted={muted}
+                    cameraOff={cameraOff}
+                    captionsEnabled={captionsEnabled}
+                    onToggleMute={() => void onToggleMute()}
+                    onToggleCamera={() => void onToggleCamera()}
+                    onToggleCaptions={handleToggleCaptions}
+                    onClose={() => setSettingsOpen(false)}
                 />
             )}
         </section>
