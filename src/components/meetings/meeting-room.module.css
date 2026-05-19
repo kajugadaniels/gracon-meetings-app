@@ -195,6 +195,18 @@
   padding: 7px 10px;
 }
 
+.roomError {
+  margin: 0;
+  border: 1px solid rgba(244, 63, 94, 0.18);
+  border-radius: 12px;
+  background: rgba(244, 63, 94, 0.08);
+  color: var(--color-error);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 10px 12px;
+}
+
 .endedState {
   display: grid;
   width: min(100%, 520px);
