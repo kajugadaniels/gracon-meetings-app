@@ -193,6 +193,15 @@ export function stopMeetingRecording(meetingId: string): Promise<MeetingRecordin
 }
 
 /**
+ * Refreshes provider playback metadata for recordings that are still processing.
+ */
+export function refreshMeetingRecordings(meetingId: string): Promise<MeetingRecording[]> {
+    return requestJson<MeetingRecording[]>(`/api/meetings/${meetingId}/recordings/refresh`, {
+        method: 'POST',
+    });
+}
+
+/**
  * Sends a meeting invitation with host-selected verification gates.
  */
 export function createMeetingInvite(
