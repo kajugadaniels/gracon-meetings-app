@@ -21,10 +21,13 @@ interface MeetingControlDockProps {
     muted: boolean;
     cameraOff: boolean;
     recording: boolean;
+    sharingScreen: boolean;
+    recordingBusy?: boolean;
     ending?: boolean;
     activePanel: 'members' | 'chat' | null;
     onToggleMute: () => void;
     onToggleCamera: () => void;
+    onToggleScreenShare: () => void;
     onToggleRecording: () => void;
     onToggleMembers: () => void;
     onToggleChat: () => void;
@@ -38,10 +41,13 @@ export function MeetingControlDock({
     muted,
     cameraOff,
     recording,
+    sharingScreen,
+    recordingBusy = false,
     ending = false,
     activePanel,
     onToggleMute,
     onToggleCamera,
+    onToggleScreenShare,
     onToggleRecording,
     onToggleMembers,
     onToggleChat,
@@ -57,13 +63,22 @@ export function MeetingControlDock({
                 {cameraOff ? <VideoOff size={18} /> : <Video size={18} />}
                 {cameraOff ? 'Start video' : 'Stop video'}
             </button>
-            <button type="button">
+            <button
+                type="button"
+                className={sharingScreen ? styles.activeButton : ''}
+                onClick={onToggleScreenShare}
+            >
                 <MonitorUp size={18} />
-                Share
+                {sharingScreen ? 'Stop share' : 'Share'}
             </button>
-            <button type="button" onClick={onToggleRecording}>
+            <button
+                type="button"
+                className={recording ? styles.activeButton : ''}
+                disabled={recordingBusy}
+                onClick={onToggleRecording}
+            >
                 <Circle size={14} fill="currentColor" />
-                {recording ? 'Stop recording' : 'Record'}
+                {recordingBusy ? 'Saving' : recording ? 'Stop recording' : 'Record'}
             </button>
             <button type="button">
                 <Captions size={18} />
