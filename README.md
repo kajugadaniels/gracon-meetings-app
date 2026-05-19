@@ -36,13 +36,13 @@ metadata, and audit history through `api/meetings`.
 - Same-origin recording proxy routes live under `/api/meetings/:id/recordings/*`; browser components never call `api/meetings` directly for recording control.
 - The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
 - `/meetings/:id` is the active meeting-room experience. Newly created instant meetings are routed here so users see the custom Gracon room instead of the raw Stream SDK surface.
-- `/meetings/:id` renders a static in-meeting room UI for design validation with mute, video, recording, share, members, chat, and invite controls.
+- `/meetings/:id` renders the custom in-meeting room UI with mute, video, recording, share, members, chat, and invite controls.
 - `/meetings/:id` now uses a full-screen participant stage, a fixed bottom `MeetingControlDock`, and a Framer Motion-powered collaboration panel that opens Members or Chat as tabs only when requested.
-- `/meetings/:id` now includes an ended-room state so static workflow validation matches the real meeting lifecycle.
-- `/meetings/:id` now connects API-backed UUID meetings to Stream behind the custom Gracon room surface, so participant presence, microphone publishing, camera publishing, remote audio, and remote video tiles are live while seeded rooms keep the local fallback.
+- `/meetings/:id` now includes an ended-room state so workflow validation matches the real meeting lifecycle.
+- `/meetings/:id` now fetches persisted meeting details from `api/meetings`, derives host identity from the authenticated session user, and connects API-backed UUID meetings to Stream behind the custom Gracon room surface.
 - `/meetings/:id` collapses duplicate Stream browser sessions for the same visible participant and keeps the richest media tile, so a single local camera feed fills the stage instead of showing an avatar duplicate.
 - `/meetings/:id` overrides Stream's tall-camera containment inside the custom stage, so camera video always covers its tile while screen sharing still preserves its full aspect ratio.
-- `/meetings/:id` now supports Stream-backed screen sharing from the custom Gracon control dock; seeded rooms use browser `getDisplayMedia` as a local fallback.
+- `/meetings/:id` now supports Stream-backed screen sharing from the custom Gracon control dock; local fallback rooms use browser `getDisplayMedia`.
 - `/meetings/:id` starts and stops recordings through same-origin audited backend routes instead of flipping UI state only.
 - `/meetings/:id` keeps recording off by default, starts recording only after the user clicks Record, and shows an elapsed recording timer while active.
 - `/meetings/:id` now has active raised-hand controls in the custom room chrome, with visible room and tile feedback.
@@ -82,7 +82,7 @@ metadata, and audit history through `api/meetings`.
 - `/recordings` uses `RecordingsExplorer` for title search, ready/shared/this-month filters, custom date ranges, and one-row desktop controls.
 - `/personal-room` renders a static reusable-room management page with room link, quick actions, settings, and readiness details.
 - `/personal-room` follows the compact dashboard direction with four room setting cards in one desktop row.
-- `src/lib/meetings/meeting-view-models.ts` converts backend meetings and recordings into card-ready UI contracts; static seeded meeting data has been removed from active pages.
+- `src/lib/meetings/meeting-view-models.ts` converts backend meetings and recordings into card-ready UI contracts; local seeded meeting data has been removed from active pages.
 - Route styling uses `.module.css` files rather than growing `globals.css`.
 
 ## Environment
@@ -136,14 +136,14 @@ npm run lint
 - `src/lib/meetings/api-client.ts` is the typed browser client.
 - `src/lib/server/meetings-api-proxy.ts` is the server-side bridge to `api/meetings`.
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
-- `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for seeded list pages.
+- `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for backend-backed list pages.
 - `src/components/meetings/MeetingRoom.tsx` owns the custom Gracon meeting room surface used for the user-facing meeting experience.
-- `src/components/meetings/MeetingRoom.tsx` owns Stream session setup for API-backed meetings and local browser mic/camera fallback for seeded rooms.
+- `src/components/meetings/MeetingRoom.tsx` owns meeting detail loading, authenticated host derivation, Stream session setup for API-backed meetings, and local browser mic/camera fallback.
 - Stream-backed rooms must keep the custom Gracon stage, controls, collaboration panel, and invite dialog instead of mounting Stream's default call UI.
 - Stream participant normalization must prefer screen share, active camera, dominant speaker, speaking state, then local participant status when duplicate sessions exist.
 - Stream camera tiles must use cover-fit inside the Gracon stage. Only screen-share tracks should use contain-fit to avoid cropping shared content.
 - Local fallback rooms must stop browser media tracks when users disable media or leave the room.
-- `src/components/meetings/MeetingControlDock.tsx` owns the static room action controls so media actions can evolve independently from room layout.
+- `src/components/meetings/MeetingControlDock.tsx` owns the room action controls so media actions can evolve independently from room layout.
 - `src/components/meetings/MeetingCollaborationPanel.tsx` owns the animated Members/Chat tab shell, while `MeetingMembersPanel.tsx`, `MeetingChatPanel.tsx`, and `MeetingInviteDialog.tsx` keep their focused room responsibilities.
 - `src/components/meetings/MeetingRoom.tsx` owns Stream-backed screen share toggles, audited recording calls, and room-level chat state for the custom live room.
 - `src/components/meetings/MeetingRoom.tsx` also owns lightweight live-room UI states such as raised hand and recording elapsed time until those states are backed by provider webhooks or dedicated API events.
