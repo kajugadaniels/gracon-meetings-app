@@ -25,31 +25,10 @@
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
 }
 
-.dateBadge {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  gap: 7px;
-  border: 1px solid rgba(91, 35, 255, 0.14);
-  border-radius: 999px;
-  background: rgba(91, 35, 255, 0.06);
-  color: var(--color-primary);
-  font-size: 11px;
-  font-weight: 500;
-  padding: 7px 10px;
-}
-
-.dateBadge span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dateBadge svg,
 .card svg {
   color: var(--color-primary);
 }
@@ -87,10 +66,9 @@
 }
 
 .timeMeta,
-.startNotice,
 .duration {
   display: inline-flex;
-  width: fit-content;
+  max-width: 100%;
   align-items: center;
   gap: 6px;
   border-radius: 999px;
@@ -105,17 +83,17 @@
   color: var(--color-text-secondary);
 }
 
+.timeMeta {
+  overflow: hidden;
+}
+
+.timeMeta {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .timeMeta svg {
-  color: currentColor;
-}
-
-.startNotice {
-  border: 1px solid rgba(245, 158, 11, 0.2);
-  background: rgba(245, 158, 11, 0.08);
-  color: #92400e;
-}
-
-.startNotice svg {
+  flex: 0 0 auto;
   color: currentColor;
 }
 
