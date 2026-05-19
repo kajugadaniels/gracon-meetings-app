@@ -14,18 +14,8 @@ export interface MeetingRoomMessage {
 }
 
 interface MeetingChatPanelProps {
-    initialMessages: MeetingRoomMessage[];
-}
-
-/**
- * Returns the current local time label for static chat messages.
- */
-function getCurrentTimeLabel() {
-    return new Intl.DateTimeFormat(undefined, {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-    }).format(new Date());
+    messages: MeetingRoomMessage[];
+    onSendMessage: (body: string) => void;
 }
 
 /**
@@ -45,22 +35,17 @@ function getSenderInitials(sender: string) {
 /**
  * Renders an in-room chat panel with local message composition and no duplicate tab title.
  */
-export function MeetingChatPanel({ initialMessages }: MeetingChatPanelProps) {
+export function MeetingChatPanel({ messages, onSendMessage }: MeetingChatPanelProps) {
     const [messageDraft, setMessageDraft] = useState('');
-    const [messages, setMessages] = useState(initialMessages);
 
+    /**
+     * Commits the draft into the room-level chat state so the panel can remount safely.
+     */
     function sendMessage() {
         const body = messageDraft.trim();
         if (!body) return;
 
-        setMessages((currentMessages) => [
-            ...currentMessages,
-            {
-                sender: 'You',
-                body,
-                time: getCurrentTimeLabel(),
-            },
-        ]);
+        onSendMessage(body);
         setMessageDraft('');
     }
 
