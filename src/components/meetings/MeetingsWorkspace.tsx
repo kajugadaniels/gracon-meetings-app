@@ -113,6 +113,8 @@ function MeetingsHomeSkeleton() {
             <div className={styles.meetingGrid}>
                 <div className={`${styles.skeletonBlock} ${styles.skeletonMeeting}`} />
                 <div className={`${styles.skeletonBlock} ${styles.skeletonMeeting}`} />
+                <div className={`${styles.skeletonBlock} ${styles.skeletonMeeting}`} />
+                <div className={`${styles.skeletonBlock} ${styles.skeletonMeeting}`} />
             </div>
         </section>
     );
