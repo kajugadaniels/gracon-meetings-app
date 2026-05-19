@@ -4,7 +4,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { MessageSquare, UsersRound, X } from 'lucide-react';
+import { MessageSquare, Mic, MicOff, UsersRound, Video, VideoOff, X } from 'lucide-react';
 import type { MeetingRoomAttendeeView } from '@/lib/meetings/static-meetings';
 import { MeetingChatPanel, type MeetingRoomMessage } from './MeetingChatPanel';
 import { MeetingMembersPanel } from './MeetingMembersPanel';
@@ -16,7 +16,11 @@ interface MeetingCollaborationPanelProps {
     activePanel: CollaborationPanel;
     attendees: MeetingRoomAttendeeView[];
     attendeeCount: number;
+    muted: boolean;
+    cameraOff: boolean;
     initialMessages: MeetingRoomMessage[];
+    onToggleMute: () => void;
+    onToggleCamera: () => void;
     onChangePanel: (panel: CollaborationPanel) => void;
     onClose: () => void;
 }
@@ -28,7 +32,11 @@ export function MeetingCollaborationPanel({
     activePanel,
     attendees,
     attendeeCount,
+    muted,
+    cameraOff,
     initialMessages,
+    onToggleMute,
+    onToggleCamera,
     onChangePanel,
     onClose,
 }: MeetingCollaborationPanelProps) {
@@ -72,6 +80,25 @@ export function MeetingCollaborationPanel({
                 >
                     <MessageSquare size={15} />
                     Chat
+                </button>
+            </div>
+
+            <div className={styles.mediaControls} aria-label="My media controls">
+                <button
+                    type="button"
+                    className={!muted ? styles.mediaControlActive : ''}
+                    onClick={onToggleMute}
+                >
+                    {muted ? <MicOff size={15} /> : <Mic size={15} />}
+                    {muted ? 'Mic off' : 'Mic on'}
+                </button>
+                <button
+                    type="button"
+                    className={!cameraOff ? styles.mediaControlActive : ''}
+                    onClick={onToggleCamera}
+                >
+                    {cameraOff ? <VideoOff size={15} /> : <Video size={15} />}
+                    {cameraOff ? 'Camera off' : 'Camera on'}
                 </button>
             </div>
 
