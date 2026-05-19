@@ -68,7 +68,7 @@ export function listMeetings(input: ListMeetingsInput = {}): Promise<Meeting[]> 
  * Fetches all visible meetings through the paginated BFF route.
  *
  * The backend caps each page at 50 rows. This bounded loop keeps long lists
- * dynamic without making the browser depend on static seed data.
+ * dynamic without making the browser depend on local seed data.
  */
 export async function listAllVisibleMeetings(
     maxPages = 20,
@@ -88,6 +88,13 @@ export async function listAllVisibleMeetings(
     }
 
     return meetings;
+}
+
+/**
+ * Fetches one visible meeting through the same-origin BFF route.
+ */
+export function getMeeting(meetingId: string): Promise<Meeting> {
+    return requestJson<Meeting>(`/api/meetings/${encodeURIComponent(meetingId)}`);
 }
 
 /**
