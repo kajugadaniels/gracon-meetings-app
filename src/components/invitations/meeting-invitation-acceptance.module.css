@@ -219,6 +219,7 @@
   opacity: 0.64;
 }
 
+.stagePanel,
 .stepPanel,
 .completePanel {
   display: grid;
@@ -229,9 +230,14 @@
   padding: 14px;
 }
 
+.stagePanel {
+  animation: enterStep 180ms ease-out both;
+}
+
 .completePanel {
   border-color: rgba(16, 185, 129, 0.18);
   background: rgba(16, 185, 129, 0.045);
+  animation: enterStep 180ms ease-out both;
 }
 
 .stepPanelHeader {
@@ -266,32 +272,69 @@
   line-height: 1.45;
 }
 
-.inlineForm {
+.accountGrid {
   display: grid;
-  gap: 8px;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.inlineForm input {
-  min-width: 0;
-  min-height: 42px;
+.accountGrid div {
+  display: grid;
+  gap: 5px;
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 15px;
+  background: #fbfbfe;
+  padding: 12px;
+}
+
+.accountGrid span,
+.otpHint {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.accountGrid strong {
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.otpBlock {
+  display: grid;
+  gap: 9px;
+}
+
+.otpGrid {
+  display: grid;
+  gap: clamp(6px, 1.5vw, 10px);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.otpInput {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid var(--color-border);
+  border-radius: 15px;
+  background: #fbfbfe;
   color: var(--color-text-primary);
   font: inherit;
-  font-size: 13px;
+  font-size: 20px;
+  font-weight: 600;
   outline: 0;
-  padding: 0 12px;
+  text-align: center;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
 
-.inlineForm input:focus {
-  border-color: rgba(91, 35, 255, 0.42);
-  box-shadow: 0 0 0 3px rgba(91, 35, 255, 0.08);
+.otpInput:focus {
+  border-color: rgba(91, 35, 255, 0.45);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(91, 35, 255, 0.09);
 }
 
 .secondaryAction,
 .panelAction,
-.inlineForm button,
 .primaryAction {
   border: 1px solid var(--color-primary);
   border-radius: 999px;
@@ -310,7 +353,6 @@
 }
 
 .panelAction,
-.inlineForm button,
 .primaryAction {
   min-height: 42px;
   background: var(--color-primary);
@@ -330,18 +372,43 @@
 
 .secondaryAction:hover,
 .panelAction:hover,
-.inlineForm button:hover,
 .primaryAction:hover {
   transform: translateY(-1px);
 }
 
 .secondaryAction:disabled,
 .panelAction:disabled,
-.inlineForm button:disabled,
 .primaryAction:disabled {
   cursor: not-allowed;
   opacity: 0.55;
   transform: none;
+}
+
+.stepMessage {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.successMessage {
+  border-color: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.07);
+  color: #047857;
+}
+
+.errorMessage {
+  border-color: var(--color-error-border);
+  background: var(--color-error-subtle);
+  color: var(--color-error);
+}
+
+.infoMessage {
+  border-color: rgba(91, 35, 255, 0.16);
+  background: rgba(91, 35, 255, 0.055);
+  color: var(--color-primary);
 }
 
 .error {
@@ -381,6 +448,18 @@
   }
 }
 
+@keyframes enterStep {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 860px) {
   .card {
     grid-template-columns: 1fr;
@@ -399,13 +478,17 @@
 
   .progress,
   .securityGrid,
-  .inlineForm {
+  .accountGrid {
     grid-template-columns: 1fr;
   }
 
   .secondaryAction,
-  .panelAction,
-  .inlineForm button {
+  .panelAction {
     width: 100%;
+  }
+
+  .otpInput {
+    min-height: 48px;
+    font-size: 18px;
   }
 }
