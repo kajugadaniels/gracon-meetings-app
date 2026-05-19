@@ -6,7 +6,9 @@
 import { HardDrive, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { RecordingCardView } from '@/lib/meetings/meeting-view-models';
+import { toast } from '@/components/ui';
 import { PaginatedRecordingGrid } from './PaginatedRecordingGrid';
+import { RecordingPlayerDialog } from './RecordingPlayerDialog';
 import styles from './recordings-explorer.module.css';
 
 type RecordingFilter = 'all' | 'ready' | 'shared' | 'month';
@@ -64,6 +66,7 @@ export function RecordingsExplorer({
     const [activeFilter, setActiveFilter] = useState<RecordingFilter>('all');
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
+    const [activeRecording, setActiveRecording] = useState<RecordingCardView | null>(null);
 
     const filteredRecordings = useMemo(() => {
         const normalizedSearch = search.trim().toLowerCase();
@@ -94,6 +97,25 @@ export function RecordingsExplorer({
         : loading
             ? 'Loading recordings from the secure backend...'
             : `${filteredRecordings.length.toLocaleString('en')} recording${filteredRecordings.length === 1 ? '' : 's'} found`;
+
+    /**
+     * Shares the playback source when the provider has returned one.
+     */
+    async function handleShare(recording: RecordingCardView) {
+        if (!recording.playbackUrl) {
+            toast.info('Recording is still processing', {
+                description: 'A shareable playback link will be available after processing completes.',
+            });
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(recording.playbackUrl);
+            toast.success('Recording link copied');
+        } catch {
+            toast.error('Unable to copy recording link');
+        }
+    }
 
     return (
         <div className={styles.explorer}>
@@ -158,8 +180,18 @@ export function RecordingsExplorer({
                     pageSize={18}
                     ariaLabel="Recorded meetings"
                     loading={loading}
+                    onPlay={setActiveRecording}
+                    onShare={(recording) => void handleShare(recording)}
                 />
             </div>
+
+            {activeRecording && (
+                <RecordingPlayerDialog
+                    recording={activeRecording}
+                    onClose={() => setActiveRecording(null)}
+                    onShare={(recording) => void handleShare(recording)}
+                />
+            )}
         </div>
     );
 }
