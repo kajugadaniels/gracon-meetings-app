@@ -11,6 +11,7 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useState } from 'react';
+import { endMeeting } from '@/lib/meetings/api-client';
 import type { MeetingRoomView } from '@/lib/meetings/static-meetings';
 import { MeetingCollaborationPanel } from './MeetingCollaborationPanel';
 import { MeetingControlDock } from './MeetingControlDock';
@@ -53,6 +54,13 @@ const INITIAL_MESSAGES: RoomMessage[] = [
         time: '10:01',
     },
 ];
+
+/**
+ * Detects API-backed meeting ids so seeded design rooms do not call the backend.
+ */
+function isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
 
 /**
  * Builds a stable initials fallback for the meeting host when seed data does not expose one.
@@ -100,10 +108,36 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
     const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [ended, setEnded] = useState(false);
+    const [ending, setEnding] = useState(false);
+    const [endError, setEndError] = useState<string | null>(null);
     const stageParticipants = getStageParticipants(meeting);
 
     function openPanel(panel: CollaborationPanel) {
         setActivePanel((currentPanel) => (currentPanel === panel ? null : panel));
+    }
+
+    /**
+     * Ends API-backed meetings, while keeping seeded design rooms usable locally.
+     */
+    async function handleEndMeeting() {
+        if (ending) return;
+
+        setEnding(true);
+        setEndError(null);
+
+        try {
+            if (isUuid(meeting.id)) {
+                await endMeeting(meeting.id);
+            }
+
+            setEnded(true);
+        } catch (err) {
+            setEndError(
+                err instanceof Error ? err.message : 'Unable to end this meeting right now.',
+            );
+        } finally {
+            setEnding(false);
+        }
     }
 
     if (ended) {
@@ -140,6 +174,8 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                     </button>
                 </div>
             </header>
+
+            {endError && <p className={styles.roomError}>{endError}</p>}
 
             <motion.div
                 layout
@@ -205,7 +241,8 @@ export function MeetingRoom({ meeting }: MeetingRoomProps) {
                 onToggleRecording={() => setRecording((value) => !value)}
                 onToggleMembers={() => openPanel('members')}
                 onToggleChat={() => openPanel('chat')}
-                onEndMeeting={() => setEnded(true)}
+                ending={ending}
+                onEndMeeting={handleEndMeeting}
             />
 
             {inviteOpen && (
