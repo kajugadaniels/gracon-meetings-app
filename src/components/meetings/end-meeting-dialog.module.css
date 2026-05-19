@@ -1,0 +1,183 @@
+/**
+ * End-meeting confirmation dialog styles.
+ */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 125;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(16px);
+  padding: 18px;
+}
+
+.dialog {
+  width: min(100%, 460px);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.24);
+  padding: 18px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(244, 63, 94, 0.18);
+  border-radius: 16px;
+  background: rgba(244, 63, 94, 0.08);
+  color: var(--color-error);
+}
+
+.header button,
+.actions button {
+  border: 1px solid var(--color-border);
+  font: inherit;
+  cursor: pointer;
+}
+
+.header button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-secondary);
+}
+
+.eyebrow {
+  margin: 0 0 5px;
+  color: var(--color-error);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.dialog h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.description,
+.warning {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.description {
+  margin: 9px 0 16px;
+}
+
+.impactGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.impactGrid div {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: rgba(248, 247, 255, 0.72);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px;
+}
+
+.impactGrid span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.impactGrid .recordingImpact {
+  border-color: rgba(244, 63, 94, 0.18);
+  background: rgba(244, 63, 94, 0.08);
+  color: var(--color-error);
+}
+
+.warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 16px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 14px;
+  background: rgba(245, 158, 11, 0.08);
+  color: #92400e;
+  padding: 10px;
+}
+
+.warning svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.actions button {
+  min-height: 40px;
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 14px;
+}
+
+.actions button:last-child {
+  border-color: var(--color-error);
+  background: var(--color-error);
+  color: white;
+}
+
+.actions button:disabled,
+.header button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+@media (max-width: 520px) {
+  .backdrop {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .dialog {
+    border-radius: 20px;
+  }
+
+  .impactGrid,
+  .actions {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+}
