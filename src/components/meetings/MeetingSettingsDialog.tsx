@@ -3,16 +3,14 @@
  */
 'use client';
 
-import { Captions, Mic, MicOff, Video, VideoOff, X } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, X } from 'lucide-react';
 import styles from './meeting-settings-dialog.module.css';
 
 interface MeetingSettingsDialogProps {
     muted: boolean;
     cameraOff: boolean;
-    captionsEnabled: boolean;
     onToggleMute: () => void;
     onToggleCamera: () => void;
-    onToggleCaptions: () => void;
     onClose: () => void;
 }
 
@@ -22,10 +20,8 @@ interface MeetingSettingsDialogProps {
 export function MeetingSettingsDialog({
     muted,
     cameraOff,
-    captionsEnabled,
     onToggleMute,
     onToggleCamera,
-    onToggleCaptions,
     onClose,
 }: MeetingSettingsDialogProps) {
     return (
@@ -74,30 +70,11 @@ export function MeetingSettingsDialog({
                         </span>
                         <em>{cameraOff ? 'Off' : 'On'}</em>
                     </button>
-
-                    <button
-                        type="button"
-                        className={styles.settingRow}
-                        onClick={onToggleCaptions}
-                    >
-                        <span className={styles.settingIcon}>
-                            <Captions size={18} />
-                        </span>
-                        <span>
-                            <strong>Captions</strong>
-                            <small>
-                                {captionsEnabled
-                                    ? 'Caption surface is visible'
-                                    : 'Caption surface is hidden'}
-                            </small>
-                        </span>
-                        <em>{captionsEnabled ? 'On' : 'Off'}</em>
-                    </button>
                 </div>
 
                 <p className={styles.helper}>
                     Device selection will be connected after provider device preferences are
-                    finalized. These controls update the live room immediately.
+                    finalized. Audio and video controls update the live room immediately.
                 </p>
             </section>
         </div>
