@@ -4,7 +4,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, Clock3, Copy, LockKeyhole } from 'lucide-react';
+import { Clock3, Copy } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui';
 import { getMeetingJoinPath } from '@/lib/meetings/api-client';
@@ -33,20 +33,6 @@ function buildMeetingUrl(meetingId: string): string {
         || (typeof window !== 'undefined' ? window.location.origin : '');
 
     return `${baseUrl.replace(/\/$/, '')}${getMeetingJoinPath(meetingId)}`;
-}
-
-/**
- * Formats future scheduled starts for disabled meeting actions.
- */
-function formatStartNotice(): string {
-    return 'Opens at meeting time';
-}
-
-/**
- * Keeps date presentation compact so meeting cards do not repeat timestamps.
- */
-function formatCompactDate(date: string): string {
-    return date.replace(/,\s*\d{4}$/, '');
 }
 
 /**
@@ -80,11 +66,7 @@ export function MeetingCard({
     const startDisabled = status === 'SCHEDULED'
         && Boolean(scheduledStartTime)
         && Number(scheduledStartTime) > now;
-    const startNotice = useMemo(
-        () => formatStartNotice(),
-        [],
-    );
-    const compactDate = useMemo(() => formatCompactDate(date), [date]);
+    const scheduledLabel = useMemo(() => `${date} · ${time}`, [date, time]);
 
     useEffect(() => {
         if (!startDisabled || !scheduledStartTime) return undefined;
@@ -123,10 +105,6 @@ export function MeetingCard({
     return (
         <article className={styles.card}>
             <header className={styles.header}>
-                <span className={styles.dateBadge}>
-                    <CalendarDays size={18} />
-                    <span>{compactDate}</span>
-                </span>
                 {status && <span className={styles.status}>{formatStatus(status)}</span>}
             </header>
             <div className={styles.body}>
@@ -134,14 +112,8 @@ export function MeetingCard({
                 <div className={styles.metaRow}>
                     <span className={styles.timeMeta}>
                         <Clock3 size={13} />
-                        {time}
+                        {scheduledLabel}
                     </span>
-                    {startDisabled && (
-                        <span className={styles.startNotice}>
-                            <LockKeyhole size={13} />
-                            {startNotice}
-                        </span>
-                    )}
                     {durationLabel && (
                         <span className={styles.duration}>
                             <Clock3 size={13} />
@@ -165,7 +137,7 @@ export function MeetingCard({
                             <button
                                 type="button"
                                 disabled={startDisabled}
-                                title={startDisabled ? startNotice : undefined}
+                                title={startDisabled ? scheduledLabel : undefined}
                             >
                                 Start
                             </button>
