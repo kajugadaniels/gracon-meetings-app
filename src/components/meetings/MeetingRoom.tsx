@@ -4,7 +4,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Circle, Home, UserPlus } from 'lucide-react';
+import { Captions, Circle, Hand, Home, UserPlus } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -131,6 +131,23 @@ function getCurrentTimeLabel() {
         minute: '2-digit',
         hour12: false,
     }).format(new Date());
+}
+
+/**
+ * Formats an elapsed duration for compact in-room recording controls.
+ */
+function formatElapsedTime(totalSeconds: number) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const paddedMinutes = String(minutes).padStart(2, '0');
+    const paddedSeconds = String(seconds).padStart(2, '0');
+
+    if (hours > 0) {
+        return `${hours}:${paddedMinutes}:${paddedSeconds}`;
+    }
+
+    return `${paddedMinutes}:${paddedSeconds}`;
 }
 
 /**
@@ -623,6 +640,10 @@ function RoomExperience({
 }: RoomExperienceProps) {
     const [recording, setRecording] = useState(false);
     const [recordingBusy, setRecordingBusy] = useState(false);
+    const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
+    const [recordingElapsedSeconds, setRecordingElapsedSeconds] = useState(0);
+    const [captionsEnabled, setCaptionsEnabled] = useState(false);
+    const [handRaised, setHandRaised] = useState(false);
     const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [ended, setEnded] = useState(false);
@@ -630,6 +651,17 @@ function RoomExperience({
     const [endError, setEndError] = useState<string | null>(null);
     const [roomActionMessage, setRoomActionMessage] = useState<string | null>(null);
     const [messages, setMessages] = useState<RoomMessage[]>(INITIAL_MESSAGES);
+    const recordingElapsedLabel = formatElapsedTime(recordingElapsedSeconds);
+
+    useEffect(() => {
+        if (!recording || recordingStartedAt === null) return undefined;
+
+        const intervalId = window.setInterval(() => {
+            setRecordingElapsedSeconds(Math.floor((Date.now() - recordingStartedAt) / 1000));
+        }, 1000);
+
+        return () => window.clearInterval(intervalId);
+    }, [recording, recordingStartedAt]);
 
     /**
      * Opens the requested collaboration panel or closes it when selected twice.
@@ -678,14 +710,20 @@ function RoomExperience({
                     ? await stopMeetingRecording(meeting.id)
                     : await startMeetingRecording(meeting.id);
 
-                setRecording(!recording);
+                const nextRecording = !recording;
+                setRecording(nextRecording);
+                setRecordingStartedAt(nextRecording ? Date.now() : null);
+                setRecordingElapsedSeconds(0);
                 setRoomActionMessage(
                     result.status === 'PROCESSING'
                         ? 'Recording stopped. The meeting file is processing.'
                         : 'Recording started and will be attached to this meeting.',
                 );
             } else {
-                setRecording((value) => !value);
+                const nextRecording = !recording;
+                setRecording(nextRecording);
+                setRecordingStartedAt(nextRecording ? Date.now() : null);
+                setRecordingElapsedSeconds(0);
                 setRoomActionMessage(
                     recording
                         ? 'Recording stopped for this local preview room.'
@@ -699,6 +737,20 @@ function RoomExperience({
         } finally {
             setRecordingBusy(false);
         }
+    }
+
+    /**
+     * Toggles local captions display until server-side transcription is connected.
+     */
+    function handleToggleCaptions() {
+        setCaptionsEnabled((value) => !value);
+    }
+
+    /**
+     * Toggles the local raised-hand state and surfaces it in the room chrome.
+     */
+    function handleToggleRaiseHand() {
+        setHandRaised((value) => !value);
     }
 
     /**
@@ -743,6 +795,24 @@ function RoomExperience({
                     <p>{meeting.date} · {meeting.time} · Hosted by {meeting.hostName}</p>
                 </div>
                 <div className={styles.headerActions}>
+                    {recording && (
+                        <span className={styles.liveStatusPill}>
+                            <Circle size={8} fill="currentColor" />
+                            Rec {recordingElapsedLabel}
+                        </span>
+                    )}
+                    {handRaised && (
+                        <span className={styles.liveStatusPill}>
+                            <Hand size={14} />
+                            Hand raised
+                        </span>
+                    )}
+                    {captionsEnabled && (
+                        <span className={styles.liveStatusPill}>
+                            <Captions size={14} />
+                            Captions on
+                        </span>
+                    )}
                     <button type="button" onClick={() => setInviteOpen(true)}>
                         <UserPlus size={16} />
                         Invite
@@ -780,9 +850,18 @@ function RoomExperience({
                                 {participant.speaking && recording && (
                                     <div className={styles.recordingPill}>
                                         <Circle size={8} fill="currentColor" />
-                                        Recording
+                                        Recording {recordingElapsedLabel}
                                     </div>
                                 )}
+                                {handRaised
+                                    && (participant.role.includes('You')
+                                        || participant.name === meeting.hostName)
+                                    && (
+                                        <div className={styles.handRaisedPill}>
+                                            <Hand size={12} />
+                                            Hand raised
+                                        </div>
+                                    )}
                                 {renderParticipantMedia(participant)}
                                 <div className={styles.videoMeta}>
                                     <strong>{participant.name}</strong>
@@ -795,6 +874,16 @@ function RoomExperience({
                             </motion.article>
                         ))}
                     </div>
+                    {captionsEnabled && (
+                        <div className={styles.captionBar} aria-live="polite">
+                            <Captions size={15} />
+                            <span>
+                                {muted
+                                    ? 'Captions are ready. Unmute to speak in this meeting.'
+                                    : `${meeting.hostName}: Audio is live in the room.`}
+                            </span>
+                        </div>
+                    )}
                 </motion.main>
 
                 <AnimatePresence initial={false}>
@@ -822,12 +911,17 @@ function RoomExperience({
                 cameraOff={cameraOff}
                 recording={recording}
                 recordingBusy={recordingBusy}
+                recordingElapsedLabel={recording ? recordingElapsedLabel : undefined}
                 sharingScreen={sharingScreen}
+                captionsEnabled={captionsEnabled}
+                handRaised={handRaised}
                 activePanel={activePanel}
                 onToggleMute={() => void onToggleMute()}
                 onToggleCamera={() => void onToggleCamera()}
                 onToggleScreenShare={() => void onToggleScreenShare()}
                 onToggleRecording={() => void handleToggleRecording()}
+                onToggleCaptions={handleToggleCaptions}
+                onToggleRaiseHand={handleToggleRaiseHand}
                 onToggleMembers={() => openPanel('members')}
                 onToggleChat={() => openPanel('chat')}
                 ending={ending}
