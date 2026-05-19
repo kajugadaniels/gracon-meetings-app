@@ -207,10 +207,11 @@ export function createMeetingInvite(
 
 /**
  * Builds the local custom meeting-room route for a Gracon meeting id.
+ *
+ * Room title and host identity must be fetched from the API/session after the
+ * route opens. Keeping them out of the URL prevents stale shared links from
+ * rendering the wrong host.
  */
-export function getMeetingJoinPath(meetingId: string, title?: string): string {
-    const path = `/meetings/${encodeURIComponent(meetingId)}`;
-    if (!title) return path;
-
-    return `${path}?title=${encodeURIComponent(title)}`;
+export function getMeetingJoinPath(meetingId: string): string {
+    return `/meetings/${encodeURIComponent(meetingId)}`;
 }
