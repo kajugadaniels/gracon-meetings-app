@@ -39,6 +39,7 @@ metadata, and audit history through `api/meetings`.
 - `/meetings/:id` renders the custom in-meeting room UI with mute, video, recording, share, members, chat, and invite controls.
 - `/meetings/:id` now uses a full-screen participant stage, a fixed bottom `MeetingControlDock`, and a Framer Motion-powered collaboration panel that opens Members or Chat as tabs only when requested.
 - `/meetings/:id` now includes an ended-room state so workflow validation matches the real meeting lifecycle.
+- `/meetings/:id` polls persisted room status while open. When the host ends the room, other participants are notified and moved to the ended-room state without needing a page reload.
 - `/meetings/:id` now fetches persisted meeting details from `api/meetings`, derives host identity from the authenticated session user, and connects API-backed UUID meetings to Stream behind the custom Gracon room surface.
 - `/meetings/:id` routes must not include title query parameters. Room title and host identity are resolved after route entry from API/session data so stale shared links cannot show the wrong host.
 - `/meetings/:id` collapses duplicate Stream browser sessions for the same visible participant and keeps the richest media tile, so a single local camera feed fills the stage instead of showing an avatar duplicate.
@@ -159,6 +160,7 @@ npm run lint
 - `src/components/meetings/MeetingRoom.tsx` owns Stream-backed screen share toggles, audited recording calls, and room-level chat state for the custom live room.
 - `src/components/meetings/MeetingRoom.tsx` also owns lightweight live-room UI states such as raised hand and recording elapsed time until those states are backed by provider webhooks or dedicated API events.
 - `src/components/meetings/MeetingStage.tsx`, `MeetingEndedState.tsx`, and `RecordingStopDialog.tsx` keep the live room layout, closed-room state, and stop-recording confirmation isolated from provider wiring.
+- `MeetingEndedState.tsx` is shown both after the local host ends the meeting and after participant-side status polling detects that the host closed the room.
 - `src/components/meetings/MeetingRoomHeader.tsx` owns room status chips and the invite entry point so the room body can focus on media and collaboration state.
 - `src/components/meetings/MeetingRoomNotice.tsx` owns persistent room notices that should remain visible after toast feedback fades.
 - `src/components/meetings/EndMeetingDialog.tsx` owns the destructive end-meeting confirmation and must stay in front of direct room closing.
