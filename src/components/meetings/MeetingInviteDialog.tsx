@@ -1,13 +1,16 @@
 /**
- * Invite dialog for the static meeting room.
+ * Invite dialog for live meeting rooms.
  */
 'use client';
 
 import { Check, Copy, MailCheck, Search, ShieldCheck, UserCheck, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { createMeetingInvite } from '@/lib/meetings/api-client';
+import { useEffect, useMemo, useState } from 'react';
+import { createMeetingInvite, searchMeetingUsersByEmail } from '@/lib/meetings/api-client';
 import type { MeetingRoomAttendeeView } from '@/lib/meetings/meeting-view-models';
-import type { MeetingInviteVerificationRequirement as ApiMeetingInviteVerificationRequirement } from '@/lib/meetings/types';
+import type {
+    MeetingInviteVerificationRequirement as ApiMeetingInviteVerificationRequirement,
+    MeetingUserSearchResult,
+} from '@/lib/meetings/types';
 import styles from './meeting-invite-dialog.module.css';
 
 interface MeetingInviteDialogProps {
@@ -45,6 +48,7 @@ const VERIFICATION_OPTIONS: Array<{
 ];
 
 const DEFAULT_VERIFICATION_REQUIREMENTS: Exclude<MeetingInviteVerificationRequirement, 'NONE'>[] = ['EMAIL_OTP'];
+const MIN_EMAIL_SEARCH_LENGTH = 3;
 
 /**
  * Detects real API meeting ids so seeded rooms can stay local-only.
@@ -80,6 +84,9 @@ export function MeetingInviteDialog({
         useState<Exclude<MeetingInviteVerificationRequirement, 'NONE'>[]>(
             DEFAULT_VERIFICATION_REQUIREMENTS,
         );
+    const [searchResults, setSearchResults] = useState<MeetingUserSearchResult[]>([]);
+    const [searchingUsers, setSearchingUsers] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
     const [invitedEmails, setInvitedEmails] = useState<Set<string>>(() => new Set());
     const [sendingEmails, setSendingEmails] = useState<Set<string>>(() => new Set());
     const [inviteError, setInviteError] = useState<string | null>(null);
@@ -88,34 +95,82 @@ export function MeetingInviteDialog({
     const noExtraVerification = verificationRequirements.length === 0;
     const apiBackedMeeting = isUuid(meetingId);
 
-    const visibleInvitees = useMemo(() => {
-        const normalizedSearch = inviteSearch.trim().toLowerCase();
-        const candidates = attendees.slice(0, 10);
+    const attendeeEmails = useMemo(
+        () => new Set(attendees.map((attendee) => attendee.email.toLowerCase())),
+        [attendees],
+    );
+    const visibleInvitees = useMemo(() => (
+        searchResults.filter((result) => !attendeeEmails.has(result.email.toLowerCase()))
+    ), [attendeeEmails, searchResults]);
+    const searchStatus = useMemo(() => {
+        const trimmedSearch = inviteSearch.trim();
 
-        if (normalizedSearch.length < 2) return candidates;
+        if (trimmedSearch.length === 0) {
+            return 'Search by email to invite an existing verified Gracon user.';
+        }
 
-        return candidates.filter((attendee) => (
-            attendee.name.toLowerCase().includes(normalizedSearch)
-            || attendee.email.toLowerCase().includes(normalizedSearch)
-        ));
-    }, [attendees, inviteSearch]);
+        if (trimmedSearch.length < MIN_EMAIL_SEARCH_LENGTH) {
+            return `Type at least ${MIN_EMAIL_SEARCH_LENGTH} characters to search by email.`;
+        }
 
-    async function markInvited(email: string) {
-        setInviteError(null);
+        if (searchingUsers) return 'Searching verified users...';
+        if (searchError) return searchError;
+        if (visibleInvitees.length === 0) return 'No verified users match that email search.';
+        return `${visibleInvitees.length} verified user${visibleInvitees.length === 1 ? '' : 's'} found`;
+    }, [inviteSearch, searchError, searchingUsers, visibleInvitees.length]);
 
-        if (!apiBackedMeeting) {
-            setInvitedEmails((currentEmails) => new Set(currentEmails).add(email));
+    useEffect(() => {
+        const normalizedSearch = inviteSearch.trim();
+
+        if (normalizedSearch.length < MIN_EMAIL_SEARCH_LENGTH) {
             return;
         }
 
-        setSendingEmails((currentEmails) => new Set(currentEmails).add(email));
+        let cancelled = false;
+        const timeout = window.setTimeout(() => {
+            setSearchingUsers(true);
+            setSearchError(null);
+
+            searchMeetingUsersByEmail(normalizedSearch)
+                .then((users) => {
+                    if (cancelled) return;
+                    setSearchResults(users);
+                })
+                .catch((err) => {
+                    if (cancelled) return;
+                    setSearchResults([]);
+                    setSearchError(
+                        err instanceof Error ? err.message : 'Unable to search verified users.',
+                    );
+                })
+                .finally(() => {
+                    if (!cancelled) setSearchingUsers(false);
+                });
+        }, 240);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timeout);
+        };
+    }, [inviteSearch]);
+
+    async function markInvited(invitee: MeetingUserSearchResult) {
+        setInviteError(null);
+
+        if (!apiBackedMeeting) {
+            setInvitedEmails((currentEmails) => new Set(currentEmails).add(invitee.email));
+            return;
+        }
+
+        setSendingEmails((currentEmails) => new Set(currentEmails).add(invitee.email));
 
         try {
             await createMeetingInvite(meetingId, {
-                email,
+                email: invitee.email,
+                invitedUserId: invitee.id,
                 requiredVerifications: verificationRequirements as ApiMeetingInviteVerificationRequirement[],
             });
-            setInvitedEmails((currentEmails) => new Set(currentEmails).add(email));
+            setInvitedEmails((currentEmails) => new Set(currentEmails).add(invitee.email));
         } catch (err) {
             setInviteError(
                 err instanceof Error ? err.message : 'Unable to send this meeting invitation.',
@@ -123,9 +178,19 @@ export function MeetingInviteDialog({
         } finally {
             setSendingEmails((currentEmails) => {
                 const nextEmails = new Set(currentEmails);
-                nextEmails.delete(email);
+                nextEmails.delete(invitee.email);
                 return nextEmails;
             });
+        }
+    }
+
+    function handleInviteSearchChange(value: string) {
+        setInviteSearch(value);
+
+        if (value.trim().length < MIN_EMAIL_SEARCH_LENGTH) {
+            setSearchResults([]);
+            setSearchingUsers(false);
+            setSearchError(null);
         }
     }
 
@@ -190,7 +255,7 @@ export function MeetingInviteDialog({
                             <span>Required verification</span>
                             <strong>Before accepting invitation</strong>
                         </div>
-                        <p>Login is always required. Select one extra gate for this invite.</p>
+                        <p>Login is always required. Select the extra gates for this invite.</p>
                         {apiBackedMeeting && <p>Invites are sent through Gracon email.</p>}
                     </div>
 
@@ -249,29 +314,32 @@ export function MeetingInviteDialog({
                             <span>Search invitees</span>
                             <input
                                 value={inviteSearch}
-                                onChange={(event) => setInviteSearch(event.target.value)}
-                                placeholder="Search by name or email..."
+                                onChange={(event) => handleInviteSearchChange(event.target.value)}
+                                inputMode="email"
+                                placeholder="Search verified user email..."
                             />
                         </label>
                     </div>
 
+                    <p className={styles.searchStatus}>{searchStatus}</p>
+
                     <div className={styles.inviteList}>
-                        {visibleInvitees.map((attendee) => {
-                            const invited = invitedEmails.has(attendee.email);
-                            const sending = sendingEmails.has(attendee.email);
+                        {visibleInvitees.map((invitee) => {
+                            const invited = invitedEmails.has(invitee.email);
+                            const sending = sendingEmails.has(invitee.email);
 
                             return (
-                                <article key={attendee.email}>
-                                    <span className={styles.avatar}>{attendee.initials}</span>
+                                <article key={invitee.id}>
+                                    <span className={styles.avatar}>{invitee.initials}</span>
                                     <div>
-                                        <strong>{attendee.name}</strong>
-                                        <small>{attendee.email}</small>
+                                        <strong>{invitee.displayName}</strong>
+                                        <small>{invitee.email}</small>
                                     </div>
                                     <button
                                         type="button"
                                         className={invited ? styles.invitedButton : ''}
                                         disabled={sending}
-                                        onClick={() => void markInvited(attendee.email)}
+                                        onClick={() => void markInvited(invitee)}
                                     >
                                         {sending ? (
                                             'Sending...'
@@ -289,8 +357,10 @@ export function MeetingInviteDialog({
                         })}
                     </div>
 
-                    {visibleInvitees.length === 0 && (
-                        <p className={styles.emptyState}>No invitees match that search.</p>
+                    {visibleInvitees.length === 0 && inviteSearch.trim().length >= MIN_EMAIL_SEARCH_LENGTH && !searchingUsers && (
+                        <p className={styles.emptyState}>
+                            Search only returns active identity-verified users by email.
+                        </p>
                     )}
                 </div>
             </section>
