@@ -1,7 +1,7 @@
 /**
  * Reusable recorded meeting card.
  */
-import { Play, Share2 } from 'lucide-react';
+import { Clock3, Play, Share2 } from 'lucide-react';
 import styles from './recording-card.module.css';
 
 export interface RecordingCardProps {
@@ -11,6 +11,9 @@ export interface RecordingCardProps {
     size: string;
     status: string;
     owner: string;
+    playable: boolean;
+    onPlay: () => void;
+    onShare: () => void;
 }
 
 /**
@@ -23,11 +26,14 @@ export function RecordingCard({
     size,
     status,
     owner,
+    playable,
+    onPlay,
+    onShare,
 }: RecordingCardProps) {
     return (
         <article className={styles.card}>
             <div className={styles.preview} aria-hidden="true">
-                <Play size={18} fill="currentColor" />
+                {playable ? <Play size={18} fill="currentColor" /> : <Clock3 size={18} />}
                 <span>{duration}</span>
             </div>
 
@@ -42,11 +48,11 @@ export function RecordingCard({
             </div>
 
             <div className={styles.actions}>
-                <button type="button">
+                <button type="button" onClick={onPlay}>
                     <Play size={15} fill="currentColor" />
-                    Play
+                    {playable ? 'Play' : 'View status'}
                 </button>
-                <button type="button">
+                <button type="button" onClick={onShare}>
                     <Share2 size={15} />
                     Share
                 </button>
