@@ -10,7 +10,8 @@
 }
 
 .card,
-.stateCard {
+.stateCard,
+.loadingCard {
   border: 1px solid var(--color-border);
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 28px 90px rgba(15, 23, 42, 0.12);
@@ -31,6 +32,22 @@
   border-radius: 24px;
   padding: clamp(24px, 5vw, 40px);
   text-align: center;
+}
+
+.loadingCard {
+  display: grid;
+  width: min(100%, 560px);
+  gap: 22px;
+  border-radius: 28px;
+  padding: clamp(22px, 4vw, 34px);
+  animation: loadingCardIn 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.loadingHeader {
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
 }
 
 .summary {
@@ -62,7 +79,22 @@
 }
 
 .loadingMark {
-  animation: pulse 900ms ease-in-out infinite alternate;
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border: 1px solid rgba(91, 35, 255, 0.16);
+  background: white;
+  color: var(--color-primary);
+  box-shadow: 0 16px 38px rgba(91, 35, 255, 0.14);
+}
+
+.loadingOrbit {
+  position: absolute;
+  inset: -7px;
+  border: 2px solid rgba(91, 35, 255, 0.12);
+  border-top-color: var(--color-primary);
+  border-radius: 22px;
+  animation: loadingOrbit 1s linear infinite;
 }
 
 .eyebrow,
@@ -91,6 +123,100 @@
   font-weight: 600;
   letter-spacing: 0;
   line-height: 1.04;
+}
+
+.loadingHeader h1 {
+  margin: 5px 0 6px;
+  color: var(--color-text-primary);
+  font-size: clamp(21px, 4vw, 28px);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.12;
+}
+
+.loadingHeader p:last-child {
+  max-width: 390px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.loadingProgress {
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(91, 35, 255, 0.10);
+}
+
+.loadingProgress span {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+  animation: loadingProgress 1.15s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.loadingChecklist {
+  display: grid;
+  gap: 9px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.loadingChecklist span {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(91, 35, 255, 0.12);
+  border-radius: 15px;
+  background: #fbfbfe;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+  padding: 9px 11px;
+}
+
+.loadingChecklist svg {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+}
+
+.loadingPreview {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: #fbfbfe;
+  padding: 14px;
+}
+
+.loadingPreview span {
+  display: block;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(91, 35, 255, 0.10);
+}
+
+.loadingPreview span::after {
+  display: block;
+  width: 42%;
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(91, 35, 255, 0.22);
+  content: '';
+  animation: loadingPreview 1.3s ease-in-out infinite;
+}
+
+.loadingPreview span:nth-child(2) {
+  width: 76%;
+}
+
+.loadingPreview span:nth-child(3) {
+  width: 52%;
 }
 
 .summaryMeta {
@@ -448,6 +574,44 @@
   }
 }
 
+@keyframes loadingCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes loadingOrbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loadingProgress {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(270%);
+  }
+}
+
+@keyframes loadingPreview {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(260%);
+  }
+}
+
 @keyframes enterStep {
   from {
     opacity: 0;
@@ -472,6 +636,16 @@
 }
 
 @media (max-width: 620px) {
+  .loadingHeader {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .loadingChecklist {
+    grid-template-columns: 1fr;
+  }
+
   .wizardHeader {
     display: grid;
   }
@@ -490,5 +664,19 @@
   .otpInput {
     min-height: 48px;
     font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingCard,
+  .stagePanel,
+  .completePanel {
+    animation: none;
+  }
+
+  .loadingOrbit,
+  .loadingProgress span,
+  .loadingPreview span::after {
+    animation-duration: 3s;
   }
 }
