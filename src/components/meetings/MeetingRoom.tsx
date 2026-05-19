@@ -18,7 +18,12 @@ import {
     type StreamVideoParticipant,
 } from '@stream-io/video-react-sdk';
 import { useEffect, useRef, useState } from 'react';
-import { endMeeting, issueMeetingStreamToken } from '@/lib/meetings/api-client';
+import {
+    endMeeting,
+    issueMeetingStreamToken,
+    startMeetingRecording,
+    stopMeetingRecording,
+} from '@/lib/meetings/api-client';
 import type {
     MeetingRoomAttendeeView,
     MeetingRoomView,
@@ -46,6 +51,7 @@ interface StageParticipant {
     role: string;
     speaking: boolean;
     hasVideo?: boolean;
+    trackType?: 'videoTrack' | 'screenShareTrack';
     streamParticipant?: StreamVideoParticipant;
 }
 
@@ -61,10 +67,12 @@ interface RoomExperienceProps {
     stageParticipants: StageParticipant[];
     muted: boolean;
     cameraOff: boolean;
+    sharingScreen: boolean;
     roomNotice?: string | null;
     renderParticipantMedia: (participant: StageParticipant) => ReactNode;
     onToggleMute: () => void | Promise<void>;
     onToggleCamera: () => void | Promise<void>;
+    onToggleScreenShare: () => void | Promise<void>;
 }
 
 const INITIAL_MESSAGES: RoomMessage[] = [
@@ -86,6 +94,7 @@ const INITIAL_MESSAGES: RoomMessage[] = [
 ];
 const STREAM_TRACK_TYPE_AUDIO = 1;
 const STREAM_TRACK_TYPE_VIDEO = 2;
+const STREAM_TRACK_TYPE_SCREEN_SHARE = 3;
 
 /**
  * Detects API-backed meeting ids so seeded design rooms do not call Stream.
@@ -111,6 +120,17 @@ function getInitials(name: string) {
         .slice(0, 2)
         .map((part) => part[0]?.toUpperCase())
         .join('') || 'GM';
+}
+
+/**
+ * Returns the current local time label for room chat messages.
+ */
+function getCurrentTimeLabel() {
+    return new Intl.DateTimeFormat(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    }).format(new Date());
 }
 
 /**
@@ -188,11 +208,27 @@ function getStreamStageParticipants(
         return getStaticStageParticipants(meeting);
     }
 
-    return participants
+    const screenSharingParticipant = participants.find((participant) => (
+        hasPublishedTrack(participant, STREAM_TRACK_TYPE_SCREEN_SHARE)
+    ));
+    const screenShareTile: StageParticipant[] = screenSharingParticipant
+        ? [{
+            initials: getInitials(screenSharingParticipant.name || screenSharingParticipant.userId),
+            name: `${screenSharingParticipant.name || screenSharingParticipant.userId} screen`,
+            role: screenSharingParticipant.isLocalParticipant ? 'Sharing your screen' : 'Sharing screen',
+            speaking: true,
+            hasVideo: true,
+            trackType: 'screenShareTrack',
+            streamParticipant: screenSharingParticipant,
+        }]
+        : [];
+
+    const participantTiles = participants
         .slice(0, 4)
         .map((participant, index) => {
             const name = participant.name || participant.userId || `Participant ${index + 1}`;
-            const speaking = participant.isSpeaking || participant.isDominantSpeaker || index === 0;
+            const speaking = !screenSharingParticipant
+                && (participant.isSpeaking || participant.isDominantSpeaker || index === 0);
             const hasVideo = hasPublishedTrack(participant, STREAM_TRACK_TYPE_VIDEO);
 
             return {
@@ -203,9 +239,12 @@ function getStreamStageParticipants(
                     : participant.isLocalParticipant ? 'You' : 'Listening',
                 speaking,
                 hasVideo,
+                trackType: 'videoTrack' as const,
                 streamParticipant: participant,
             };
         });
+
+    return [...screenShareTile, ...participantTiles].slice(0, 4);
 }
 
 /**
@@ -304,11 +343,31 @@ function useStreamSession(meeting: MeetingRoomView) {
 function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; roomNotice?: string | null }) {
     const [muted, setMuted] = useState(true);
     const [cameraOff, setCameraOff] = useState(true);
+    const [sharingScreen, setSharingScreen] = useState(false);
     const [mediaError, setMediaError] = useState<string | null>(null);
     const audioStreamRef = useRef<MediaStream | null>(null);
     const videoStreamRef = useRef<MediaStream | null>(null);
+    const screenShareStreamRef = useRef<MediaStream | null>(null);
     const localVideoRef = useRef<HTMLVideoElement | null>(null);
-    const stageParticipants = getStaticStageParticipants(meeting);
+    const screenShareVideoRef = useRef<HTMLVideoElement | null>(null);
+    const staticParticipants = getStaticStageParticipants(meeting);
+    const stageParticipants: StageParticipant[] = sharingScreen
+        ? [
+            {
+                initials: getInitials(meeting.hostName),
+                name: `${meeting.hostName} screen`,
+                role: 'Sharing your screen',
+                speaking: true,
+                hasVideo: true,
+                trackType: 'screenShareTrack' as const,
+            },
+            ...staticParticipants.map((participant) => ({
+                ...participant,
+                speaking: false,
+                role: participant.name === meeting.hostName ? 'Host' : participant.role,
+            })),
+        ].slice(0, 4)
+        : staticParticipants;
 
     useEffect(() => {
         if (localVideoRef.current) {
@@ -316,9 +375,18 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
         }
     }, [cameraOff]);
 
+    useEffect(() => {
+        if (screenShareVideoRef.current) {
+            screenShareVideoRef.current.srcObject = sharingScreen
+                ? screenShareStreamRef.current
+                : null;
+        }
+    }, [sharingScreen]);
+
     useEffect(() => () => {
         stopMediaStream(audioStreamRef.current);
         stopMediaStream(videoStreamRef.current);
+        stopMediaStream(screenShareStreamRef.current);
     }, []);
 
     /**
@@ -374,6 +442,36 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
         }
     }
 
+    /**
+     * Requests or stops browser screen capture for static and fallback rooms.
+     */
+    async function handleToggleScreenShare() {
+        setMediaError(null);
+
+        if (sharingScreen) {
+            stopMediaStream(screenShareStreamRef.current);
+            screenShareStreamRef.current = null;
+            setSharingScreen(false);
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: false,
+            });
+            const [track] = stream.getVideoTracks();
+            track?.addEventListener('ended', () => {
+                screenShareStreamRef.current = null;
+                setSharingScreen(false);
+            });
+            screenShareStreamRef.current = stream;
+            setSharingScreen(true);
+        } catch {
+            setMediaError('Screen sharing permission was blocked or unavailable.');
+        }
+    }
+
     return (
         <RoomExperience
             meeting={meeting}
@@ -382,9 +480,18 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
             stageParticipants={stageParticipants}
             muted={muted}
             cameraOff={cameraOff}
+            sharingScreen={sharingScreen}
             roomNotice={mediaError ?? roomNotice}
             renderParticipantMedia={(participant) => (
-                participant.speaking && !cameraOff ? (
+                participant.trackType === 'screenShareTrack' ? (
+                    <video
+                        ref={screenShareVideoRef}
+                        className={styles.localScreenShareVideo}
+                        autoPlay
+                        muted
+                        playsInline
+                    />
+                ) : participant.speaking && !cameraOff ? (
                     <video
                         ref={localVideoRef}
                         className={styles.localVideo}
@@ -398,6 +505,7 @@ function LocalMeetingRoom({ meeting, roomNotice }: { meeting: MeetingRoomView; r
             )}
             onToggleMute={handleToggleMute}
             onToggleCamera={handleToggleCamera}
+            onToggleScreenShare={handleToggleScreenShare}
         />
     );
 }
@@ -424,6 +532,7 @@ function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: 
         ));
     const muted = !hasPublishedTrack(localParticipant, STREAM_TRACK_TYPE_AUDIO);
     const cameraOff = !hasPublishedTrack(localParticipant, STREAM_TRACK_TYPE_VIDEO);
+    const sharingScreen = hasPublishedTrack(localParticipant, STREAM_TRACK_TYPE_SCREEN_SHARE);
     const stageParticipants = getStreamStageParticipants(visibleParticipants, meeting);
     const attendees = getStreamAttendees(visibleParticipants, meeting);
     const participantCount = visibleParticipants.length || rawParticipantCount;
@@ -450,6 +559,17 @@ function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: 
         }
     }
 
+    /**
+     * Toggles Stream screen sharing while keeping the custom Gracon room surface.
+     */
+    async function handleToggleScreenShare() {
+        if (sharingScreen) {
+            await call.screenShare.disable();
+        } else {
+            await call.screenShare.enable();
+        }
+    }
+
     return (
         <>
             {remoteAudioParticipants.length > 0 && (
@@ -462,10 +582,13 @@ function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: 
                 stageParticipants={stageParticipants}
                 muted={muted}
                 cameraOff={cameraOff}
+                sharingScreen={sharingScreen}
                 renderParticipantMedia={(participant) => (
                     participant.streamParticipant && participant.hasVideo ? (
                         <ParticipantView
                             participant={participant.streamParticipant}
+                            trackType={participant.trackType ?? 'videoTrack'}
+                            muteAudio
                             ParticipantViewUI={null}
                             className={styles.streamParticipantView}
                         />
@@ -475,6 +598,7 @@ function StreamMeetingRoom({ meeting, call }: { meeting: MeetingRoomView; call: 
                 )}
                 onToggleMute={handleToggleMute}
                 onToggleCamera={handleToggleCamera}
+                onToggleScreenShare={handleToggleScreenShare}
             />
         </>
     );
@@ -490,17 +614,22 @@ function RoomExperience({
     stageParticipants,
     muted,
     cameraOff,
+    sharingScreen,
     roomNotice,
     renderParticipantMedia,
     onToggleMute,
     onToggleCamera,
+    onToggleScreenShare,
 }: RoomExperienceProps) {
-    const [recording, setRecording] = useState(true);
+    const [recording, setRecording] = useState(false);
+    const [recordingBusy, setRecordingBusy] = useState(false);
     const [activePanel, setActivePanel] = useState<CollaborationPanel | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [ended, setEnded] = useState(false);
     const [ending, setEnding] = useState(false);
     const [endError, setEndError] = useState<string | null>(null);
+    const [roomActionMessage, setRoomActionMessage] = useState<string | null>(null);
+    const [messages, setMessages] = useState<RoomMessage[]>(INITIAL_MESSAGES);
 
     /**
      * Opens the requested collaboration panel or closes it when selected twice.
@@ -531,6 +660,59 @@ function RoomExperience({
         } finally {
             setEnding(false);
         }
+    }
+
+    /**
+     * Starts or stops recording through api/meetings when the room is persisted.
+     */
+    async function handleToggleRecording() {
+        if (recordingBusy) return;
+
+        setRecordingBusy(true);
+        setEndError(null);
+        setRoomActionMessage(null);
+
+        try {
+            if (isUuid(meeting.id)) {
+                const result = recording
+                    ? await stopMeetingRecording(meeting.id)
+                    : await startMeetingRecording(meeting.id);
+
+                setRecording(!recording);
+                setRoomActionMessage(
+                    result.status === 'PROCESSING'
+                        ? 'Recording stopped. The meeting file is processing.'
+                        : 'Recording started and will be attached to this meeting.',
+                );
+            } else {
+                setRecording((value) => !value);
+                setRoomActionMessage(
+                    recording
+                        ? 'Recording stopped for this local preview room.'
+                        : 'Recording started for this local preview room.',
+                );
+            }
+        } catch (err) {
+            setEndError(
+                err instanceof Error ? err.message : 'Unable to update recording right now.',
+            );
+        } finally {
+            setRecordingBusy(false);
+        }
+    }
+
+    /**
+     * Stores custom-room chat messages above the panel so tab switches do not lose them.
+     */
+    function handleSendMessage(body: string) {
+        setMessages((currentMessages) => [
+            ...currentMessages,
+            {
+                sender: 'You',
+                body,
+                time: getCurrentTimeLabel(),
+            },
+        ]);
     }
 
     if (ended) {
@@ -568,8 +750,8 @@ function RoomExperience({
                 </div>
             </header>
 
-            {(endError || roomNotice) && (
-                <p className={styles.roomError}>{endError ?? roomNotice}</p>
+            {(endError || roomNotice || roomActionMessage) && (
+                <p className={styles.roomError}>{endError ?? roomNotice ?? roomActionMessage}</p>
             )}
 
             <motion.div
@@ -624,9 +806,10 @@ function RoomExperience({
                             attendeeCount={attendeeCount}
                             muted={muted}
                             cameraOff={cameraOff}
-                            initialMessages={INITIAL_MESSAGES}
+                            messages={messages}
                             onToggleMute={onToggleMute}
                             onToggleCamera={onToggleCamera}
+                            onSendMessage={handleSendMessage}
                             onChangePanel={setActivePanel}
                             onClose={() => setActivePanel(null)}
                         />
@@ -638,10 +821,13 @@ function RoomExperience({
                 muted={muted}
                 cameraOff={cameraOff}
                 recording={recording}
+                recordingBusy={recordingBusy}
+                sharingScreen={sharingScreen}
                 activePanel={activePanel}
                 onToggleMute={() => void onToggleMute()}
                 onToggleCamera={() => void onToggleCamera()}
-                onToggleRecording={() => setRecording((value) => !value)}
+                onToggleScreenShare={() => void onToggleScreenShare()}
+                onToggleRecording={() => void handleToggleRecording()}
                 onToggleMembers={() => openPanel('members')}
                 onToggleChat={() => openPanel('chat')}
                 ending={ending}
