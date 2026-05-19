@@ -3,7 +3,6 @@
  */
 import type { Metadata } from 'next';
 import { MeetingRoom } from '@/components/meetings/MeetingRoom';
-import { createMeetingRoomFallback } from '@/lib/meetings/meeting-view-models';
 
 interface MeetingRoomPageProps {
     params: Promise<{
@@ -28,7 +27,6 @@ export default async function MeetingRoomPage({
 }: MeetingRoomPageProps) {
     const { id } = await params;
     const { title } = await searchParams;
-    const meeting = createMeetingRoomFallback(id, title);
 
-    return <MeetingRoom meeting={meeting} />;
+    return <MeetingRoom meetingId={id} initialTitle={title} />;
 }
