@@ -44,6 +44,8 @@ metadata, and audit history through `api/meetings`.
 - `/meetings/:id` starts and stops recordings through same-origin audited backend routes instead of flipping UI state only.
 - `/meetings/:id` keeps recording off by default, starts recording only after the user clicks Record, and shows an elapsed recording timer while active.
 - `/meetings/:id` now has active raised-hand controls in the custom room chrome, with visible room and tile feedback.
+- `/meetings/:id` now has a dedicated `MeetingRoomHeader` status surface for secure-room state, participant count, media state, recording timer, hand raise, and invite access.
+- `/meetings/:id` supports room keyboard shortcuts outside editable fields: `M` mute, `V` video, `S` screen share, `R` recording, `H` hand raise, and `Esc` close room panels/dialogs.
 - `/meetings/:id` keeps chat messages in room-level state, so switching between Members and Chat does not reset local messages.
 - Stream rooms start with microphone and camera disabled by default so joining a call never publishes media before the user explicitly chooses it.
 - The custom Gracon room is the only active in-meeting surface. The old isolated Stream SDK validation route has been removed to prevent users from seeing two different room designs.
@@ -137,6 +139,8 @@ npm run lint
 - `src/components/meetings/MeetingRoom.tsx` owns Stream-backed screen share toggles, audited recording calls, and room-level chat state for the custom live room.
 - `src/components/meetings/MeetingRoom.tsx` also owns lightweight live-room UI states such as raised hand and recording elapsed time until those states are backed by provider webhooks or dedicated API events.
 - `src/components/meetings/MeetingStage.tsx`, `MeetingEndedState.tsx`, and `RecordingStopDialog.tsx` keep the live room layout, closed-room state, and stop-recording confirmation isolated from provider wiring.
+- `src/components/meetings/MeetingRoomHeader.tsx` owns room status chips and the invite entry point so the room body can focus on media and collaboration state.
+- `src/components/meetings/MeetingRoomNotice.tsx` owns persistent room notices that should remain visible after toast feedback fades.
 - `src/components/meetings/MeetingSettingsDialog.tsx` owns the lightweight room settings surface for microphone and camera controls.
 - `src/components/ui/Toast.tsx` mirrors the document workspace toast design and is the required feedback surface for meeting room success/error messages.
 - `MeetingInviteDialog.tsx` builds public meeting links from `NEXT_PUBLIC_MEETINGS_PUBLIC_URL` or the current localhost origin, and API-backed rooms send invitations through same-origin proxy routes.
