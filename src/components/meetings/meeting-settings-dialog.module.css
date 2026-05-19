@@ -1,0 +1,150 @@
+/**
+ * Meeting settings dialog styles.
+ */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.34);
+  backdrop-filter: blur(14px);
+  padding: 18px;
+}
+
+.dialog {
+  width: min(100%, 480px);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.22);
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.header p {
+  margin: 0 0 5px;
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.header button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.settingList {
+  display: grid;
+  gap: 8px;
+}
+
+.settingRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 70px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: white;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font: inherit;
+  padding: 12px;
+  text-align: left;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.settingRow:hover {
+  border-color: rgba(91, 35, 255, 0.26);
+  transform: translateY(-1px);
+}
+
+.settingIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
+
+.settingRow strong,
+.settingRow small {
+  display: block;
+}
+
+.settingRow strong {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settingRow small,
+.helper {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.settingRow em {
+  border-radius: 999px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+  padding: 6px 9px;
+}
+
+.helper {
+  margin: 13px 2px 0;
+}
+
+@media (max-width: 520px) {
+  .backdrop {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .dialog {
+    border-radius: 20px;
+  }
+
+  .settingRow {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .settingRow em {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
