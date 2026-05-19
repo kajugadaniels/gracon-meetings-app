@@ -70,12 +70,15 @@ export function listMeetings(input: ListMeetingsInput = {}): Promise<Meeting[]> 
  * The backend caps each page at 50 rows. This bounded loop keeps long lists
  * dynamic without making the browser depend on static seed data.
  */
-export async function listAllVisibleMeetings(maxPages = 20): Promise<Meeting[]> {
+export async function listAllVisibleMeetings(
+    maxPages = 20,
+    input: Pick<ListMeetingsInput, 'status'> = {},
+): Promise<Meeting[]> {
     const meetings: Meeting[] = [];
     let cursor: string | undefined;
 
     for (let page = 0; page < maxPages; page += 1) {
-        const pageItems = await listMeetings({ take: 50, cursor });
+        const pageItems = await listMeetings({ ...input, take: 50, cursor });
         meetings.push(...pageItems);
 
         if (pageItems.length < 50) break;
