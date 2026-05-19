@@ -61,6 +61,9 @@ metadata, and audit history through `api/meetings`.
 - `/home` renders a light-mode dashboard with quick actions, real upcoming meeting cards from `api/meetings`, and a short skeleton loading state.
 - `/home` uses a compact premium dashboard layout with smaller action cards and three meeting cards per desktop row.
 - `/home` uses the same backend-backed meeting view models as the list pages and only renders the first 6 future meetings with `SCHEDULED` status.
+- `/home` also shows scheduled meetings accepted by invited users, not only meetings they own, because `api/meetings` returns accepted participant meetings in the visible meeting list.
+- Scheduled meeting invitation acceptance returns users to `/home` instead of dropping them into a room before the meeting time.
+- Reusable meeting cards disable the Start action until the scheduled start time, show the scheduled readiness time, and copy the canonical meeting URL with a `Copy URL` action.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - `NewMeetingDialog` starts instant meetings dynamically by creating a meeting, starting it through `api/meetings`, and navigating to the live room.
 - Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
@@ -142,6 +145,7 @@ npm run lint
 - `src/lib/server/meetings-api-proxy.ts` is the server-side bridge to `api/meetings`.
 - `src/components/meetings/MeetingsWorkspace.tsx` owns the current meeting creation, schedule, list, start/end, and token-preparation UI.
 - `src/components/meetings/PaginatedMeetingGrid.tsx` and `src/components/meetings/PaginatedRecordingGrid.tsx` own client-side paging for backend-backed list pages.
+- `src/components/meetings/MeetingCard.tsx` owns scheduled start gating, canonical room URL copying, and compact card interaction states for home, upcoming, and previous-compatible surfaces.
 - `src/components/meetings/RecordingPlayerDialog.tsx` owns secure recording playback, metadata display, processing fallback states, and the user-triggered refresh action for provider playback readiness.
 - `src/components/meetings/MeetingRoom.tsx` owns the custom Gracon meeting room surface used for the user-facing meeting experience.
 - `src/components/meetings/MeetingRoom.tsx` owns meeting detail loading, authenticated host derivation, Stream session setup for API-backed meetings, and local browser mic/camera fallback.
