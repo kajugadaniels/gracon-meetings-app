@@ -56,30 +56,30 @@ metadata, and audit history through `api/meetings`.
 - If `api/meetings` is offline, same-origin proxy routes now return a clean 503 response instead of crashing the Next.js route.
 - The authenticated shell uses a flush top navbar, left meetings sidebar, account avatar dropdown, and `/home` as the post-login landing route.
 - The topbar and sidebar live in dedicated `src/components/layout` components; protected layout owns only session recovery and shell placement.
-- `/home` currently renders a static light-mode dashboard with quick actions, realistic upcoming meeting cards, and a short skeleton loading state while future meeting actions mature.
+- `/home` renders a light-mode dashboard with quick actions, real upcoming meeting cards from `api/meetings`, and a short skeleton loading state.
 - `/home` uses a compact premium dashboard layout with smaller action cards and three meeting cards per desktop row.
-- `/home` now reads the shared meetings seed dataset through typed adapters and only renders the first 6 upcoming meetings.
+- `/home` uses the same backend-backed meeting view models as the list pages and only renders the first 6 upcoming meetings.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - `NewMeetingDialog` starts instant meetings dynamically by creating a meeting, starting it through `api/meetings`, and navigating to the live room.
 - Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
 - `/invitations/:token` renders the secure meeting invitation acceptance flow. It previews the invite, sends/verifies email OTP when required, completes the identity gate for verified users, and accepts only through `api/meetings`.
-- `/upcoming` renders a static scheduled-meetings dashboard using the reusable `MeetingCard` component.
+- `/upcoming` renders a backend-backed scheduled-meetings dashboard using the reusable `MeetingCard` component.
 - `/upcoming` follows the compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
-- `/upcoming` paginates the shared seed dataset at 18 meeting cards per page.
+- `/upcoming` paginates real visible meeting data at 18 meeting cards per page.
 - `/upcoming` uses `UpcomingMeetingsExplorer` for title search, active filters, custom date ranges, and paginated results.
 - `/upcoming` keeps search, filters, custom dates, and scheduling on one compact desktop row with reduced-motion-safe filter feedback.
 - `/upcoming` opens the reusable `ScheduleMeetingDialog` through `UpcomingScheduleButton` so the page can remain server-rendered.
-- `/previous` renders a static completed-meetings dashboard using the reusable `MeetingCard` component.
+- `/previous` renders a backend-backed completed-meetings dashboard using the reusable `MeetingCard` component.
 - `/previous` follows the same compact dashboard direction with smaller summary cards and three meeting cards per desktop row.
-- `/previous` paginates the shared seed dataset at 18 meeting cards per page.
+- `/previous` paginates real visible meeting data at 18 meeting cards per page.
 - `/previous` uses `PreviousMeetingsExplorer` for title search, recorded/this-month/follow-up filters, custom date ranges, and one-row desktop controls.
-- `/recordings` renders a static recordings library using the reusable `RecordingCard` component with Play and Share actions.
+- `/recordings` renders a backend-backed recordings library using the reusable `RecordingCard` component with Play and Share actions.
 - `/recordings` follows the compact dashboard direction with minimal recording cards and three recordings per desktop row.
-- `/recordings` paginates 40 ready recorded meetings at 18 recording cards per page.
+- `/recordings` fetches accessible recording metadata through same-origin recording routes and paginates it at 18 recording cards per page.
 - `/recordings` uses `RecordingsExplorer` for title search, ready/shared/this-month filters, custom date ranges, and one-row desktop controls.
 - `/personal-room` renders a static reusable-room management page with room link, quick actions, settings, and readiness details.
 - `/personal-room` follows the compact dashboard direction with four room setting cards in one desktop row.
-- `src/data/meetings.json` contains 1000 deterministic meeting records, including 40 ready recordings, and `src/lib/meetings/static-meetings.ts` is the only adapter pages should use directly.
+- `src/lib/meetings/meeting-view-models.ts` converts backend meetings and recordings into card-ready UI contracts; static seeded meeting data has been removed from active pages.
 - Route styling uses `.module.css` files rather than growing `globals.css`.
 
 ## Environment
