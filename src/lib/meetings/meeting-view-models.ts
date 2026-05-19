@@ -125,6 +125,25 @@ export function getMeetingSortDate(meeting: Meeting): string {
 }
 
 /**
+ * Checks if a meeting is a future scheduled room that belongs on upcoming pages.
+ */
+export function isFutureScheduledMeeting(
+    meeting: Meeting,
+    now: Date = new Date(),
+): boolean {
+    if (meeting.status !== 'SCHEDULED' || !meeting.scheduledStartAt) return false;
+
+    return new Date(meeting.scheduledStartAt).getTime() >= now.getTime();
+}
+
+/**
+ * Checks if a meeting belongs to completed-history surfaces.
+ */
+export function isPreviousMeeting(meeting: Meeting): boolean {
+    return meeting.status === 'ENDED' || meeting.status === 'CANCELLED';
+}
+
+/**
  * Converts a backend participant into a room attendee view.
  */
 export function toMeetingRoomAttendeeView(
@@ -206,6 +225,8 @@ export function splitMeetingCards(
     meetings: Meeting[],
     recordingsByMeetingId: Map<string, MeetingRecording[]> = new Map(),
 ): { upcoming: MeetingCardView[]; previous: MeetingCardView[] } {
+    const sourceMeetings = new Map(meetings.map((meeting) => [meeting.id, meeting]));
+    const now = new Date();
     const cards = meetings.map((meeting) => (
         toMeetingCardView(meeting, recordingsByMeetingId.get(meeting.id) ?? [])
     ));
@@ -213,10 +234,8 @@ export function splitMeetingCards(
     return {
         upcoming: cards
             .filter((card) => {
-                const sourceMeeting = meetings.find((meeting) => meeting.id === card.id);
-                return sourceMeeting?.status === 'SCHEDULED'
-                    || sourceMeeting?.status === 'LIVE'
-                    || sourceMeeting?.status === 'DRAFT';
+                const sourceMeeting = sourceMeetings.get(card.id);
+                return Boolean(sourceMeeting && isFutureScheduledMeeting(sourceMeeting, now));
             })
             .sort((first, second) => (
                 new Date(first.scheduledStartAt).getTime()
@@ -224,9 +243,8 @@ export function splitMeetingCards(
             )),
         previous: cards
             .filter((card) => {
-                const sourceMeeting = meetings.find((meeting) => meeting.id === card.id);
-                return sourceMeeting?.status === 'ENDED'
-                    || sourceMeeting?.status === 'CANCELLED';
+                const sourceMeeting = sourceMeetings.get(card.id);
+                return Boolean(sourceMeeting && isPreviousMeeting(sourceMeeting));
             })
             .sort((first, second) => (
                 new Date(second.scheduledStartAt).getTime()
@@ -244,15 +262,11 @@ export function buildMeetingsSummary(
 ): MeetingsSummary {
     return meetings.reduce<MeetingsSummary>(
         (summary, meeting) => {
-            if (
-                meeting.status === 'SCHEDULED'
-                || meeting.status === 'LIVE'
-                || meeting.status === 'DRAFT'
-            ) {
+            if (isFutureScheduledMeeting(meeting)) {
                 summary.upcomingCount += 1;
             }
 
-            if (meeting.status === 'ENDED' || meeting.status === 'CANCELLED') {
+            if (isPreviousMeeting(meeting)) {
                 summary.previousCount += 1;
             }
 
