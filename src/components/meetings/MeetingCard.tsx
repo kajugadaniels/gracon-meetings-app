@@ -38,16 +38,23 @@ function buildMeetingUrl(meetingId: string): string {
 /**
  * Formats future scheduled starts for disabled meeting actions.
  */
-function formatStartNotice(scheduledStartAt?: string): string {
-    if (!scheduledStartAt) return 'This meeting is not ready to start yet.';
+function formatStartNotice(): string {
+    return 'Opens at meeting time';
+}
 
-    return `Starts ${new Intl.DateTimeFormat('en', {
-        month: 'short',
-        day: '2-digit',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-    }).format(new Date(scheduledStartAt))}`;
+/**
+ * Keeps date presentation compact so meeting cards do not repeat timestamps.
+ */
+function formatCompactDate(date: string): string {
+    return date.replace(/,\s*\d{4}$/, '');
+}
+
+/**
+ * Converts lifecycle constants into readable card labels.
+ */
+function formatStatus(status?: MeetingStatus): string {
+    if (!status) return 'Meeting';
+    return status.toLowerCase().replace(/^\w/, (letter) => letter.toUpperCase());
 }
 
 /**
@@ -74,9 +81,10 @@ export function MeetingCard({
         && Boolean(scheduledStartTime)
         && Number(scheduledStartTime) > now;
     const startNotice = useMemo(
-        () => formatStartNotice(scheduledStartAt),
-        [scheduledStartAt],
+        () => formatStartNotice(),
+        [],
     );
+    const compactDate = useMemo(() => formatCompactDate(date), [date]);
 
     useEffect(() => {
         if (!startDisabled || !scheduledStartTime) return undefined;
@@ -115,25 +123,33 @@ export function MeetingCard({
     return (
         <article className={styles.card}>
             <header className={styles.header}>
-                <span className={styles.icon}>
+                <span className={styles.dateBadge}>
                     <CalendarDays size={18} />
+                    <span>{compactDate}</span>
                 </span>
-                {status && <span className={styles.status}>{status.toLowerCase()}</span>}
+                {status && <span className={styles.status}>{formatStatus(status)}</span>}
             </header>
-            <h2 className={styles.title}>{title}</h2>
-            <p className={styles.schedule}>{date} · {time}</p>
-            {startDisabled && (
-                <span className={styles.startNotice}>
-                    <LockKeyhole size={13} />
-                    {startNotice}
-                </span>
-            )}
-            {durationLabel && (
-                <span className={styles.duration}>
-                    <Clock3 size={13} />
-                    {durationLabel}
-                </span>
-            )}
+            <div className={styles.body}>
+                <h2 className={styles.title}>{title}</h2>
+                <div className={styles.metaRow}>
+                    <span className={styles.timeMeta}>
+                        <Clock3 size={13} />
+                        {time}
+                    </span>
+                    {startDisabled && (
+                        <span className={styles.startNotice}>
+                            <LockKeyhole size={13} />
+                            {startNotice}
+                        </span>
+                    )}
+                    {durationLabel && (
+                        <span className={styles.duration}>
+                            <Clock3 size={13} />
+                            {durationLabel}
+                        </span>
+                    )}
+                </div>
+            </div>
             <div className={styles.footer}>
                 <div className={styles.avatarStack} aria-label="Meeting attendees">
                     {attendees.map((attendee) => (
