@@ -1,13 +1,17 @@
 /**
  * Members panel for the static meeting room.
  */
-import { MoreHorizontal, MicOff, ShieldCheck, Video } from 'lucide-react';
+import { Mic, MicOff, ShieldCheck, Video, VideoOff } from 'lucide-react';
 import type { MeetingRoomAttendeeView } from '@/lib/meetings/static-meetings';
 import styles from './meeting-members-panel.module.css';
 
 interface MeetingMembersPanelProps {
     attendees: MeetingRoomAttendeeView[];
     attendeeCount: number;
+    muted: boolean;
+    cameraOff: boolean;
+    onToggleMute: () => void;
+    onToggleCamera: () => void;
 }
 
 /**
@@ -26,6 +30,10 @@ function getMemberStatus(index: number) {
 export function MeetingMembersPanel({
     attendees,
     attendeeCount,
+    muted,
+    cameraOff,
+    onToggleMute,
+    onToggleCamera,
 }: MeetingMembersPanelProps) {
     const visibleAttendees = attendees.slice(0, 8);
 
@@ -43,32 +51,60 @@ export function MeetingMembersPanel({
             </div>
 
             <div className={styles.memberList}>
-                {visibleAttendees.map((attendee, index) => (
+                {visibleAttendees.map((attendee, index) => {
+                    const isLocalUser = index === 0;
+
+                    return (
                     <article
                         key={attendee.email}
-                        className={`${styles.memberItem} ${index === 0 ? styles.activeMember : ''}`}
+                        className={`${styles.memberItem} ${isLocalUser ? styles.activeMember : ''}`}
                     >
                         <span className={styles.avatar}>{attendee.initials}</span>
                         <div>
                             <div className={styles.memberNameRow}>
                                 <strong>{attendee.name}</strong>
-                                <small>{getMemberStatus(index)}</small>
+                                <small>
+                                    {isLocalUser
+                                        ? `${muted ? 'Muted' : 'Mic on'} · ${cameraOff ? 'Camera off' : 'Camera on'}`
+                                        : getMemberStatus(index)}
+                                </small>
                             </div>
                             <p>{attendee.role}</p>
                         </div>
                         <div className={styles.memberActions} aria-label={`${attendee.name} meeting state`}>
-                            <span title={index % 4 === 0 ? 'Muted' : 'Microphone available'}>
-                                <MicOff size={13} />
-                            </span>
-                            <span title={index % 3 === 0 ? 'Camera off' : 'Camera available'}>
-                                <Video size={13} />
-                            </span>
-                            <button type="button" aria-label={`More options for ${attendee.name}`}>
-                                <MoreHorizontal size={14} />
-                            </button>
+                            {isLocalUser ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        className={!muted ? styles.memberActionActive : ''}
+                                        aria-label={muted ? 'Turn microphone on' : 'Turn microphone off'}
+                                        onClick={onToggleMute}
+                                    >
+                                        {muted ? <MicOff size={13} /> : <Mic size={13} />}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={!cameraOff ? styles.memberActionActive : ''}
+                                        aria-label={cameraOff ? 'Turn camera on' : 'Turn camera off'}
+                                        onClick={onToggleCamera}
+                                    >
+                                        {cameraOff ? <VideoOff size={13} /> : <Video size={13} />}
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <span title={index % 4 === 0 ? 'Muted' : 'Microphone available'}>
+                                        <MicOff size={13} />
+                                    </span>
+                                    <span title={index % 3 === 0 ? 'Camera off' : 'Camera available'}>
+                                        <Video size={13} />
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </article>
-                ))}
+                    );
+                })}
             </div>
 
             {attendeeCount > visibleAttendees.length && (
