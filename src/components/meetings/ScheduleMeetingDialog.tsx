@@ -350,6 +350,7 @@ export function ScheduleMeetingDialog({
                     email: guest.email,
                     invitedUserId: guest.id === guest.existingParticipantId ? undefined : guest.id,
                     requiredVerifications: verificationRequirements,
+                    sendEmail: !guest.existingParticipantId,
                 })
             )));
 
