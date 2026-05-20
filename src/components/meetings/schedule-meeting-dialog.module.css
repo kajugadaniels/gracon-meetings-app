@@ -236,6 +236,18 @@
   white-space: nowrap;
 }
 
+.guestChip small {
+  border-radius: 999px;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+  padding: 4px 6px;
+  text-transform: uppercase;
+}
+
 .guestChip button {
   display: inline-grid;
   width: 22px;
