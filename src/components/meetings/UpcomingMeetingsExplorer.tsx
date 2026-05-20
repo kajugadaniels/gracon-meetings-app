@@ -6,7 +6,9 @@
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { MeetingCardView } from '@/lib/meetings/meeting-view-models';
+import type { Meeting } from '@/lib/meetings/types';
 import { PaginatedMeetingGrid } from './PaginatedMeetingGrid';
+import { ScheduleMeetingDialog } from './ScheduleMeetingDialog';
 import { UpcomingScheduleButton } from './UpcomingScheduleButton';
 import styles from './upcoming-meetings-explorer.module.css';
 
@@ -14,7 +16,9 @@ type UpcomingFilter = 'all' | 'today' | 'week' | 'invite';
 
 interface UpcomingMeetingsExplorerProps {
     meetings: MeetingCardView[];
+    sourceMeetings?: Meeting[];
     loading?: boolean;
+    onMeetingUpdated?: (meeting: Meeting) => void;
 }
 
 const FILTERS: Array<{ id: UpcomingFilter; label: string }> = [
@@ -67,12 +71,18 @@ function isInsideDateRange(isoDate: string, fromDate: string, toDate: string) {
  */
 export function UpcomingMeetingsExplorer({
     meetings,
+    sourceMeetings = [],
     loading = false,
+    onMeetingUpdated,
 }: UpcomingMeetingsExplorerProps) {
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState<UpcomingFilter>('all');
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
+    const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
+    const sourceMeetingById = useMemo(() => (
+        new Map(sourceMeetings.map((meeting) => [meeting.id, meeting]))
+    ), [sourceMeetings]);
 
     const filteredMeetings = useMemo(() => {
         const normalizedSearch = search.trim().toLowerCase();
@@ -164,8 +174,23 @@ export function UpcomingMeetingsExplorer({
                     pageSize={18}
                     ariaLabel="Scheduled meetings"
                     loading={loading}
+                    onEditMeeting={(meeting) => {
+                        const sourceMeeting = sourceMeetingById.get(meeting.id);
+                        if (sourceMeeting) setEditingMeeting(sourceMeeting);
+                    }}
                 />
             </div>
+
+            {editingMeeting && (
+                <ScheduleMeetingDialog
+                    meeting={editingMeeting}
+                    onClose={() => setEditingMeeting(null)}
+                    onUpdated={(updatedMeeting) => {
+                        onMeetingUpdated?.(updatedMeeting);
+                        setEditingMeeting(null);
+                    }}
+                />
+            )}
         </div>
     );
 }
