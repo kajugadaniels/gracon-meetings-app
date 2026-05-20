@@ -10,6 +10,7 @@ import type {
     MeetingStatus,
     MeetingStreamAccess,
     MeetingUserSearchResult,
+    UpdateMeetingInput,
 } from './types';
 
 interface ListMeetingsInput {
@@ -104,6 +105,19 @@ export function getMeeting(meetingId: string): Promise<Meeting> {
 export function createMeeting(input: CreateMeetingInput): Promise<Meeting> {
     return requestJson<Meeting>('/api/meetings', {
         method: 'POST',
+        body: JSON.stringify(input),
+    });
+}
+
+/**
+ * Updates mutable scheduled meeting metadata through the local BFF route.
+ */
+export function updateMeeting(
+    meetingId: string,
+    input: UpdateMeetingInput,
+): Promise<Meeting> {
+    return requestJson<Meeting>(`/api/meetings/${encodeURIComponent(meetingId)}`, {
+        method: 'PATCH',
         body: JSON.stringify(input),
     });
 }
