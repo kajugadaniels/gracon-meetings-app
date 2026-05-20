@@ -15,6 +15,10 @@ interface PaginatedMeetingGridProps {
     loading?: boolean;
     showActions?: boolean;
     onEditMeeting?: (meeting: MeetingCardView) => void;
+    onDeleteMeeting?: (meeting: MeetingCardView) => void;
+    canEditMeeting?: (meeting: MeetingCardView) => boolean;
+    canDeleteMeeting?: (meeting: MeetingCardView) => boolean;
+    deletingMeetingId?: string | null;
 }
 
 /**
@@ -27,6 +31,10 @@ export function PaginatedMeetingGrid({
     loading = false,
     showActions = true,
     onEditMeeting,
+    onDeleteMeeting,
+    canEditMeeting,
+    canDeleteMeeting,
+    deletingMeetingId = null,
 }: PaginatedMeetingGridProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.max(Math.ceil(meetings.length / pageSize), 1);
@@ -68,7 +76,17 @@ export function PaginatedMeetingGrid({
                             meetingId={meeting.id}
                             durationLabel={meeting.durationLabel}
                             showActions={showActions}
-                            onEdit={onEditMeeting ? () => onEditMeeting(meeting) : undefined}
+                            onEdit={
+                                onEditMeeting && (!canEditMeeting || canEditMeeting(meeting))
+                                    ? () => onEditMeeting(meeting)
+                                    : undefined
+                            }
+                            onDelete={
+                                onDeleteMeeting && (!canDeleteMeeting || canDeleteMeeting(meeting))
+                                    ? () => onDeleteMeeting(meeting)
+                                    : undefined
+                            }
+                            deleting={deletingMeetingId === meeting.id}
                         />
                     ))}
                 </div>
