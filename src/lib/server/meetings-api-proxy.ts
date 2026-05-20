@@ -15,7 +15,7 @@ import {
 const MEETINGS_API_BASE =
     process.env.NEXT_PUBLIC_MEETINGS_API_URL ?? 'http://localhost:3007/api/v1';
 
-type ProxyMethod = 'GET' | 'POST' | 'PATCH';
+type ProxyMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
 interface ProxyOptions {
     method: ProxyMethod;
