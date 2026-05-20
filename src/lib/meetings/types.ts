@@ -50,6 +50,17 @@ export interface CreateMeetingInput {
     joinBeforeHost?: boolean;
 }
 
+export interface UpdateMeetingInput {
+    title?: string;
+    description?: string;
+    visibility?: MeetingVisibility;
+    scheduledStartAt?: string;
+    scheduledEndAt?: string;
+    recordingEnabled?: boolean;
+    waitingRoomEnabled?: boolean;
+    joinBeforeHost?: boolean;
+}
+
 export interface MeetingStreamAccess {
     apiKey: string;
     userId: string;
