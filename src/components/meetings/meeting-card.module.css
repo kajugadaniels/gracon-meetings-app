@@ -258,6 +258,10 @@
   color: var(--color-error);
 }
 
+.actions .deleteAction svg {
+  color: var(--color-error);
+}
+
 .actions .deleteAction:not(:disabled):hover {
   border-color: rgba(244, 63, 94, 0.32);
   background: rgba(244, 63, 94, 0.06);
