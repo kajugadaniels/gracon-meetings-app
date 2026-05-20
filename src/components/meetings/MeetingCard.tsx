@@ -4,7 +4,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Clock3, Copy } from 'lucide-react';
+import { Clock3, Copy, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui';
 import { getMeetingJoinPath } from '@/lib/meetings/api-client';
@@ -22,6 +22,7 @@ export interface MeetingCardProps {
     meetingId?: string;
     durationLabel?: string;
     showActions?: boolean;
+    onEdit?: () => void;
 }
 
 /**
@@ -58,6 +59,7 @@ export function MeetingCard({
     meetingId,
     durationLabel,
     showActions = true,
+    onEdit,
 }: MeetingCardProps) {
     const [now, setNow] = useState(() => Date.now());
     const scheduledStartTime = scheduledStartAt
@@ -131,11 +133,20 @@ export function MeetingCard({
                 </div>
                 {showActions && (
                     <div className={styles.actions}>
+                        {onEdit && (
+                            <button type="button" onClick={onEdit}>
+                                <Pencil size={15} />
+                                Edit
+                            </button>
+                        )}
                         {meetingId && !startDisabled ? (
-                            <Link href={getMeetingJoinPath(meetingId)}>Start</Link>
+                            <Link className={styles.startAction} href={getMeetingJoinPath(meetingId)}>
+                                Start
+                            </Link>
                         ) : (
                             <button
                                 type="button"
+                                className={styles.startAction}
                                 disabled={startDisabled}
                                 title={startDisabled ? scheduledLabel : undefined}
                             >
