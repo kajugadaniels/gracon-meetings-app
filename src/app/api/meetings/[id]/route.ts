@@ -18,3 +18,19 @@ export async function GET(
         path: `/meetings/${encodeURIComponent(id)}`,
     });
 }
+
+/**
+ * Updates one meeting through api/meetings after server-side session recovery.
+ */
+export async function PATCH(
+    request: NextRequest,
+    context: { params: Promise<{ id: string }> },
+) {
+    const { id } = await context.params;
+
+    return proxyMeetingsApi(request, {
+        method: 'PATCH',
+        path: `/meetings/${encodeURIComponent(id)}`,
+        body: await request.json(),
+    });
+}
