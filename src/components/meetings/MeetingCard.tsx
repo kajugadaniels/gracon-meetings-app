@@ -142,23 +142,6 @@ export function MeetingCard({
                 </div>
                 {showActions && (
                     <div className={styles.actions}>
-                        {onEdit && (
-                            <button type="button" onClick={onEdit}>
-                                <Pencil size={15} />
-                                Edit
-                            </button>
-                        )}
-                        {onDelete && (
-                            <button
-                                type="button"
-                                className={styles.deleteAction}
-                                disabled={deleting}
-                                onClick={onDelete}
-                            >
-                                <Trash2 size={15} />
-                                {deleting ? 'Deleting...' : 'Delete'}
-                            </button>
-                        )}
                         {meetingId && !startDisabled ? (
                             <Link className={styles.startAction} href={getMeetingJoinPath(meetingId)}>
                                 Start
@@ -177,6 +160,29 @@ export function MeetingCard({
                             <Copy size={15} />
                             Copy URL
                         </button>
+                        {onEdit && (
+                            <button
+                                type="button"
+                                className={styles.iconAction}
+                                onClick={onEdit}
+                                aria-label="Edit scheduled meeting"
+                                title="Edit scheduled meeting"
+                            >
+                                <Pencil size={15} />
+                            </button>
+                        )}
+                        {onDelete && (
+                            <button
+                                type="button"
+                                className={`${styles.iconAction} ${styles.deleteAction}`}
+                                disabled={deleting}
+                                onClick={onDelete}
+                                aria-label={deleting ? 'Deleting scheduled meeting' : 'Delete scheduled meeting'}
+                                title={deleting ? 'Deleting scheduled meeting' : 'Delete scheduled meeting'}
+                            >
+                                <Trash2 size={15} />
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
