@@ -14,6 +14,7 @@ interface PaginatedMeetingGridProps {
     ariaLabel: string;
     loading?: boolean;
     showActions?: boolean;
+    onEditMeeting?: (meeting: MeetingCardView) => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export function PaginatedMeetingGrid({
     ariaLabel,
     loading = false,
     showActions = true,
+    onEditMeeting,
 }: PaginatedMeetingGridProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.max(Math.ceil(meetings.length / pageSize), 1);
@@ -66,6 +68,7 @@ export function PaginatedMeetingGrid({
                             meetingId={meeting.id}
                             durationLabel={meeting.durationLabel}
                             showActions={showActions}
+                            onEdit={onEditMeeting ? () => onEditMeeting(meeting) : undefined}
                         />
                     ))}
                 </div>
