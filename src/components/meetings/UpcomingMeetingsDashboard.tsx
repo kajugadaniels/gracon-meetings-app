@@ -92,6 +92,25 @@ export function UpcomingMeetingsDashboard() {
         },
     ], [loading, meetings.length, summary.invitedGuestCount, summary.upcomingCount]);
 
+    /**
+     * Applies an edited meeting locally so the edited schedule is visible
+     * immediately after the dialog succeeds.
+     */
+    function handleMeetingUpdated(updatedMeeting: Meeting) {
+        setMeetings((currentMeetings) => (
+            currentMeetings.map((meeting) => (
+                meeting.id === updatedMeeting.id ? updatedMeeting : meeting
+            ))
+        ));
+        setUpcomingMeetings((currentMeetings) => (
+            currentMeetings.map((meeting) => (
+                meeting.id === updatedMeeting.id
+                    ? splitMeetingCards([updatedMeeting]).upcoming[0] ?? meeting
+                    : meeting
+            ))
+        ));
+    }
+
     return (
         <section className={styles.page}>
             <header className={styles.hero}>
@@ -135,7 +154,12 @@ export function UpcomingMeetingsDashboard() {
             )}
 
             <section className={styles.contentGrid} aria-label="Scheduled meetings">
-                <UpcomingMeetingsExplorer meetings={upcomingMeetings} loading={loading} />
+                <UpcomingMeetingsExplorer
+                    meetings={upcomingMeetings}
+                    sourceMeetings={meetings}
+                    loading={loading}
+                    onMeetingUpdated={handleMeetingUpdated}
+                />
 
                 <aside className={styles.sidePanel} aria-label="Preparation checklist">
                     <p className={styles.eyebrow}>Readiness</p>
