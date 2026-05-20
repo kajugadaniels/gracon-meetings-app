@@ -112,7 +112,7 @@ export function MeetingCard({
         <article className={styles.card}>
             <div className={styles.body}>
                 <div className={styles.titleRow}>
-                    <h2 className={styles.title}>{title}</h2>
+                    <h2 className={styles.title} title={title}>{title}</h2>
                     {status && <span className={styles.status}>{formatStatus(status)}</span>}
                 </div>
                 <div className={styles.metaRow}>
@@ -129,11 +129,16 @@ export function MeetingCard({
                 </div>
             </div>
             <div className={styles.footer}>
-                <div className={styles.avatarStack} aria-label="Meeting attendees">
-                    {attendees.map((attendee) => (
-                        <span key={attendee}>{attendee}</span>
-                    ))}
-                    {overflowCount > 0 && <span>+{overflowCount}</span>}
+                <div className={styles.attendeeSummary}>
+                    <div className={styles.avatarStack} aria-label="Meeting attendees">
+                        {attendees.map((attendee) => (
+                            <span key={attendee}>{attendee}</span>
+                        ))}
+                        {overflowCount > 0 && <span>+{overflowCount}</span>}
+                    </div>
+                    <span className={styles.attendeeCount}>
+                        {attendees.length + overflowCount} invited
+                    </span>
                 </div>
                 {showActions && (
                     <div className={styles.actions}>
