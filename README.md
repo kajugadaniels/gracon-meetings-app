@@ -67,6 +67,7 @@ metadata, and audit history through `api/meetings`.
 - Reusable meeting cards disable the Start action until the scheduled start time, show the scheduled readiness time, and copy the canonical meeting URL with a `Copy URL` action.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - `ScheduleMeetingDialog` now supports create and edit modes. Upcoming meeting cards can open it to update title, date, time, agenda, pending invite verification gates, and new invited guests without replacing the room workflow.
+- In edit mode, `ScheduleMeetingDialog` sends emails only to newly selected guests. Existing pending invitees keep their original invite email/link while the backend silently updates their verification gates.
 - Scheduled meeting edit and delete actions are owner-only in the UI. Invited users can still view accepted scheduled meetings but do not see schedule mutation controls.
 - `NewMeetingDialog` starts instant meetings dynamically by creating a meeting, starting it through `api/meetings`, and navigating to the live room.
 - Meeting dialogs blur the background, close on outside click, and use short CSS enter/exit animations with reduced-motion fallbacks.
