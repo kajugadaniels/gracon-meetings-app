@@ -213,6 +213,17 @@
   cursor: not-allowed;
 }
 
+.actions .deleteAction {
+  border-color: rgba(244, 63, 94, 0.18);
+  color: var(--color-error);
+}
+
+.actions .deleteAction:not(:disabled):hover {
+  border-color: rgba(244, 63, 94, 0.32);
+  background: rgba(244, 63, 94, 0.06);
+  color: var(--color-error);
+}
+
 @media (max-width: 760px) {
   .footer {
     align-items: flex-start;
