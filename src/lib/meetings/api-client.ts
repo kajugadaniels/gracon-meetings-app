@@ -123,6 +123,15 @@ export function updateMeeting(
 }
 
 /**
+ * Deletes a future scheduled meeting owned by the current user.
+ */
+export function deleteScheduledMeeting(meetingId: string): Promise<Meeting> {
+    return requestJson<Meeting>(`/api/meetings/${encodeURIComponent(meetingId)}`, {
+        method: 'DELETE',
+    });
+}
+
+/**
  * Starts a meeting and creates the Stream call lazily on the backend.
  */
 export function startMeeting(meetingId: string): Promise<Meeting> {
