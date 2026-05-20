@@ -4,7 +4,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Clock3, Copy, Pencil } from 'lucide-react';
+import { Clock3, Copy, Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui';
 import { getMeetingJoinPath } from '@/lib/meetings/api-client';
@@ -23,6 +23,8 @@ export interface MeetingCardProps {
     durationLabel?: string;
     showActions?: boolean;
     onEdit?: () => void;
+    onDelete?: () => void;
+    deleting?: boolean;
 }
 
 /**
@@ -60,6 +62,8 @@ export function MeetingCard({
     durationLabel,
     showActions = true,
     onEdit,
+    onDelete,
+    deleting = false,
 }: MeetingCardProps) {
     const [now, setNow] = useState(() => Date.now());
     const scheduledStartTime = scheduledStartAt
@@ -137,6 +141,17 @@ export function MeetingCard({
                             <button type="button" onClick={onEdit}>
                                 <Pencil size={15} />
                                 Edit
+                            </button>
+                        )}
+                        {onDelete && (
+                            <button
+                                type="button"
+                                className={styles.deleteAction}
+                                disabled={deleting}
+                                onClick={onDelete}
+                            >
+                                <Trash2 size={15} />
+                                {deleting ? 'Deleting...' : 'Delete'}
                             </button>
                         )}
                         {meetingId && !startDisabled ? (
