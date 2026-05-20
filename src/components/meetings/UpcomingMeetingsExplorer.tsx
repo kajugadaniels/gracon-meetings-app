@@ -5,8 +5,11 @@
 
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from '@/components/ui';
 import type { MeetingCardView } from '@/lib/meetings/meeting-view-models';
 import type { Meeting } from '@/lib/meetings/types';
+import { deleteScheduledMeeting } from '@/lib/meetings/api-client';
+import { DeleteScheduledMeetingDialog } from './DeleteScheduledMeetingDialog';
 import { PaginatedMeetingGrid } from './PaginatedMeetingGrid';
 import { ScheduleMeetingDialog } from './ScheduleMeetingDialog';
 import { UpcomingScheduleButton } from './UpcomingScheduleButton';
@@ -17,8 +20,10 @@ type UpcomingFilter = 'all' | 'today' | 'week' | 'invite';
 interface UpcomingMeetingsExplorerProps {
     meetings: MeetingCardView[];
     sourceMeetings?: Meeting[];
+    currentUserId?: string;
     loading?: boolean;
     onMeetingUpdated?: (meeting: Meeting) => void;
+    onMeetingDeleted?: (meetingId: string) => void;
 }
 
 const FILTERS: Array<{ id: UpcomingFilter; label: string }> = [
@@ -72,17 +77,26 @@ function isInsideDateRange(isoDate: string, fromDate: string, toDate: string) {
 export function UpcomingMeetingsExplorer({
     meetings,
     sourceMeetings = [],
+    currentUserId,
     loading = false,
     onMeetingUpdated,
+    onMeetingDeleted,
 }: UpcomingMeetingsExplorerProps) {
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState<UpcomingFilter>('all');
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
     const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
+    const [deleteCandidate, setDeleteCandidate] = useState<MeetingCardView | null>(null);
+    const [deletingMeetingId, setDeletingMeetingId] = useState<string | null>(null);
     const sourceMeetingById = useMemo(() => (
         new Map(sourceMeetings.map((meeting) => [meeting.id, meeting]))
     ), [sourceMeetings]);
+    const ownerEditableMeetings = useMemo(() => new Set(
+        sourceMeetings
+            .filter((meeting) => meeting.ownerId === currentUserId)
+            .map((meeting) => meeting.id),
+    ), [currentUserId, sourceMeetings]);
 
     const filteredMeetings = useMemo(() => {
         const normalizedSearch = search.trim().toLowerCase();
@@ -113,6 +127,33 @@ export function UpcomingMeetingsExplorer({
         : loading
             ? 'Loading meetings from the secure backend...'
             : `${filteredMeetings.length.toLocaleString('en')} meeting${filteredMeetings.length === 1 ? '' : 's'} found`;
+
+    /**
+     * Deletes a future scheduled meeting after explicit confirmation.
+     */
+    async function handleDeleteMeeting(meeting: MeetingCardView) {
+        const sourceMeeting = sourceMeetingById.get(meeting.id);
+        if (!sourceMeeting || sourceMeeting.ownerId !== currentUserId) return;
+
+        setDeletingMeetingId(meeting.id);
+
+        try {
+            await deleteScheduledMeeting(meeting.id);
+            onMeetingDeleted?.(meeting.id);
+            toast.success('Scheduled meeting deleted', {
+                description: 'The meeting was removed from upcoming schedules.',
+            });
+            setDeleteCandidate(null);
+        } catch (err) {
+            toast.error('Unable to delete meeting', {
+                description: err instanceof Error
+                    ? err.message
+                    : 'Try again or refresh the meeting list.',
+            });
+        } finally {
+            setDeletingMeetingId(null);
+        }
+    }
 
     return (
         <div className={styles.explorer}>
@@ -174,10 +215,20 @@ export function UpcomingMeetingsExplorer({
                     pageSize={18}
                     ariaLabel="Scheduled meetings"
                     loading={loading}
+                    canEditMeeting={(meeting) => ownerEditableMeetings.has(meeting.id)}
                     onEditMeeting={(meeting) => {
                         const sourceMeeting = sourceMeetingById.get(meeting.id);
-                        if (sourceMeeting) setEditingMeeting(sourceMeeting);
+                        if (sourceMeeting && sourceMeeting.ownerId === currentUserId) {
+                            setEditingMeeting(sourceMeeting);
+                        }
                     }}
+                    canDeleteMeeting={(meeting) => ownerEditableMeetings.has(meeting.id)}
+                    onDeleteMeeting={(meeting) => {
+                        if (ownerEditableMeetings.has(meeting.id)) {
+                            setDeleteCandidate(meeting);
+                        }
+                    }}
+                    deletingMeetingId={deletingMeetingId}
                 />
             </div>
 
@@ -189,6 +240,17 @@ export function UpcomingMeetingsExplorer({
                         onMeetingUpdated?.(updatedMeeting);
                         setEditingMeeting(null);
                     }}
+                />
+            )}
+
+            {deleteCandidate && (
+                <DeleteScheduledMeetingDialog
+                    meetingTitle={deleteCandidate.title}
+                    deleting={deletingMeetingId === deleteCandidate.id}
+                    onCancel={() => {
+                        if (!deletingMeetingId) setDeleteCandidate(null);
+                    }}
+                    onConfirm={() => void handleDeleteMeeting(deleteCandidate)}
                 />
             )}
         </div>
