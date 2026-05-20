@@ -19,20 +19,28 @@ import {
     createMeeting,
     createMeetingInvite,
     searchMeetingUsersByEmail,
+    updateMeeting,
 } from '@/lib/meetings/api-client';
 import type {
     Meeting,
     MeetingInviteVerificationRequirement,
+    MeetingParticipant,
     MeetingUserSearchResult,
 } from '@/lib/meetings/types';
 import styles from './schedule-meeting-dialog.module.css';
 
 interface ScheduleMeetingDialogProps {
     onClose: () => void;
+    meeting?: Meeting;
     onScheduled?: (meeting: Meeting) => void;
+    onUpdated?: (meeting: Meeting) => void;
 }
 
 type ScheduleVerificationOption = 'NONE' | MeetingInviteVerificationRequirement;
+type SelectedScheduleGuest = MeetingUserSearchResult & {
+    existingParticipantId?: string;
+    participantStatus?: MeetingParticipant['status'];
+};
 
 const MIN_EMAIL_SEARCH_LENGTH = 3;
 const DEFAULT_VERIFICATIONS: MeetingInviteVerificationRequirement[] = ['EMAIL_OTP'];
@@ -83,17 +91,79 @@ function getScheduledDateTime(date: string, time: string) {
 }
 
 /**
+ * Converts an ISO date into local date and time input values.
+ */
+function getScheduleInputParts(isoDate?: string | null) {
+    if (!isoDate) return { date: getTodayInputValue(), time: '' };
+
+    const dateValue = new Date(isoDate);
+    if (Number.isNaN(dateValue.getTime())) {
+        return { date: getTodayInputValue(), time: '' };
+    }
+
+    const year = dateValue.getFullYear();
+    const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+    const day = String(dateValue.getDate()).padStart(2, '0');
+    const hours = String(dateValue.getHours()).padStart(2, '0');
+    const minutes = String(dateValue.getMinutes()).padStart(2, '0');
+
+    return {
+        date: `${year}-${month}-${day}`,
+        time: `${hours}:${minutes}`,
+    };
+}
+
+/**
+ * Converts an existing participant row into the dialog's guest-chip view.
+ */
+function toSelectedGuest(participant: MeetingParticipant): SelectedScheduleGuest | null {
+    if (participant.role === 'HOST' || participant.role === 'CO_HOST') return null;
+    if (participant.status === 'REMOVED' || participant.status === 'DECLINED') return null;
+
+    const displayName = participant.displayName?.trim() || participant.email;
+    const nameParts = displayName.replace(/[^a-zA-Z0-9\s]/g, ' ').trim().split(/\s+/);
+    const initials = nameParts.length > 1
+        ? `${nameParts[0][0] ?? ''}${nameParts[nameParts.length - 1][0] ?? ''}`.toUpperCase()
+        : displayName.slice(0, 2).toUpperCase();
+
+    return {
+        id: participant.userId ?? participant.id,
+        email: participant.email,
+        displayName,
+        initials,
+        imageUrl: null,
+        existingParticipantId: participant.id,
+        participantStatus: participant.status,
+    };
+}
+
+/**
  * Renders the schedule meeting form dialog.
  */
-export function ScheduleMeetingDialog({ onClose, onScheduled }: ScheduleMeetingDialogProps) {
+export function ScheduleMeetingDialog({
+    onClose,
+    meeting,
+    onScheduled,
+    onUpdated,
+}: ScheduleMeetingDialogProps) {
+    const isEditing = Boolean(meeting);
+    const initialSchedule = useMemo(
+        () => getScheduleInputParts(meeting?.scheduledStartAt),
+        [meeting?.scheduledStartAt],
+    );
+    const initialGuests = useMemo<SelectedScheduleGuest[]>(() => (
+        meeting?.participants
+            ?.map(toSelectedGuest)
+            .filter((guest): guest is SelectedScheduleGuest => Boolean(guest)) ?? []
+    ), [meeting?.participants]);
     const [closing, setClosing] = useState(false);
-    const [title, setTitle] = useState('');
-    const [date, setDate] = useState(getTodayInputValue());
-    const [time, setTime] = useState('');
-    const [agenda, setAgenda] = useState('');
+    const [title, setTitle] = useState(meeting?.title ?? '');
+    const [date, setDate] = useState(initialSchedule.date);
+    const [time, setTime] = useState(initialSchedule.time);
+    const [agenda, setAgenda] = useState(meeting?.description ?? '');
     const [guestSearch, setGuestSearch] = useState('');
     const [guestResults, setGuestResults] = useState<MeetingUserSearchResult[]>([]);
-    const [selectedGuests, setSelectedGuests] = useState<MeetingUserSearchResult[]>([]);
+    const [selectedGuests, setSelectedGuests] = useState<SelectedScheduleGuest[]>(initialGuests);
     const [verificationRequirements, setVerificationRequirements] =
         useState<MeetingInviteVerificationRequirement[]>(DEFAULT_VERIFICATIONS);
     const [searchingGuests, setSearchingGuests] = useState(false);
@@ -188,7 +258,10 @@ export function ScheduleMeetingDialog({ onClose, onScheduled }: ScheduleMeetingD
      */
     function addGuest(guest: MeetingUserSearchResult) {
         setSelectedGuests((currentGuests) => {
-            if (currentGuests.some((currentGuest) => currentGuest.id === guest.id)) {
+            if (currentGuests.some((currentGuest) => (
+                currentGuest.id === guest.id
+                || currentGuest.email.toLowerCase() === guest.email.toLowerCase()
+            ))) {
                 return currentGuests;
             }
 
@@ -200,7 +273,7 @@ export function ScheduleMeetingDialog({ onClose, onScheduled }: ScheduleMeetingD
     }
 
     /**
-     * Removes a guest before the scheduled meeting is created.
+     * Removes a guest before the scheduled meeting is created or updated.
      */
     function removeGuest(guestId: string) {
         setSelectedGuests((currentGuests) => (
@@ -246,31 +319,52 @@ export function ScheduleMeetingDialog({ onClose, onScheduled }: ScheduleMeetingD
 
         try {
             const scheduledEndAt = new Date(scheduledStartAt.getTime() + 60 * 60 * 1000);
-            const meeting = await createMeeting({
-                title: title.trim(),
-                description: agenda.trim() || undefined,
-                visibility: 'INVITE_ONLY',
-                scheduledStartAt: scheduledStartAt.toISOString(),
-                scheduledEndAt: scheduledEndAt.toISOString(),
-                recordingEnabled: false,
-                waitingRoomEnabled: true,
-                joinBeforeHost: false,
-            });
+            const savedMeeting = isEditing && meeting
+                ? await updateMeeting(meeting.id, {
+                    title: title.trim(),
+                    description: agenda.trim() || undefined,
+                    visibility: 'INVITE_ONLY',
+                    scheduledStartAt: scheduledStartAt.toISOString(),
+                    scheduledEndAt: scheduledEndAt.toISOString(),
+                    recordingEnabled: meeting.recordingEnabled,
+                    waitingRoomEnabled: meeting.waitingRoomEnabled,
+                    joinBeforeHost: meeting.joinBeforeHost,
+                })
+                : await createMeeting({
+                    title: title.trim(),
+                    description: agenda.trim() || undefined,
+                    visibility: 'INVITE_ONLY',
+                    scheduledStartAt: scheduledStartAt.toISOString(),
+                    scheduledEndAt: scheduledEndAt.toISOString(),
+                    recordingEnabled: false,
+                    waitingRoomEnabled: true,
+                    joinBeforeHost: false,
+                });
 
-            await Promise.all(selectedGuests.map((guest) => (
-                createMeetingInvite(meeting.id, {
+            const guestsToInvite = selectedGuests.filter((guest) => (
+                !guest.existingParticipantId || guest.participantStatus === 'INVITED'
+            ));
+
+            await Promise.all(guestsToInvite.map((guest) => (
+                createMeetingInvite(savedMeeting.id, {
                     email: guest.email,
-                    invitedUserId: guest.id,
+                    invitedUserId: guest.id === guest.existingParticipantId ? undefined : guest.id,
                     requiredVerifications: verificationRequirements,
                 })
             )));
 
-            toast.success('Meeting scheduled', {
-                description: selectedGuests.length > 0
-                    ? `${selectedGuests.length} guest${selectedGuests.length === 1 ? '' : 's'} invited.`
-                    : 'Your meeting is ready in upcoming meetings.',
+            toast.success(isEditing ? 'Meeting updated' : 'Meeting scheduled', {
+                description: guestsToInvite.length > 0
+                    ? `${guestsToInvite.length} guest${guestsToInvite.length === 1 ? '' : 's'} invited.`
+                    : isEditing
+                        ? 'The schedule and agenda were saved.'
+                        : 'Your meeting is ready in upcoming meetings.',
             });
-            onScheduled?.(meeting);
+            if (isEditing) {
+                onUpdated?.(savedMeeting);
+            } else {
+                onScheduled?.(savedMeeting);
+            }
             closeWithAnimation(true);
         } catch (err) {
             const message = err instanceof Error
@@ -297,8 +391,12 @@ export function ScheduleMeetingDialog({ onClose, onScheduled }: ScheduleMeetingD
             >
                 <div className={styles.dialogHeader}>
                     <div>
-                        <p>Schedule meeting</p>
-                        <h2 id="schedule-meeting-title">Prepare the meeting before guests join.</h2>
+                        <p>{isEditing ? 'Edit scheduled meeting' : 'Schedule meeting'}</p>
+                        <h2 id="schedule-meeting-title">
+                            {isEditing
+                                ? 'Update the agenda, guests, and meeting time.'
+                                : 'Prepare the meeting before guests join.'}
+                        </h2>
                     </div>
                     <button
                         type="button"
@@ -364,13 +462,18 @@ export function ScheduleMeetingDialog({ onClose, onScheduled }: ScheduleMeetingD
                                     <span key={guest.id} className={styles.guestChip}>
                                         {guest.initials}
                                         <em>{guest.email}</em>
-                                        <button
-                                            type="button"
-                                            onClick={() => removeGuest(guest.id)}
-                                            aria-label={`Remove ${guest.email}`}
-                                        >
-                                            <X size={12} />
-                                        </button>
+                                        {guest.existingParticipantId && (
+                                            <small>{guest.participantStatus?.toLowerCase()}</small>
+                                        )}
+                                        {!guest.existingParticipantId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeGuest(guest.id)}
+                                                aria-label={`Remove ${guest.email}`}
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        )}
                                     </span>
                                 ))}
                             </div>
@@ -480,7 +583,9 @@ export function ScheduleMeetingDialog({ onClose, onScheduled }: ScheduleMeetingD
                             ) : (
                                 <CalendarDays size={15} />
                             )}
-                            {submitting ? 'Scheduling...' : 'Schedule'}
+                            {submitting
+                                ? (isEditing ? 'Saving...' : 'Scheduling...')
+                                : (isEditing ? 'Save changes' : 'Schedule')}
                         </button>
                     </div>
                 </form>
