@@ -5,6 +5,7 @@
 
 import { CalendarClock, Clock3, ShieldCheck, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useSessionUser } from '@/app/(protected)/layout';
 import {
     listAllVisibleMeetings,
 } from '@/lib/meetings/api-client';
@@ -30,6 +31,7 @@ const EMPTY_SUMMARY: MeetingsSummary = {
  * Renders the upcoming meetings page using real backend data.
  */
 export function UpcomingMeetingsDashboard() {
+    const user = useSessionUser();
     const [meetings, setMeetings] = useState<Meeting[]>([]);
     const [upcomingMeetings, setUpcomingMeetings] = useState<MeetingCardView[]>([]);
     const [summary, setSummary] = useState<MeetingsSummary>(EMPTY_SUMMARY);
@@ -111,6 +113,18 @@ export function UpcomingMeetingsDashboard() {
         ));
     }
 
+    /**
+     * Removes a deleted schedule from the current dashboard without a reload.
+     */
+    function handleMeetingDeleted(meetingId: string) {
+        setMeetings((currentMeetings) => (
+            currentMeetings.filter((meeting) => meeting.id !== meetingId)
+        ));
+        setUpcomingMeetings((currentMeetings) => (
+            currentMeetings.filter((meeting) => meeting.id !== meetingId)
+        ));
+    }
+
     return (
         <section className={styles.page}>
             <header className={styles.hero}>
@@ -157,8 +171,10 @@ export function UpcomingMeetingsDashboard() {
                 <UpcomingMeetingsExplorer
                     meetings={upcomingMeetings}
                     sourceMeetings={meetings}
+                    currentUserId={user?.userId}
                     loading={loading}
                     onMeetingUpdated={handleMeetingUpdated}
+                    onMeetingDeleted={handleMeetingDeleted}
                 />
 
                 <aside className={styles.sidePanel} aria-label="Preparation checklist">
