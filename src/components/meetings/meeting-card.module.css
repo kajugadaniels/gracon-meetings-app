@@ -187,8 +187,7 @@
     transform 140ms ease;
 }
 
-.actions button:first-child,
-.actions a:first-child {
+.actions .startAction {
   border-color: var(--color-primary);
   background: var(--color-primary);
   color: white;
@@ -201,8 +200,7 @@
   transform: translateY(-1px);
 }
 
-.actions button:first-child:not(:disabled):hover,
-.actions a:first-child:hover {
+.actions .startAction:not(:disabled):hover {
   border-color: var(--color-primary);
   background: var(--color-primary-hover);
   color: white;
