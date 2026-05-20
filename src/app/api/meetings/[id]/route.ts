@@ -34,3 +34,18 @@ export async function PATCH(
         body: await request.json(),
     });
 }
+
+/**
+ * Deletes one future scheduled meeting through api/meetings after session recovery.
+ */
+export async function DELETE(
+    request: NextRequest,
+    context: { params: Promise<{ id: string }> },
+) {
+    const { id } = await context.params;
+
+    return proxyMeetingsApi(request, {
+        method: 'DELETE',
+        path: `/meetings/${encodeURIComponent(id)}`,
+    });
+}
