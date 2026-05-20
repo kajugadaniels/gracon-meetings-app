@@ -103,6 +103,7 @@ export interface CreateMeetingInviteInput {
     email: string;
     invitedUserId?: string;
     requiredVerifications?: MeetingInviteVerificationRequirement[];
+    sendEmail?: boolean;
     note?: string;
 }
 
