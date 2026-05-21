@@ -10,6 +10,7 @@ import type {
     MeetingStatus,
     MeetingStreamAccess,
     MeetingUserSearchResult,
+    UserPreferencesResponse,
     UpdateMeetingInput,
 } from './types';
 
@@ -244,6 +245,13 @@ export function createMeetingInvite(
 export function searchMeetingUsersByEmail(query: string): Promise<MeetingUserSearchResult[]> {
     const search = new URLSearchParams({ q: query.trim() });
     return requestJson<MeetingUserSearchResult[]>(`/api/users/search?${search.toString()}`);
+}
+
+/**
+ * Reads auth-owned invitation defaults for the current user.
+ */
+export function getUserPreferences(): Promise<UserPreferencesResponse> {
+    return requestJson<UserPreferencesResponse>('/api/users/preferences');
 }
 
 /**
