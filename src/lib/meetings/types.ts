@@ -99,6 +99,15 @@ export type MeetingInviteVerificationRequirement =
     | 'EMAIL_OTP'
     | 'IDENTITY_VERIFICATION';
 
+export type UserInviteVerificationPreference =
+    | 'NO_VERIFICATION'
+    | MeetingInviteVerificationRequirement;
+
+export interface UserPreferencesResponse {
+    defaultDocumentInviteVerifications: UserInviteVerificationPreference[];
+    defaultMeetingInviteVerifications: UserInviteVerificationPreference[];
+}
+
 export interface CreateMeetingInviteInput {
     email: string;
     invitedUserId?: string;
