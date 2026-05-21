@@ -4,12 +4,17 @@
 'use client';
 
 import { Check, Copy, MailCheck, Search, ShieldCheck, UserCheck, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { createMeetingInvite, searchMeetingUsersByEmail } from '@/lib/meetings/api-client';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+    createMeetingInvite,
+    getUserPreferences,
+    searchMeetingUsersByEmail,
+} from '@/lib/meetings/api-client';
 import type { MeetingRoomAttendeeView } from '@/lib/meetings/meeting-view-models';
 import type {
     MeetingInviteVerificationRequirement as ApiMeetingInviteVerificationRequirement,
     MeetingUserSearchResult,
+    UserInviteVerificationPreference,
 } from '@/lib/meetings/types';
 import styles from './meeting-invite-dialog.module.css';
 
@@ -20,6 +25,7 @@ interface MeetingInviteDialogProps {
 }
 
 type MeetingInviteVerificationRequirement = 'NONE' | 'EMAIL_OTP' | 'IDENTITY_VERIFICATION';
+type ActiveMeetingInviteVerificationRequirement = Exclude<MeetingInviteVerificationRequirement, 'NONE'>;
 
 const VERIFICATION_OPTIONS: Array<{
     value: MeetingInviteVerificationRequirement;
@@ -47,7 +53,8 @@ const VERIFICATION_OPTIONS: Array<{
     },
 ];
 
-const DEFAULT_VERIFICATION_REQUIREMENTS: Exclude<MeetingInviteVerificationRequirement, 'NONE'>[] = ['EMAIL_OTP'];
+const DEFAULT_VERIFICATION_REQUIREMENTS: ActiveMeetingInviteVerificationRequirement[] = [];
+const ACTIVE_VERIFICATION_FALLBACK: ActiveMeetingInviteVerificationRequirement[] = ['EMAIL_OTP'];
 const MIN_EMAIL_SEARCH_LENGTH = 3;
 
 /**
@@ -72,6 +79,19 @@ function getMeetingPublicUrl(meetingId: string): string {
 }
 
 /**
+ * Converts auth-owned meeting preference values into API invite gate values.
+ */
+function mapMeetingPreferenceToRequirements(
+    preferences: UserInviteVerificationPreference[],
+): ActiveMeetingInviteVerificationRequirement[] {
+    if (preferences.includes('NO_VERIFICATION')) return [];
+
+    return (['EMAIL_OTP', 'IDENTITY_VERIFICATION'] as const).filter((requirement) =>
+        preferences.includes(requirement),
+    );
+}
+
+/**
  * Renders the in-meeting invite flow with local invitee search.
  */
 export function MeetingInviteDialog({
@@ -80,8 +100,10 @@ export function MeetingInviteDialog({
     onClose,
 }: MeetingInviteDialogProps) {
     const [inviteSearch, setInviteSearch] = useState('');
+    const [defaultVerificationRequirements, setDefaultVerificationRequirements] =
+        useState<ActiveMeetingInviteVerificationRequirement[]>(DEFAULT_VERIFICATION_REQUIREMENTS);
     const [verificationRequirements, setVerificationRequirements] =
-        useState<Exclude<MeetingInviteVerificationRequirement, 'NONE'>[]>(
+        useState<ActiveMeetingInviteVerificationRequirement[]>(
             DEFAULT_VERIFICATION_REQUIREMENTS,
         );
     const [searchResults, setSearchResults] = useState<MeetingUserSearchResult[]>([]);
@@ -91,6 +113,7 @@ export function MeetingInviteDialog({
     const [sendingEmails, setSendingEmails] = useState<Set<string>>(() => new Set());
     const [inviteError, setInviteError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const verificationTouchedRef = useRef(false);
     const meetingLink = getMeetingPublicUrl(meetingId);
     const noExtraVerification = verificationRequirements.length === 0;
     const apiBackedMeeting = isUuid(meetingId);
@@ -118,6 +141,29 @@ export function MeetingInviteDialog({
         if (visibleInvitees.length === 0) return 'No verified users match that email search.';
         return `${visibleInvitees.length} verified user${visibleInvitees.length === 1 ? '' : 's'} found`;
     }, [inviteSearch, searchError, searchingUsers, visibleInvitees.length]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        getUserPreferences()
+            .then((preferences) => {
+                if (cancelled) return;
+
+                const nextDefaults = mapMeetingPreferenceToRequirements(
+                    preferences.defaultMeetingInviteVerifications,
+                );
+
+                setDefaultVerificationRequirements(nextDefaults);
+                if (!verificationTouchedRef.current) {
+                    setVerificationRequirements(nextDefaults);
+                }
+            })
+            .catch(() => {
+                // Keep the local no-verification fallback; api/meetings still enforces invite gates.
+            });
+
+        return () => { cancelled = true; };
+    }, []);
 
     useEffect(() => {
         const normalizedSearch = inviteSearch.trim();
@@ -195,12 +241,20 @@ export function MeetingInviteDialog({
     }
 
     function setNoExtraVerification(enabled: boolean) {
-        setVerificationRequirements(enabled ? [] : DEFAULT_VERIFICATION_REQUIREMENTS);
+        verificationTouchedRef.current = true;
+        setVerificationRequirements(
+            enabled
+                ? []
+                : defaultVerificationRequirements.length > 0
+                  ? defaultVerificationRequirements
+                  : ACTIVE_VERIFICATION_FALLBACK,
+        );
     }
 
     function toggleVerificationRequirement(
-        requirement: Exclude<MeetingInviteVerificationRequirement, 'NONE'>,
+        requirement: ActiveMeetingInviteVerificationRequirement,
     ) {
+        verificationTouchedRef.current = true;
         setVerificationRequirements((currentRequirements) => {
             if (currentRequirements.includes(requirement)) {
                 return currentRequirements.filter((item) => item !== requirement);
