@@ -123,6 +123,12 @@ ALLOW_DEV_READABLE_AUTH_COOKIES=true
 NEXT_PUBLIC_ALLOW_DEV_READABLE_AUTH_COOKIES=true
 ```
 
+## AI Agent Rules
+
+Project-local AI guidance lives in `agents/README.md`.
+
+Read that guide before changing auth/session recovery, the protected meetings shell, home/upcoming/previous/recordings pages, scheduling and invite dialogs, invitation acceptance, Stream media wiring, recording playback, or the custom meeting-room UI. The guide is specific to this frontend so contributors preserve the meetings boundary while keeping `api/meetings`, `api/auth`, and `app/app` as the source of truth for authorization, credentials, and identity verification.
+
 ## Local Commands
 
 ```bash
