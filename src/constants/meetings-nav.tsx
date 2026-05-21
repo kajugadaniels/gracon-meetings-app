@@ -6,7 +6,6 @@ import {
     History,
     Home,
     type LucideIcon,
-    Radio,
     Video,
 } from 'lucide-react';
 
@@ -41,11 +40,5 @@ export const MEETINGS_NAV_ITEMS: MeetingsNavItem[] = [
         label: 'Recordings',
         description: 'Recorded meetings and playback access.',
         icon: Video,
-    },
-    {
-        href: '/personal-room',
-        label: 'Personal room',
-        description: 'Your reusable always-available room.',
-        icon: Radio,
     },
 ];
