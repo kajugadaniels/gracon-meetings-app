@@ -13,11 +13,12 @@ import {
     X,
 } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { MouseEvent, useEffect, useMemo, useState } from 'react';
+import { MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from '@/components/ui';
 import {
     createMeeting,
     createMeetingInvite,
+    getUserPreferences,
     searchMeetingUsersByEmail,
     updateMeeting,
 } from '@/lib/meetings/api-client';
@@ -26,6 +27,7 @@ import type {
     MeetingInviteVerificationRequirement,
     MeetingParticipant,
     MeetingUserSearchResult,
+    UserInviteVerificationPreference,
 } from '@/lib/meetings/types';
 import styles from './schedule-meeting-dialog.module.css';
 
@@ -43,7 +45,8 @@ type SelectedScheduleGuest = MeetingUserSearchResult & {
 };
 
 const MIN_EMAIL_SEARCH_LENGTH = 3;
-const DEFAULT_VERIFICATIONS: MeetingInviteVerificationRequirement[] = ['EMAIL_OTP'];
+const DEFAULT_VERIFICATIONS: MeetingInviteVerificationRequirement[] = [];
+const ACTIVE_VERIFICATION_FALLBACK: MeetingInviteVerificationRequirement[] = ['EMAIL_OTP'];
 const VERIFICATION_OPTIONS: Array<{
     value: ScheduleVerificationOption;
     label: string;
@@ -138,6 +141,19 @@ function toSelectedGuest(participant: MeetingParticipant): SelectedScheduleGuest
 }
 
 /**
+ * Converts auth-owned meeting preference values into scheduled guest gates.
+ */
+function mapMeetingPreferenceToRequirements(
+    preferences: UserInviteVerificationPreference[],
+): MeetingInviteVerificationRequirement[] {
+    if (preferences.includes('NO_VERIFICATION')) return [];
+
+    return (['EMAIL_OTP', 'IDENTITY_VERIFICATION'] as const).filter((requirement) =>
+        preferences.includes(requirement),
+    );
+}
+
+/**
  * Renders the schedule meeting form dialog.
  */
 export function ScheduleMeetingDialog({
@@ -164,12 +180,15 @@ export function ScheduleMeetingDialog({
     const [guestSearch, setGuestSearch] = useState('');
     const [guestResults, setGuestResults] = useState<MeetingUserSearchResult[]>([]);
     const [selectedGuests, setSelectedGuests] = useState<SelectedScheduleGuest[]>(initialGuests);
+    const [defaultVerificationRequirements, setDefaultVerificationRequirements] =
+        useState<MeetingInviteVerificationRequirement[]>(DEFAULT_VERIFICATIONS);
     const [verificationRequirements, setVerificationRequirements] =
         useState<MeetingInviteVerificationRequirement[]>(DEFAULT_VERIFICATIONS);
     const [searchingGuests, setSearchingGuests] = useState(false);
     const [searchError, setSearchError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
+    const verificationTouchedRef = useRef(false);
     const todayInputValue = useMemo(() => getTodayInputValue(), []);
     const noExtraVerification = verificationRequirements.length === 0;
     const selectedGuestEmails = useMemo(
@@ -195,6 +214,29 @@ export function ScheduleMeetingDialog({
         if (visibleGuestResults.length === 0) return 'No verified guests match that email search.';
         return `${visibleGuestResults.length} guest${visibleGuestResults.length === 1 ? '' : 's'} found`;
     }, [guestSearch, searchError, searchingGuests, visibleGuestResults.length]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        getUserPreferences()
+            .then((preferences) => {
+                if (cancelled) return;
+
+                const nextDefaults = mapMeetingPreferenceToRequirements(
+                    preferences.defaultMeetingInviteVerifications,
+                );
+
+                setDefaultVerificationRequirements(nextDefaults);
+                if (!verificationTouchedRef.current) {
+                    setVerificationRequirements(nextDefaults);
+                }
+            })
+            .catch(() => {
+                // Scheduling remains usable; api/meetings enforces invite gates on submit.
+            });
+
+        return () => { cancelled = true; };
+    }, []);
 
     useEffect(() => {
         const normalizedSearch = guestSearch.trim();
@@ -285,7 +327,14 @@ export function ScheduleMeetingDialog({
      * Enables or disables the no-extra-verification invite mode.
      */
     function setNoExtraVerification(enabled: boolean) {
-        setVerificationRequirements(enabled ? [] : DEFAULT_VERIFICATIONS);
+        verificationTouchedRef.current = true;
+        setVerificationRequirements(
+            enabled
+                ? []
+                : defaultVerificationRequirements.length > 0
+                  ? defaultVerificationRequirements
+                  : ACTIVE_VERIFICATION_FALLBACK,
+        );
     }
 
     /**
@@ -294,6 +343,7 @@ export function ScheduleMeetingDialog({
     function toggleVerificationRequirement(
         requirement: MeetingInviteVerificationRequirement,
     ) {
+        verificationTouchedRef.current = true;
         setVerificationRequirements((currentRequirements) => {
             if (currentRequirements.includes(requirement)) {
                 return currentRequirements.filter((item) => item !== requirement);
