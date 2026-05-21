@@ -24,6 +24,7 @@ metadata, and audit history through `api/meetings`.
 - Cross-app session recovery with shared Gracon cookies
 - Meeting list, scheduling, invites, join flow, recording library, and live-call screens in later milestones
 - User-friendly loading and session recovery states
+- Meeting invitation verification defaults consumed from the user-owned settings in `api/auth`
 
 ## Current Foundation
 
@@ -33,6 +34,7 @@ metadata, and audit history through `api/meetings`.
 - Loading states now use `MeetingsLoadingState` for session recovery, route transitions, and Stream room preparation.
 - Protected `/meetings` route is available as the initial authenticated workspace.
 - Same-origin `/api/meetings` route handlers proxy meeting actions to `api/meetings` with server-resolved auth tokens, so production HttpOnly cookies keep working.
+- Same-origin `/api/users/preferences` reads auth-owned user defaults for meeting invitation gates. The values only preselect the live invite and schedule dialogs; `api/meetings` still enforces the selected gates on every invitation.
 - Same-origin recording proxy routes live under `/api/meetings/:id/recordings/*`; browser components never call `api/meetings` directly for recording control.
 - The `/meetings` workspace now creates scheduled meetings, lists visible meetings, starts/ends meetings, and requests short-lived Stream call tokens.
 - `/meetings/:id` is the active meeting-room experience. Newly created instant meetings are routed here so users see the custom Gracon room instead of the raw Stream SDK surface.
@@ -67,6 +69,7 @@ metadata, and audit history through `api/meetings`.
 - Reusable meeting cards disable the Start action until the scheduled start time, show the scheduled readiness time, and copy the canonical meeting URL with a `Copy URL` action.
 - Home quick-action dialogs are split into `NewMeetingDialog`, `JoinMeetingDialog`, and `ScheduleMeetingDialog`, each with its own scoped module CSS.
 - `ScheduleMeetingDialog` now supports create and edit modes. Upcoming meeting cards can open it to update title, date, time, agenda, pending invite verification gates, and new invited guests without replacing the room workflow.
+- `ScheduleMeetingDialog` starts from the user's saved meeting invitation defaults. The platform default is no extra verification, and choosing it disables email and identity checks until the user turns it off.
 - In edit mode, `ScheduleMeetingDialog` sends emails only to newly selected guests. Existing pending invitees keep their original invite email/link while the backend silently updates their verification gates.
 - Scheduled meeting edit and delete actions are owner-only in the UI. Invited users can still view accepted scheduled meetings but do not see schedule mutation controls.
 - `NewMeetingDialog` starts instant meetings dynamically by creating a meeting, starting it through `api/meetings`, and navigating to the live room.
@@ -94,8 +97,6 @@ metadata, and audit history through `api/meetings`.
 - `/recordings` opens recordings in `RecordingPlayerDialog`. The dialog plays provider asset URLs when available and shows a processing state when metadata exists before the media file is ready.
 - `/recordings` can refresh a processing recording through the same-origin recording refresh route, which asks `api/meetings` to pull finalized Stream playback metadata without exposing provider credentials to the browser.
 - Recording cards must display derived duration from `durationSeconds` or recording timestamps; avoid showing `00:00` for processing recordings.
-- `/personal-room` renders a static reusable-room management page with room link, quick actions, settings, and readiness details.
-- `/personal-room` follows the compact dashboard direction with four room setting cards in one desktop row.
 - `src/lib/meetings/meeting-view-models.ts` converts backend meetings and recordings into card-ready UI contracts; local seeded meeting data has been removed from active pages.
 - Route styling uses `.module.css` files rather than growing `globals.css`.
 
@@ -173,6 +174,7 @@ npm run lint
 - `src/components/meetings/MeetingSettingsDialog.tsx` owns the lightweight room settings surface for microphone and camera controls.
 - `src/components/ui/Toast.tsx` mirrors the document workspace toast design and is the required feedback surface for meeting room success/error messages.
 - `MeetingInviteDialog.tsx` builds public meeting links from `NEXT_PUBLIC_MEETINGS_PUBLIC_URL` or the current localhost origin, and API-backed rooms send invitations through same-origin proxy routes.
+- `MeetingInviteDialog.tsx` starts from `defaultMeetingInviteVerifications` returned by `app/app` settings through `api/auth`; live-room hosts can still override the gates before sending each invite.
 - `MeetingInviteDialog.tsx` searches active verified invitees by email through the same-origin `/api/users/search` route after the user types at least 3 characters.
 - `src/components/invitations/MeetingInvitationAcceptance.tsx` owns the public invite acceptance flow and must keep backend verification gates authoritative.
 - Identity-gated invitations must use the same proof flow as documents: start the challenge in `api/meetings`, redirect to `app/app/verify-identity?challenge=invitation`, return to the invitation URL, then let `api/meetings` sync the fresh `id_verifications` proof.
