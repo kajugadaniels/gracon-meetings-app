@@ -162,6 +162,44 @@ function checkGitignore() {
     }
 }
 
+function checkNextSecurityHeaders() {
+    const configPath = join(projectRoot, 'next.config.ts');
+    if (!existsSync(configPath)) {
+        errors.push('next.config.ts is required.');
+        return;
+    }
+
+    const config = readFileSync(configPath, 'utf8');
+    for (const marker of [
+        'Content-Security-Policy',
+        'Referrer-Policy',
+        'X-Content-Type-Options',
+        'X-Frame-Options',
+        'Permissions-Policy',
+        'frame-ancestors',
+        'camera=(self)',
+        'microphone=(self)',
+        'display-capture=(self)',
+    ]) {
+        if (!config.includes(marker)) {
+            errors.push(`next.config.ts must configure ${marker}.`);
+        }
+    }
+}
+
+function checkWorkflowSecretScanning() {
+    const workflowPath = join(projectRoot, '.github/workflows/app-security.yml');
+    if (!existsSync(workflowPath)) {
+        errors.push('.github/workflows/app-security.yml is required.');
+        return;
+    }
+
+    const workflow = readFileSync(workflowPath, 'utf8');
+    if (!workflow.includes('gitleaks/gitleaks-action')) {
+        errors.push('app-security workflow must run Gitleaks secret scanning.');
+    }
+}
+
 function checkSourceBoundary() {
     const sensitiveStorage = /\b(localStorage|sessionStorage)\b.*(token|jwt|secret|password|private|nid|pid|passport|recording|invite|stream)/i;
     for (const file of walk(join(projectRoot, 'src'))) {
@@ -187,7 +225,47 @@ function checkSourceBoundary() {
             if (line.includes('STREAM_API_SECRET')) {
                 errors.push(`${relativePath}:${index + 1} must not reference Stream API secrets in frontend code.`);
             }
+
+            if (line.includes('href={recording.playbackUrl') || line.includes('writeText(recording.playbackUrl')) {
+                errors.push(`${relativePath}:${index + 1} must not expose provider playback URLs as share/open links.`);
+            }
+
+            if (line.includes('src={user.imageUrl')) {
+                errors.push(`${relativePath}:${index + 1} must not render raw profile image URLs directly.`);
+            }
         });
+    }
+}
+
+function checkMediaProxyBoundaries() {
+    const profileRoutePath = join(projectRoot, 'src/app/api/profile-image/route.ts');
+    const topbarPath = join(projectRoot, 'src/components/layout/MeetingsTopbar.tsx');
+    const recordingDialogPath = join(projectRoot, 'src/components/meetings/RecordingPlayerDialog.tsx');
+    const recordingExplorerPath = join(projectRoot, 'src/components/meetings/RecordingsExplorer.tsx');
+
+    for (const requiredPath of [profileRoutePath, topbarPath, recordingDialogPath, recordingExplorerPath]) {
+        if (!existsSync(requiredPath)) {
+            errors.push(`${relative(projectRoot, requiredPath)} is required for media safety checks.`);
+            return;
+        }
+    }
+
+    const profileRoute = readFileSync(profileRoutePath, 'utf8');
+    const topbar = readFileSync(topbarPath, 'utf8');
+    const recordingDialog = readFileSync(recordingDialogPath, 'utf8');
+    const recordingExplorer = readFileSync(recordingExplorerPath, 'utf8');
+
+    if (!profileRoute.includes('isAllowedS3ProfileImageUrl') || !profileRoute.includes('X-Amz-Signature')) {
+        errors.push('profile-image route must validate presigned S3 profile image sources.');
+    }
+    if (!topbar.includes('/api/profile-image')) {
+        errors.push('MeetingsTopbar must render profile images through /api/profile-image.');
+    }
+    if (recordingDialog.includes('Open source') || recordingDialog.includes('href={recording.playbackUrl')) {
+        errors.push('RecordingPlayerDialog must not expose provider playback URLs as open-source links.');
+    }
+    if (recordingExplorer.includes('writeText(recording.playbackUrl')) {
+        errors.push('RecordingsExplorer must not copy provider playback URLs to the clipboard.');
     }
 }
 
@@ -205,7 +283,10 @@ function checkRedirectSafety() {
 checkEnvExample();
 checkDeployEnv();
 checkGitignore();
+checkNextSecurityHeaders();
+checkWorkflowSecretScanning();
 checkSourceBoundary();
+checkMediaProxyBoundaries();
 checkRedirectSafety();
 
 if (errors.length > 0) {
