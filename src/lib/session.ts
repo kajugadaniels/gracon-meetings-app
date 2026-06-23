@@ -17,6 +17,7 @@ export const MEETINGS_URL =
     process.env.NEXT_PUBLIC_MEETINGS_URL ?? 'http://localhost:4003';
 
 const DEFAULT_NEXT_PATH = '/home';
+const BLOCKED_NEXT_PATHS = new Set(['/logout', '/login']);
 
 export type SessionBootstrapResult =
     | { status: 'authenticated'; user: Record<string, unknown> }
@@ -28,13 +29,28 @@ export type SessionBootstrapResult =
  */
 export function normalizeMeetingsPath(path: string | null | undefined): string {
     if (!path) return DEFAULT_NEXT_PATH;
-    if (path.startsWith('/') && !path.startsWith('//')) return path;
+    if (path.startsWith('/') && !path.startsWith('//')) {
+        try {
+            const parsed = new URL(path, MEETINGS_URL);
+            if (BLOCKED_NEXT_PATHS.has(parsed.pathname)) {
+                return DEFAULT_NEXT_PATH;
+            }
+
+            return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        } catch {
+            return DEFAULT_NEXT_PATH;
+        }
+    }
 
     try {
         const meetingsOrigin = new URL(MEETINGS_URL).origin;
         const url = new URL(path);
 
         if (url.origin === meetingsOrigin) {
+            if (BLOCKED_NEXT_PATHS.has(url.pathname)) {
+                return DEFAULT_NEXT_PATH;
+            }
+
             return `${url.pathname}${url.search}${url.hash}`;
         }
     } catch {
