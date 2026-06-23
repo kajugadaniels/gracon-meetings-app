@@ -102,7 +102,7 @@ export function RecordingsExplorer({
             : `${filteredRecordings.length.toLocaleString('en')} recording${filteredRecordings.length === 1 ? '' : 's'} found`;
 
     /**
-     * Shares the playback source when the provider has returned one.
+     * Shares the recordings workspace URL instead of exposing provider assets.
      */
     async function handleShare(recording: RecordingCardView) {
         if (!recording.playbackUrl) {
@@ -113,7 +113,9 @@ export function RecordingsExplorer({
         }
 
         try {
-            await navigator.clipboard.writeText(recording.playbackUrl);
+            const shareUrl = new URL('/recordings', window.location.origin);
+            shareUrl.searchParams.set('recording', recording.id);
+            await navigator.clipboard.writeText(shareUrl.toString());
             toast.success('Recording link copied');
         } catch {
             toast.error('Unable to copy recording link');
