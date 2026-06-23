@@ -38,3 +38,12 @@ Run deployment env validation with real production env values before release:
 ```bash
 CHECK_DEPLOY_ENV=true npm run check:security
 ```
+
+## Browser Hardening
+
+- `next.config.ts` owns the app-wide CSP and security headers, including
+  camera, microphone, and display-capture permissions for meeting rooms.
+- The app security workflow runs Gitleaks before install/build steps.
+- Profile images render through `/api/profile-image`, not raw presigned URLs.
+- Recording provider playback URLs may be used only for guarded playback after
+  backend access checks; they must not be copied or exposed as direct open links.
