@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { Download, Headphones, LockKeyhole, RefreshCw, Share2, ShieldCheck, X } from 'lucide-react';
+import { Headphones, LockKeyhole, RefreshCw, Share2, ShieldCheck, X } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import type { RecordingCardView } from '@/lib/meetings/meeting-view-models';
 import styles from './recording-player-dialog.module.css';
@@ -116,12 +116,6 @@ export function RecordingPlayerDialog({
                         <span>Access is checked before metadata is loaded.</span>
                     </div>
                     <div className={styles.actions}>
-                        {recording.playbackUrl && (
-                            <a href={recording.playbackUrl} target="_blank" rel="noreferrer">
-                                <Download size={15} />
-                                Open source
-                            </a>
-                        )}
                         <button type="button" onClick={() => onShare(recording)}>
                             <Share2 size={15} />
                             Share
