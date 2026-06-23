@@ -25,12 +25,18 @@ function getInitials(user: SessionUser) {
         .join('') || 'G';
 }
 
+function getProfileImageSource(user: SessionUser) {
+    if (!user.imageUrl) return null;
+    return `/api/profile-image?user=${encodeURIComponent(user.userId)}`;
+}
+
 /**
  * Renders the fixed topbar with logo and account dropdown.
  */
 export function MeetingsTopbar({ user }: { user: SessionUser }) {
     const [accountOpen, setAccountOpen] = useState(false);
     const accountRef = useRef<HTMLDivElement>(null);
+    const profileImageSource = getProfileImageSource(user);
 
     useEffect(() => {
         const handlePointerDown = (event: MouseEvent) => {
@@ -63,9 +69,9 @@ export function MeetingsTopbar({ user }: { user: SessionUser }) {
                     aria-haspopup="menu"
                     title={getDisplayName(user)}
                 >
-                    {user.imageUrl ? (
+                    {profileImageSource ? (
                         <Image
-                            src={user.imageUrl}
+                            src={profileImageSource}
                             alt=""
                             width={38}
                             height={38}
@@ -81,9 +87,9 @@ export function MeetingsTopbar({ user }: { user: SessionUser }) {
                     <div className={styles.accountMenu} role="menu">
                         <div className={styles.accountProfile}>
                             <div className={styles.accountAvatar} aria-hidden="true">
-                                {user.imageUrl ? (
+                                {profileImageSource ? (
                                     <Image
-                                        src={user.imageUrl}
+                                        src={profileImageSource}
                                         alt=""
                                         width={36}
                                         height={36}
