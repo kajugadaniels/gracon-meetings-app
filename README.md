@@ -133,7 +133,8 @@ Read that guide before changing auth/session recovery, the protected meetings sh
 
 Read [SECURITY.md](./SECURITY.md) before changing session handoff, Stream token
 handling, meeting API proxy routes, invitations, recording playback, or
-production cookie settings.
+production cookie settings. Also read it before changing CSP headers, profile
+image rendering, or app security workflow checks.
 
 ## Local Commands
 
